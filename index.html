@@ -3183,22 +3183,38 @@
                 scroll-margin-top: -55px;
             }
 
-            /* Remove carousel arrow space on mobile */
+            /* Remove carousel arrow space + side padding on mobile */
             .carousel-wrap {
                 padding: 0;
+                overflow: visible;
+            }
+
+            .landing-block {
+                padding: 0 8px;
             }
 
             /* Replace buttons with simple text on mobile */
             .section-cta-wrap .hero-cta {
                 border: none;
                 padding: 4px 0;
-                font-size: 0.75rem;
+                font-size: 0.72rem;
                 color: var(--muted);
-                opacity: 0.6;
+                opacity: 0.5;
+                animation: subtlePulse 3s ease-in-out infinite;
             }
 
-            .section-cta-wrap {
-                margin: 12px 0;
+            @keyframes subtlePulse {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 0.6; }
+            }
+
+            /* Button spacing */
+            .landing-featured .section-cta-wrap {
+                margin: 28px 0 0;
+            }
+
+            .landing-pm .section-cta-wrap {
+                margin: 0 0 16px;
             }
 
             /* Dot indicators for carousels */
