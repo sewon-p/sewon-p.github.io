@@ -2932,31 +2932,28 @@
         }
 
         .carousel-dots {
-            display: none;
+            display: flex;
             justify-content: center;
             gap: 8px;
             margin-top: 16px;
         }
 
-        .carousel-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--muted);
-            opacity: 0.4;
-            transition: all 0.25s;
-            cursor: pointer;
+        .carousel-dots {
+            position: relative;
+            height: 3px;
+            background: var(--surface-border);
+            border-radius: 2px;
+            max-width: 200px;
         }
 
-        .carousel-dot:hover {
-            opacity: 0.7;
-        }
-
-        .carousel-dot.active {
+        .carousel-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
             background: var(--accent);
-            opacity: 1;
-            width: 20px;
-            border-radius: 4px;
+            border-radius: 2px;
+            transition: left 0.25s, width 0.25s;
         }
 
         .landing-feature-card:hover {
@@ -2994,7 +2991,7 @@
         }
 
         .carousel-btn {
-            display: none;
+            display: flex;
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
@@ -3056,7 +3053,7 @@
         }
 
         .landing-pm-grid .landing-pm-card {
-            flex: 0 0 calc(23% - 14px);
+            flex: 0 0 calc(25% - 14px);
             scroll-snap-align: start;
         }
 
@@ -4822,34 +4819,34 @@
                 }, { passive: true });
             }
 
-            // === CAROUSEL DOTS ===
-            function initDots(gridId, dotsId) {
+            // === CAROUSEL PROGRESS BAR ===
+            function initProgress(gridId, barId) {
                 const grid = document.getElementById(gridId);
-                const dots = document.getElementById(dotsId);
-                if (!grid || !dots) return;
-                const cards = grid.children;
-                dots.innerHTML = '';
-                for (let i = 0; i < cards.length; i++) {
-                    const dot = document.createElement('div');
-                    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-                    dot.style.cursor = 'pointer';
-                    dot.addEventListener('click', () => {
-                        const cardWidth = cards[0].offsetWidth + 18;
-                        grid.scrollTo({ left: cardWidth * i, behavior: 'smooth' });
-                    });
-                    dots.appendChild(dot);
+                const bar = document.getElementById(barId);
+                if (!grid || !bar) return;
+
+                const progress = document.createElement('div');
+                progress.className = 'carousel-progress';
+                bar.appendChild(progress);
+
+                function update() {
+                    const maxScroll = grid.scrollWidth - grid.clientWidth;
+                    if (maxScroll <= 0) {
+                        bar.style.display = 'none';
+                        return;
+                    }
+                    const ratio = grid.scrollLeft / maxScroll;
+                    const cards = grid.children.length;
+                    const segmentWidth = 100 / cards;
+                    progress.style.width = segmentWidth + '%';
+                    progress.style.left = (ratio * (100 - segmentWidth)) + '%';
                 }
-                grid.addEventListener('scroll', () => {
-                    const scrollLeft = grid.scrollLeft;
-                    const cardWidth = cards[0].offsetWidth + 18;
-                    const activeIdx = Math.round(scrollLeft / cardWidth);
-                    dots.querySelectorAll('.carousel-dot').forEach((d, i) => {
-                        d.classList.toggle('active', i === activeIdx);
-                    });
-                });
+
+                grid.addEventListener('scroll', update);
+                update();
             }
-            initDots('engCarousel', 'engDots');
-            initDots('pmCarousel', 'pmDots');
+            initProgress('engCarousel', 'engDots');
+            initProgress('pmCarousel', 'pmDots');
         });
     </script>
 </body>
