@@ -4790,6 +4790,7 @@
             let isScrolling = false;
 
             window.addEventListener('wheel', (e) => {
+                if (document.getElementById('projectModal').classList.contains('active')) return;
                 e.preventDefault();
                 if (isScrolling) return;
 
@@ -4832,6 +4833,7 @@
                 }, { passive: true });
 
                 window.addEventListener('touchend', (e) => {
+                    if (document.getElementById('projectModal').classList.contains('active')) return;
                     if (isScrolling) return;
                     const diff = touchStartY - e.changedTouches[0].clientY;
                     if (Math.abs(diff) < 50) return;
