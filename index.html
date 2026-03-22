@@ -3167,11 +3167,12 @@
 
             /* PM cards: centered with peek on both sides */
             .landing-pm-grid {
-                padding: 4px calc((100% - 85%) / 2);
+                padding: 4px calc((100% - 70%) / 2);
+                scroll-snap-type: x mandatory;
             }
 
             .landing-pm-grid .landing-pm-card {
-                flex: 0 0 85%;
+                flex: 0 0 70%;
                 scroll-snap-align: center;
             }
 
@@ -3191,7 +3192,7 @@
             }
 
             .landing-pm {
-                padding-top: 10px;
+                padding-top: 0;
             }
 
             /* Dot indicators for carousels */
