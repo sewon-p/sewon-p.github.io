@@ -3128,14 +3128,23 @@
                 padding: 20px;
             }
 
-            /* Mobile: engineering card full width */
+            /* Mobile: 1 card at a time, centered */
             .landing-feature-grid {
-                padding: 4px 0;
+                padding: 4px calc((100% - 85%) / 2);
             }
 
             .landing-feature-grid .landing-feature-card {
+                flex: 0 0 85%;
+                scroll-snap-align: center;
+            }
+
+            .landing-pm-grid .landing-pm-card {
                 flex: 0 0 calc(100% - 16px);
-                scroll-snap-align: start;
+            }
+
+            /* Hide desktop carousel arrows on mobile */
+            .carousel-arrow {
+                display: none;
             }
 
             .carousel-btn {
@@ -3192,11 +3201,13 @@
             }
 
             .landing-pm {
-                padding-top: 0;
+                padding-top: 10px;
             }
 
             /* Dot indicators for carousels */
-            /* (carousel dots already visible globally) */
+            .carousel-dots {
+                display: flex;
+            }
 
             /* Mobile overlay */
             .mobile-overlay {
