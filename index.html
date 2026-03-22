@@ -3165,15 +3165,10 @@
                 display: none;
             }
 
-            /* PM cards: centered with peek on both sides */
-            .landing-pm-grid {
-                padding: 4px calc((100% - 70%) / 2);
-                scroll-snap-type: x mandatory;
-            }
-
+            /* PM cards: full width on mobile */
             .landing-pm-grid .landing-pm-card {
-                flex: 0 0 70%;
-                scroll-snap-align: center;
+                flex: 0 0 calc(100% - 16px);
+                scroll-snap-align: start;
             }
 
             .pm-card-emoji {
