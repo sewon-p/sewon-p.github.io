@@ -2923,7 +2923,7 @@
         }
 
         .carousel-dots {
-            display: none;
+            display: flex;
             justify-content: center;
             gap: 8px;
             margin-top: 16px;
@@ -2978,6 +2978,7 @@
         }
 
         .carousel-btn {
+            display: none;
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
@@ -2990,7 +2991,6 @@
             color: var(--dark);
             font-size: 1.1rem;
             cursor: pointer;
-            display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
@@ -3130,10 +3130,7 @@
                 flex: 0 0 calc(100% - 16px);
             }
 
-            /* Hide desktop carousel arrows on mobile */
-            .carousel-arrow {
-                display: none;
-            }
+            /* (carousel arrows already hidden globally) */
 
             /* Hide detail elements on mobile */
             .feature-points,
@@ -3189,9 +3186,7 @@
             }
 
             /* Dot indicators for carousels */
-            .carousel-dots {
-                display: flex;
-            }
+            /* (carousel dots already visible globally) */
 
             /* Mobile overlay */
             .mobile-overlay {
@@ -4814,6 +4809,11 @@
                 for (let i = 0; i < cards.length; i++) {
                     const dot = document.createElement('div');
                     dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                    dot.style.cursor = 'pointer';
+                    dot.addEventListener('click', () => {
+                        const cardWidth = cards[0].offsetWidth + 18;
+                        grid.scrollTo({ left: cardWidth * i, behavior: 'smooth' });
+                    });
                     dots.appendChild(dot);
                 }
                 grid.addEventListener('scroll', () => {
