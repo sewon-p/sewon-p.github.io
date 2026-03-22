@@ -2876,38 +2876,70 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(43, 45, 66, 0.55);
+            background: rgba(43, 45, 66, 0.7);
             z-index: 9999;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 24px;
-        }
-
-        .mobile-overlay-box {
-            background: white;
-            border-radius: 16px;
-            padding: 32px 24px;
-            text-align: center;
-            max-width: 320px;
-            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
-        }
-
-        .mobile-overlay-box p {
-            font-size: 0.88rem;
-            color: var(--dark);
-            line-height: 1.6;
-            margin: 0 0 20px;
-        }
-
-        .mobile-overlay-box button {
-            background: var(--dark);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 24px;
-            font-size: 0.85rem;
-            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
             cursor: pointer;
+        }
+
+        .mobile-overlay-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .mobile-overlay-msg {
+            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        .mobile-overlay-scroll-hint {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        .mobile-overlay-arrow {
+            font-size: 1.2rem;
+            animation: bounceDown 1.5s infinite;
+        }
+
+        @keyframes bounceDown {
+            0%, 100% { transform: translateY(0); opacity: 0.6; }
+            50% { transform: translateY(8px); opacity: 1; }
+        }
+
+        .carousel-dots {
+            display: none;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--surface-border);
+            transition: all 0.2s;
+        }
+
+        .carousel-dot.active {
+            background: var(--accent);
+            width: 20px;
+            border-radius: 4px;
         }
 
         .landing-feature-card:hover {
@@ -3136,6 +3168,16 @@
                 margin: 16px 0;
             }
 
+            /* Reduce hero top space (header hidden) */
+            .landing-hero {
+                padding-top: 24px;
+            }
+
+            /* Dot indicators for carousels */
+            .carousel-dots {
+                display: flex;
+            }
+
             /* Mobile overlay */
             .mobile-overlay {
                 display: flex;
@@ -3147,10 +3189,13 @@
 <body>
 
     <!-- Mobile overlay -->
-    <div class="mobile-overlay" id="mobileOverlay">
-        <div class="mobile-overlay-box">
-            <p>This portfolio is abbreviated on mobile.<br>For full project details, please view on desktop.</p>
-            <button onclick="document.getElementById('mobileOverlay').style.display='none'">Got it</button>
+    <div class="mobile-overlay" id="mobileOverlay" onclick="this.style.display='none'">
+        <div class="mobile-overlay-content">
+            <p class="mobile-overlay-msg">This portfolio is abbreviated on mobile.<br>For full details, please view on desktop.</p>
+            <div class="mobile-overlay-scroll-hint">
+                <span>Scroll to continue</span>
+                <span class="mobile-overlay-arrow">↓</span>
+            </div>
         </div>
     </div>
 
@@ -3299,6 +3344,7 @@
                     <button class="carousel-btn carousel-next disabled" id="engCarouselNext"
                         onclick="scrollEngCarousel(1)">→</button>
                 </div>
+                <div class="carousel-dots" id="engDots"></div>
                 <div class="section-cta-wrap">
                     <a href="#pm-cases" class="hero-cta">Product & Strategy Cases <span
                             class="hero-cta-arrow">↓</span></a>
@@ -3370,6 +3416,7 @@
                     </div>
                     <button class="carousel-btn carousel-next" id="carouselNext" onclick="scrollCarousel(1)">→</button>
                 </div>
+                <div class="carousel-dots" id="pmDots"></div>
             </div>
         </section>
     </main>
@@ -4700,12 +4747,65 @@
                         if (s.id && href === '#' + s.id) currentSection = i;
                         else if (s.querySelector(href)) currentSection = i;
                     });
-                    // Also match by section class
                     if (href === '#projects') currentSection = 1;
                     if (href === '#pm-cases') currentSection = 2;
                     if (href === '#hero') currentSection = 0;
                 });
             });
+
+            // === MOBILE: touch snap between sections ===
+            if (isMobile) {
+                let touchStartY = 0;
+                window.addEventListener('touchstart', (e) => {
+                    touchStartY = e.touches[0].clientY;
+                }, { passive: true });
+
+                window.addEventListener('touchend', (e) => {
+                    if (isScrolling) return;
+                    const diff = touchStartY - e.changedTouches[0].clientY;
+                    if (Math.abs(diff) < 50) return;
+
+                    if (diff > 0 && currentSection < sections.length - 1) {
+                        currentSection++;
+                        isScrolling = true;
+                        sections[currentSection].scrollIntoView({ behavior: 'smooth' });
+                        setTimeout(() => { isScrolling = false; }, 800);
+                    } else if (diff < 0 && currentSection > 0) {
+                        currentSection--;
+                        isScrolling = true;
+                        if (currentSection === 0) {
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        } else {
+                            sections[currentSection].scrollIntoView({ behavior: 'smooth' });
+                        }
+                        setTimeout(() => { isScrolling = false; }, 800);
+                    }
+                }, { passive: true });
+            }
+
+            // === CAROUSEL DOTS ===
+            function initDots(gridId, dotsId) {
+                const grid = document.getElementById(gridId);
+                const dots = document.getElementById(dotsId);
+                if (!grid || !dots) return;
+                const cards = grid.children;
+                dots.innerHTML = '';
+                for (let i = 0; i < cards.length; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                    dots.appendChild(dot);
+                }
+                grid.addEventListener('scroll', () => {
+                    const scrollLeft = grid.scrollLeft;
+                    const cardWidth = cards[0].offsetWidth + 18;
+                    const activeIdx = Math.round(scrollLeft / cardWidth);
+                    dots.querySelectorAll('.carousel-dot').forEach((d, i) => {
+                        d.classList.toggle('active', i === activeIdx);
+                    });
+                });
+            }
+            initDots('engCarousel', 'engDots');
+            initDots('pmCarousel', 'pmDots');
         });
     </script>
 </body>
