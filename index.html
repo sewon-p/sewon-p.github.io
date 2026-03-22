@@ -12,6 +12,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no">
     <title>Sewon Park — Portfolio</title>
     <!-- Spline Viewer Script -->
     <script type="module" src="https://unpkg.com/@splinetool/viewer/build/spline-viewer.js"></script>
@@ -2832,6 +2833,8 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
             padding: 4px 0;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
         }
 
         .landing-feature-grid::-webkit-scrollbar {
@@ -2938,6 +2941,8 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
             padding: 4px 0;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
         }
 
         .landing-pm-grid::-webkit-scrollbar {
@@ -3024,6 +3029,20 @@
             .landing-pm-card,
             .landing-insight-card {
                 padding: 20px;
+            }
+
+            /* Mobile: 1 card at a time */
+            .landing-feature-grid .landing-feature-card {
+                flex: 0 0 calc(100% - 16px);
+            }
+
+            .landing-pm-grid .landing-pm-card {
+                flex: 0 0 calc(100% - 16px);
+            }
+
+            /* Hide desktop carousel arrows on mobile */
+            .carousel-arrow {
+                display: none;
             }
         }
     </style>
