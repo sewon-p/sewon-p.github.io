@@ -2933,12 +2933,19 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--surface-border);
-            transition: all 0.2s;
+            background: var(--muted);
+            opacity: 0.4;
+            transition: all 0.25s;
+            cursor: pointer;
+        }
+
+        .carousel-dot:hover {
+            opacity: 0.7;
         }
 
         .carousel-dot.active {
             background: var(--accent);
+            opacity: 1;
             width: 20px;
             border-radius: 4px;
         }
@@ -2978,7 +2985,7 @@
         }
 
         .carousel-btn {
-            display: none;
+            display: flex;
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
@@ -3130,7 +3137,9 @@
                 flex: 0 0 calc(100% - 16px);
             }
 
-            /* (carousel arrows already hidden globally) */
+            .carousel-btn {
+                display: none;
+            }
 
             /* Hide detail elements on mobile */
             .feature-points,
