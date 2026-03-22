@@ -2876,7 +2876,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(43, 45, 66, 0.85);
+            background: rgba(43, 45, 66, 0.7);
             z-index: 9999;
             flex-direction: column;
             justify-content: center;
@@ -2896,10 +2896,9 @@
         .mobile-overlay-msg {
             font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
             font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.95);
+            color: rgba(255, 255, 255, 0.9);
             line-height: 1.7;
             margin: 0;
-            font-weight: 700;
         }
 
         .mobile-overlay-scroll-hint {
@@ -2923,7 +2922,7 @@
         }
 
         .carousel-dots {
-            display: flex;
+            display: none;
             justify-content: center;
             gap: 8px;
             margin-top: 16px;
@@ -2978,7 +2977,6 @@
         }
 
         .carousel-btn {
-            display: none;
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
@@ -2991,6 +2989,7 @@
             color: var(--dark);
             font-size: 1.1rem;
             cursor: pointer;
+            display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
@@ -3116,21 +3115,19 @@
                 padding: 20px;
             }
 
-            /* Mobile: 1 card at a time, centered */
-            .landing-feature-grid {
-                padding: 4px calc((100% - 85%) / 2);
-            }
-
+            /* Mobile: 1 card at a time */
             .landing-feature-grid .landing-feature-card {
-                flex: 0 0 85%;
-                scroll-snap-align: center;
+                flex: 0 0 calc(100% - 16px);
             }
 
             .landing-pm-grid .landing-pm-card {
                 flex: 0 0 calc(100% - 16px);
             }
 
-            /* (carousel arrows already hidden globally) */
+            /* Hide desktop carousel arrows on mobile */
+            .carousel-arrow {
+                display: none;
+            }
 
             /* Hide detail elements on mobile */
             .feature-points,
@@ -3157,8 +3154,8 @@
 
             /* PM cards: centered with peek on both sides */
             .landing-pm-grid {
-                padding: 4px calc((100% - 70%) / 2);
-                scroll-snap-type: x mandatory;
+                padding: 4px 12px;
+                scroll-padding: 0 calc((100% - 70%) / 2);
             }
 
             .landing-pm-grid .landing-pm-card {
@@ -3176,17 +3173,15 @@
                 padding-top: 24px;
             }
 
-            /* Reduce section top padding on mobile */
-            .landing-featured {
-                padding-top: 40px;
-            }
-
+            /* Reduce PM section top padding */
             .landing-pm {
-                padding-top: 10px;
+                padding-top: 0;
             }
 
             /* Dot indicators for carousels */
-            /* (carousel dots already visible globally) */
+            .carousel-dots {
+                display: flex;
+            }
 
             /* Mobile overlay */
             .mobile-overlay {
@@ -3203,7 +3198,7 @@
         <div class="mobile-overlay-content">
             <p class="mobile-overlay-msg">This portfolio is abbreviated on mobile.<br>For full details, please view on desktop.</p>
             <div class="mobile-overlay-scroll-hint">
-                <span>Touch to continue</span>
+                <span>Scroll to continue</span>
                 <span class="mobile-overlay-arrow">↓</span>
             </div>
         </div>
@@ -4766,20 +4761,14 @@
             // === MOBILE: touch snap between sections ===
             if (isMobile) {
                 let touchStartY = 0;
-                let touchStartX = 0;
                 window.addEventListener('touchstart', (e) => {
                     touchStartY = e.touches[0].clientY;
-                    touchStartX = e.touches[0].clientX;
                 }, { passive: true });
 
                 window.addEventListener('touchend', (e) => {
                     if (isScrolling) return;
-                    const diffY = touchStartY - e.changedTouches[0].clientY;
-                    const diffX = Math.abs(touchStartX - e.changedTouches[0].clientX);
-                    // Ignore horizontal swipes (carousel) and small gestures
-                    if (diffX > Math.abs(diffY)) return;
-                    if (Math.abs(diffY) < 50) return;
-                    const diff = diffY;
+                    const diff = touchStartY - e.changedTouches[0].clientY;
+                    if (Math.abs(diff) < 50) return;
 
                     if (diff > 0 && currentSection < sections.length - 1) {
                         currentSection++;
@@ -4809,11 +4798,6 @@
                 for (let i = 0; i < cards.length; i++) {
                     const dot = document.createElement('div');
                     dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-                    dot.style.cursor = 'pointer';
-                    dot.addEventListener('click', () => {
-                        const cardWidth = cards[0].offsetWidth + 18;
-                        grid.scrollTo({ left: cardWidth * i, behavior: 'smooth' });
-                    });
                     dots.appendChild(dot);
                 }
                 grid.addEventListener('scroll', () => {
