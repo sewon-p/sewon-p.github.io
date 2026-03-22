@@ -2932,22 +2932,24 @@
         }
 
         .carousel-dots {
-            position: relative;
-            height: 6px;
-            background: var(--surface-border);
-            border-radius: 6px;
-            max-width: 200px;
-            margin: 16px auto 0;
+            display: none;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
         }
 
-        .carousel-progress {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--surface-border);
+            transition: all 0.2s;
+        }
+
+        .carousel-dot.active {
             background: var(--accent);
-            border-radius: 6px;
-            transition: left 0.25s, width 0.25s;
+            width: 20px;
+            border-radius: 4px;
         }
 
         .landing-feature-card:hover {
@@ -3126,6 +3128,11 @@
             .landing-pm-card,
             .landing-insight-card {
                 padding: 20px;
+            }
+
+            /* Reduce CTA button margins on mobile */
+            .section-cta-wrap {
+                margin: 12px 0;
             }
 
             /* Mobile: engineering card full width */
@@ -4807,34 +4814,29 @@
                 }, { passive: true });
             }
 
-            // === CAROUSEL PROGRESS BAR ===
-            function initProgress(gridId, barId) {
+            // === CAROUSEL DOTS ===
+            function initDots(gridId, dotsId) {
                 const grid = document.getElementById(gridId);
-                const bar = document.getElementById(barId);
-                if (!grid || !bar) return;
-
-                const progress = document.createElement('div');
-                progress.className = 'carousel-progress';
-                bar.appendChild(progress);
-
-                function update() {
-                    const maxScroll = grid.scrollWidth - grid.clientWidth;
-                    if (maxScroll <= 0) {
-                        bar.style.display = 'none';
-                        return;
-                    }
-                    const ratio = grid.scrollLeft / maxScroll;
-                    const cards = grid.children.length;
-                    const segmentWidth = 100 / cards;
-                    progress.style.width = segmentWidth + '%';
-                    progress.style.left = (ratio * (100 - segmentWidth)) + '%';
+                const dots = document.getElementById(dotsId);
+                if (!grid || !dots) return;
+                const cards = grid.children;
+                dots.innerHTML = '';
+                for (let i = 0; i < cards.length; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                    dots.appendChild(dot);
                 }
-
-                grid.addEventListener('scroll', update);
-                update();
+                grid.addEventListener('scroll', () => {
+                    const scrollLeft = grid.scrollLeft;
+                    const cardWidth = cards[0].offsetWidth + 18;
+                    const activeIdx = Math.round(scrollLeft / cardWidth);
+                    dots.querySelectorAll('.carousel-dot').forEach((d, i) => {
+                        d.classList.toggle('active', i === activeIdx);
+                    });
+                });
             }
-            initProgress('engCarousel', 'engDots');
-            initProgress('pmCarousel', 'pmDots');
+            initDots('engCarousel', 'engDots');
+            initDots('pmCarousel', 'pmDots');
         });
     </script>
 </body>
