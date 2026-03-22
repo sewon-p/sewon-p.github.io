@@ -2947,24 +2947,24 @@
         }
 
         .carousel-dots {
-            display: none;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 16px;
-        }
-
-        .carousel-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
+            display: flex;
+            position: relative;
+            height: 6px;
             background: var(--surface-border);
-            transition: all 0.2s;
+            border-radius: 6px;
+            max-width: 200px;
+            margin: 16px auto 0;
+            overflow: hidden;
         }
 
-        .carousel-dot.active {
+        .carousel-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
             background: var(--accent);
-            width: 20px;
-            border-radius: 4px;
+            border-radius: 6px;
+            transition: left 0.3s ease, width 0.3s ease;
         }
 
         .landing-feature-card:hover {
@@ -3208,6 +3208,11 @@
                 scroll-margin-top: -55px;
             }
 
+            /* Hide modal link on mobile */
+            .pm-card-link {
+                display: none;
+            }
+
             /* Remove carousel arrow space + side padding on mobile */
             .carousel-wrap {
                 padding: 0;
@@ -3242,9 +3247,34 @@
                 margin: 55px 0 16px;
             }
 
-            /* Dot indicators for carousels */
+            /* Dot indicators for carousels - override to dots on mobile */
             .carousel-dots {
                 display: flex;
+                height: auto;
+                background: none;
+                max-width: none;
+                overflow: visible;
+                gap: 8px;
+                justify-content: center;
+            }
+
+            .carousel-progress {
+                display: none;
+            }
+
+            .carousel-dot {
+                display: block;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--surface-border);
+                transition: all 0.2s;
+            }
+
+            .carousel-dot.active {
+                background: var(--accent);
+                width: 20px;
+                border-radius: 4px;
             }
 
             /* Mobile overlay */
@@ -4856,29 +4886,49 @@
                 }, { passive: true });
             }
 
-            // === CAROUSEL DOTS ===
-            function initDots(gridId, dotsId) {
+            // === CAROUSEL INDICATOR ===
+            function initCarouselIndicator(gridId, barId) {
                 const grid = document.getElementById(gridId);
-                const dots = document.getElementById(dotsId);
-                if (!grid || !dots) return;
-                const cards = grid.children;
-                dots.innerHTML = '';
-                for (let i = 0; i < cards.length; i++) {
-                    const dot = document.createElement('div');
-                    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-                    dots.appendChild(dot);
-                }
-                grid.addEventListener('scroll', () => {
-                    const scrollLeft = grid.scrollLeft;
-                    const cardWidth = cards[0].offsetWidth + 18;
-                    const activeIdx = Math.round(scrollLeft / cardWidth);
-                    dots.querySelectorAll('.carousel-dot').forEach((d, i) => {
-                        d.classList.toggle('active', i === activeIdx);
+                const bar = document.getElementById(barId);
+                if (!grid || !bar) return;
+
+                if (isMobile) {
+                    // Mobile: dots
+                    const cards = grid.children;
+                    bar.innerHTML = '';
+                    for (let i = 0; i < cards.length; i++) {
+                        const dot = document.createElement('div');
+                        dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                        bar.appendChild(dot);
+                    }
+                    grid.addEventListener('scroll', () => {
+                        const cardWidth = cards[0].offsetWidth + 18;
+                        const activeIdx = Math.round(grid.scrollLeft / cardWidth);
+                        bar.querySelectorAll('.carousel-dot').forEach((d, i) => {
+                            d.classList.toggle('active', i === activeIdx);
+                        });
                     });
-                });
+                } else {
+                    // PC: progress bar
+                    bar.innerHTML = '';
+                    const progress = document.createElement('div');
+                    progress.className = 'carousel-progress';
+                    bar.appendChild(progress);
+                    function update() {
+                        const maxScroll = grid.scrollWidth - grid.clientWidth;
+                        if (maxScroll <= 0) { bar.style.display = 'none'; return; }
+                        const ratio = grid.scrollLeft / maxScroll;
+                        const cards = grid.children.length;
+                        const segW = 100 / cards;
+                        progress.style.width = segW + '%';
+                        progress.style.left = (ratio * (100 - segW)) + '%';
+                    }
+                    grid.addEventListener('scroll', update);
+                    update();
+                }
             }
-            initDots('engCarousel', 'engDots');
-            initDots('pmCarousel', 'pmDots');
+            initCarouselIndicator('engCarousel', 'engDots');
+            initCarouselIndicator('pmCarousel', 'pmDots');
         });
     </script>
 </body>
