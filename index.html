@@ -2832,16 +2832,7 @@
             scroll-behavior: smooth;
             -ms-overflow-style: none;
             scrollbar-width: none;
-            padding: 16px 0;
-            cursor: grab;
-        }
-
-        .landing-feature-grid:active {
-            cursor: grabbing;
-        }
-
-        .landing-feature-grid-future {
-            /* placeholder: same grid styles, ready when more cards are added */
+            padding: 4px 0;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-x;
         }
@@ -2987,7 +2978,6 @@
         }
 
         .carousel-btn {
-            display: flex;
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
@@ -3000,6 +2990,7 @@
             color: var(--dark);
             font-size: 1.1rem;
             cursor: pointer;
+            display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
@@ -3034,14 +3025,9 @@
             scroll-behavior: smooth;
             -ms-overflow-style: none;
             scrollbar-width: none;
-            padding: 16px 0;
+            padding: 4px 0;
             -webkit-overflow-scrolling: touch;
             touch-action: pan-x;
-            cursor: grab;
-        }
-
-        .landing-pm-grid:active {
-            cursor: grabbing;
         }
 
         .landing-pm-grid::-webkit-scrollbar {
@@ -3130,26 +3116,23 @@
                 padding: 20px;
             }
 
-            /* Reduce CTA button margins on mobile */
-            .section-cta-wrap {
-                margin: 8px 0;
-            }
-
-            /* Mobile: engineering card full width */
+            /* Mobile: 1 card at a time, centered */
             .landing-feature-grid {
-                display: flex !important;
-                grid-template-columns: none !important;
-                padding: 12px 0;
+                padding: 4px calc((100% - 85%) / 2);
             }
 
             .landing-feature-grid .landing-feature-card {
+                flex: 0 0 85%;
+                scroll-snap-align: center;
+            }
+
+            .landing-pm-grid .landing-pm-card {
                 flex: 0 0 calc(100% - 16px);
-                scroll-snap-align: start;
             }
 
             /* Hide desktop carousel arrows on mobile */
-            .carousel-btn {
-                display: none !important;
+            .carousel-arrow {
+                display: none;
             }
 
             /* Hide detail elements on mobile */
@@ -3177,14 +3160,12 @@
 
             /* PM cards: centered with peek on both sides */
             .landing-pm-grid {
-                display: flex !important;
-                grid-template-columns: none !important;
-                padding: 12px calc((100% - 80%) / 2) !important;
+                padding: 4px calc((100% - 70%) / 2);
                 scroll-snap-type: x mandatory;
             }
 
             .landing-pm-grid .landing-pm-card {
-                flex: 0 0 80% !important;
+                flex: 0 0 70%;
                 scroll-snap-align: center;
             }
 
@@ -3204,7 +3185,7 @@
             }
 
             .landing-pm {
-                padding-top: 4px;
+                padding-top: 10px;
             }
 
             /* Dot indicators for carousels */
