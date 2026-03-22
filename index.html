@@ -3132,17 +3132,24 @@
 
             /* Reduce CTA button margins on mobile */
             .section-cta-wrap {
-                margin: 12px 0;
+                margin: 8px 0;
             }
 
             /* Mobile: engineering card full width */
+            .landing-feature-grid {
+                display: flex !important;
+                grid-template-columns: none !important;
+                padding: 12px 0;
+            }
+
             .landing-feature-grid .landing-feature-card {
                 flex: 0 0 calc(100% - 16px);
+                scroll-snap-align: start;
             }
 
             /* Hide desktop carousel arrows on mobile */
             .carousel-btn {
-                display: none;
+                display: none !important;
             }
 
             /* Hide detail elements on mobile */
@@ -3170,12 +3177,14 @@
 
             /* PM cards: centered with peek on both sides */
             .landing-pm-grid {
-                padding: 4px calc((100% - 70%) / 2);
+                display: flex !important;
+                grid-template-columns: none !important;
+                padding: 12px calc((100% - 80%) / 2) !important;
                 scroll-snap-type: x mandatory;
             }
 
             .landing-pm-grid .landing-pm-card {
-                flex: 0 0 70%;
+                flex: 0 0 80% !important;
                 scroll-snap-align: center;
             }
 
@@ -3195,7 +3204,7 @@
             }
 
             .landing-pm {
-                padding-top: 10px;
+                padding-top: 4px;
             }
 
             /* Dot indicators for carousels */
