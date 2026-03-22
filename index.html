@@ -2858,6 +2858,17 @@
             box-shadow: none;
         }
 
+        .mobile-brief-notice {
+            display: none;
+            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-left: 2px solid var(--accent);
+            line-height: 1.5;
+        }
+
         .landing-feature-card:hover {
             border-color: rgba(239, 35, 60, 0.38);
             box-shadow: 0 24px 44px rgba(43, 45, 66, 0.09);
@@ -3044,6 +3055,34 @@
             .carousel-arrow {
                 display: none;
             }
+
+            /* Hide detail elements on mobile */
+            .feature-points,
+            .feature-tags,
+            .feature-stats {
+                display: none;
+            }
+
+            /* Mobile-only brief notice */
+            .mobile-brief-notice {
+                display: block;
+            }
+
+            /* Tagline: allow wrap only */
+            .hero-tagline {
+                white-space: normal;
+                word-break: keep-all;
+            }
+
+            /* PM cards: narrower */
+            .landing-pm-grid .landing-pm-card {
+                flex: 0 0 calc(70% - 16px);
+            }
+
+            .pm-card-emoji {
+                font-size: 3.5rem;
+                margin: 16px 0;
+            }
         }
     </style>
 </head>
@@ -3114,6 +3153,7 @@
                                 Natural-language traffic requests are converted into structured SUMO scenarios through
                                 fine-tuned extraction, base-model reasoning, validation, and correction logging.
                             </p>
+                            <p class="mobile-brief-notice">Abbreviated for mobile — view on desktop for full details.</p>
                             <ul class="feature-points" id="feature-llm-points">
                                 <li>Natural language to structured traffic parameters</li>
                                 <li>Role-separated model and tool orchestration</li>
@@ -3158,6 +3198,7 @@
                                 A full mobility ML system that combines simulation-based labeling, feature engineering,
                                 model comparison, online inference, GIS matching, dashboards, and cloud deployment.
                             </p>
+                            <p class="mobile-brief-notice">Abbreviated for mobile — view on desktop for full details.</p>
                             <ul class="feature-points" id="feature-ml-points">
                                 <li>Simulation to labeling to model serving as one system</li>
                                 <li>Real-time mobile telemetry ingestion and spatial matching</li>
@@ -4546,7 +4587,8 @@
             // === ALWAYS start at hero ===
             history.scrollRestoration = 'manual';
             document.documentElement.style.scrollSnapType = 'none';
-            window.scrollTo({ top: 50, behavior: 'instant' });
+            const isMobile = window.innerWidth <= 640;
+            window.scrollTo({ top: isMobile ? 0 : 50, behavior: 'instant' });
             requestAnimationFrame(() => {
                 document.documentElement.style.scrollSnapType = 'y mandatory';
             });
@@ -4578,7 +4620,7 @@
                     currentSection--;
                     isScrolling = true;
                     if (currentSection === 0) {
-                        window.scrollTo({ top: 50, behavior: 'smooth' });
+                        window.scrollTo({ top: window.innerWidth <= 640 ? 0 : 50, behavior: 'smooth' });
                     } else {
                         sections[currentSection].scrollIntoView({ behavior: 'smooth' });
                     }
