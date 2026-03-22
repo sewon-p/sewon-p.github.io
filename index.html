@@ -4718,6 +4718,7 @@
 
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
+            document.documentElement.style.scrollSnapType = 'none';
 
             setTimeout(() => {
                 // Initialize Spline Lazy Loading
@@ -4734,6 +4735,7 @@
 
             modal.classList.remove('active');
             document.body.style.overflow = 'auto';
+            document.documentElement.style.scrollSnapType = 'y mandatory';
             window.currentProjectId = null;
 
             // Cleanup: Remove content to kill WebGL context
