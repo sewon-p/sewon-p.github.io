@@ -3116,9 +3116,14 @@
                 padding: 20px;
             }
 
-            /* Mobile: 1 card at a time */
+            /* Mobile: 1 card at a time, centered */
+            .landing-feature-grid {
+                padding: 4px calc((100% - 85%) / 2);
+            }
+
             .landing-feature-grid .landing-feature-card {
-                flex: 0 0 calc(100% - 16px);
+                flex: 0 0 85%;
+                scroll-snap-align: center;
             }
 
             .landing-pm-grid .landing-pm-card {
@@ -3155,8 +3160,8 @@
 
             /* PM cards: centered with peek on both sides */
             .landing-pm-grid {
-                padding: 4px 12px;
-                scroll-padding: 0 calc((100% - 70%) / 2);
+                padding: 4px calc((100% - 70%) / 2);
+                scroll-snap-type: x mandatory;
             }
 
             .landing-pm-grid .landing-pm-card {
