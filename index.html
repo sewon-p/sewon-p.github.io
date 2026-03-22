@@ -3180,7 +3180,7 @@
             }
 
             .landing-pm {
-                padding-top: 20px;
+                padding-top: 10px;
             }
 
             /* Dot indicators for carousels */
@@ -4766,14 +4766,20 @@
             // === MOBILE: touch snap between sections ===
             if (isMobile) {
                 let touchStartY = 0;
+                let touchStartX = 0;
                 window.addEventListener('touchstart', (e) => {
                     touchStartY = e.touches[0].clientY;
+                    touchStartX = e.touches[0].clientX;
                 }, { passive: true });
 
                 window.addEventListener('touchend', (e) => {
                     if (isScrolling) return;
-                    const diff = touchStartY - e.changedTouches[0].clientY;
-                    if (Math.abs(diff) < 50) return;
+                    const diffY = touchStartY - e.changedTouches[0].clientY;
+                    const diffX = Math.abs(touchStartX - e.changedTouches[0].clientX);
+                    // Ignore horizontal swipes (carousel) and small gestures
+                    if (diffX > Math.abs(diffY)) return;
+                    if (Math.abs(diffY) < 50) return;
+                    const diff = diffY;
 
                     if (diff > 0 && currentSection < sections.length - 1) {
                         currentSection++;
