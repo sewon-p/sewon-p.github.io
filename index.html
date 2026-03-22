@@ -42,9 +42,18 @@
         }
 
         html {
-            scroll-behavior: smooth;
             scroll-snap-type: y mandatory;
             overflow-y: scroll;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        html::-webkit-scrollbar {
+            display: none;
+        }
+
+        html::-webkit-scrollbar {
+            display: none;
         }
 
         /* Hide Scrollbar but keep functionality */
@@ -2594,6 +2603,7 @@
             padding: 100px 0 38px;
             min-height: 100vh;
             scroll-snap-align: start;
+            scroll-snap-stop: always;
             display: flex;
             align-items: center;
         }
@@ -2602,6 +2612,7 @@
             padding: 40px 0 110px;
             min-height: 100vh;
             scroll-snap-align: start;
+            scroll-snap-stop: always;
             scroll-margin-top: 10px;
             display: flex;
             align-items: flex-start;
@@ -2620,6 +2631,7 @@
             display: flex;
             align-items: center;
             scroll-snap-align: start;
+            scroll-snap-stop: always;
         }
 
         .hero-block {
@@ -3073,89 +3085,96 @@
                     <h2 class="landing-section-title" id="featured-divider">Featured Engineering Work</h2>
                 </div>
                 <div class="carousel-wrap">
-                    <button class="carousel-btn carousel-prev disabled" id="engCarouselPrev" onclick="scrollEngCarousel(-1)">←</button>
+                    <button class="carousel-btn carousel-prev disabled" id="engCarouselPrev"
+                        onclick="scrollEngCarousel(-1)">←</button>
                     <div class="landing-feature-grid" id="engCarousel">
-                    <article class="landing-feature-card">
-                        <span class="feature-kicker" id="feature-llm-kicker">LLM Workflow</span>
-                        <h2 class="feature-title" id="feature-llm-title">Synthetic Driving Scenario Generation</h2>
-                        <p class="feature-copy" id="feature-llm-copy">
-                            Natural-language traffic requests are converted into structured SUMO scenarios through
-                            fine-tuned extraction, base-model reasoning, validation, and correction logging.
-                        </p>
-                        <ul class="feature-points" id="feature-llm-points">
-                            <li>Natural language to structured traffic parameters</li>
-                            <li>Role-separated model and tool orchestration</li>
-                            <li>Evaluation, correction logging, and retraining export</li>
-                        </ul>
-                        <div class="feature-tags">
-                            <span class="feature-tag">LLM</span>
-                            <span class="feature-tag">SUMO</span>
-                            <span class="feature-tag">Prompt Design</span>
-                            <span class="feature-tag">Evaluation Loop</span>
-                        </div>
-                        <div class="feature-stats">
-                            <div class="feature-stat">
-                                <span class="feature-stat-label">Core Shape</span>
-                                <span class="feature-stat-value" id="feature-llm-stat1">NL → Params → XML</span>
+                        <article class="landing-feature-card">
+                            <span class="feature-kicker" id="feature-llm-kicker">LLM Workflow</span>
+                            <h2 class="feature-title" id="feature-llm-title">Synthetic Driving Scenario Generation</h2>
+                            <p class="feature-copy" id="feature-llm-copy">
+                                Natural-language traffic requests are converted into structured SUMO scenarios through
+                                fine-tuned extraction, base-model reasoning, validation, and correction logging.
+                            </p>
+                            <ul class="feature-points" id="feature-llm-points">
+                                <li>Natural language to structured traffic parameters</li>
+                                <li>Role-separated model and tool orchestration</li>
+                                <li>Evaluation, correction logging, and retraining export</li>
+                            </ul>
+                            <div class="feature-tags">
+                                <span class="feature-tag">LLM</span>
+                                <span class="feature-tag">SUMO</span>
+                                <span class="feature-tag">Prompt Design</span>
+                                <span class="feature-tag">Evaluation Loop</span>
                             </div>
-                            <div class="feature-stat">
-                                <span class="feature-stat-label">Improvement</span>
-                                <span class="feature-stat-value" id="feature-llm-stat2">Correction Logging</span>
+                            <div class="feature-stats">
+                                <div class="feature-stat">
+                                    <span class="feature-stat-label">Core Shape</span>
+                                    <span class="feature-stat-value" id="feature-llm-stat1">NL → Params → XML</span>
+                                </div>
+                                <div class="feature-stat">
+                                    <span class="feature-stat-label">Improvement</span>
+                                    <span class="feature-stat-value" id="feature-llm-stat2">Correction Logging</span>
+                                </div>
+                                <div class="feature-stat">
+                                    <span class="feature-stat-label">Output</span>
+                                    <span class="feature-stat-value" id="feature-llm-stat3">Runnable SUMO
+                                        Artifacts</span>
+                                </div>
                             </div>
-                            <div class="feature-stat">
-                                <span class="feature-stat-label">Output</span>
-                                <span class="feature-stat-value" id="feature-llm-stat3">Runnable SUMO Artifacts</span>
+                            <div class="feature-actions">
+                                <button class="feature-button" id="feature-llm-button"
+                                    onclick="openEngineeringLink('llm')">Preview Pending</button>
+                                <div class="feature-link-note" id="feature-llm-link-note">Project page URL will be
+                                    attached
+                                    after UI alignment.</div>
                             </div>
-                        </div>
-                        <div class="feature-actions">
-                            <button class="feature-button" id="feature-llm-button"
-                                onclick="openEngineeringLink('llm')">Preview Pending</button>
-                            <div class="feature-link-note" id="feature-llm-link-note">Project page URL will be attached
-                                after UI alignment.</div>
-                        </div>
-                    </article>
+                        </article>
 
-                    <article class="landing-feature-card">
-                        <span class="feature-kicker" id="feature-ml-kicker">ML System</span>
-                        <h2 class="feature-title" id="feature-ml-title">UrbanFlow — Real-Time Traffic Density Estimation
-                        </h2>
-                        <p class="feature-copy" id="feature-ml-copy">
-                            A full mobility ML system that combines simulation-based labeling, feature engineering,
-                            model comparison, online inference, GIS matching, dashboards, and cloud deployment.
-                        </p>
-                        <ul class="feature-points" id="feature-ml-points">
-                            <li>Simulation to labeling to model serving as one system</li>
-                            <li>Real-time mobile telemetry ingestion and spatial matching</li>
-                            <li>FastAPI, SQL persistence, streaming, dashboards, and deployment</li>
-                        </ul>
-                        <div class="feature-tags">
-                            <span class="feature-tag">Machine Learning</span>
-                            <span class="feature-tag">FastAPI</span>
-                            <span class="feature-tag">XGBoost</span>
-                            <span class="feature-tag">Cloud Run</span>
-                        </div>
-                        <div class="feature-stats">
-                            <div class="feature-stat">
-                                <span class="feature-stat-label">Samples</span>
-                                <span class="feature-stat-value" id="feature-ml-stat1">176,845</span>
+                        <article class="landing-feature-card">
+                            <span class="feature-kicker" id="feature-ml-kicker">ML System</span>
+                            <h2 class="feature-title" id="feature-ml-title">UrbanFlow — Real-Time Traffic Density
+                                Estimation
+                            </h2>
+                            <p class="feature-copy" id="feature-ml-copy">
+                                A full mobility ML system that combines simulation-based labeling, feature engineering,
+                                model comparison, online inference, GIS matching, dashboards, and cloud deployment.
+                            </p>
+                            <ul class="feature-points" id="feature-ml-points">
+                                <li>Simulation to labeling to model serving as one system</li>
+                                <li>Real-time mobile telemetry ingestion and spatial matching</li>
+                                <li>FastAPI, SQL persistence, streaming, dashboards, and deployment</li>
+                            </ul>
+                            <div class="feature-tags">
+                                <span class="feature-tag">Machine Learning</span>
+                                <span class="feature-tag">FastAPI</span>
+                                <span class="feature-tag">XGBoost</span>
+                                <span class="feature-tag">Cloud Run</span>
                             </div>
-                            <div class="feature-stat">
-                                <span class="feature-stat-label">Features</span>
-                                <span class="feature-stat-value" id="feature-ml-stat2">32 Engineered Signals</span>
+                            <div class="feature-stats">
+                                <div class="feature-stat">
+                                    <span class="feature-stat-label">Samples</span>
+                                    <span class="feature-stat-value" id="feature-ml-stat1">176,845</span>
+                                </div>
+                                <div class="feature-stat">
+                                    <span class="feature-stat-label">Features</span>
+                                    <span class="feature-stat-value" id="feature-ml-stat2">32 Engineered Signals</span>
+                                </div>
+                                <div class="feature-stat">
+                                    <span class="feature-stat-label">Serving</span>
+                                    <span class="feature-stat-value" id="feature-ml-stat3">Realtime Inference
+                                        Stack</span>
+                                </div>
                             </div>
-                            <div class="feature-stat">
-                                <span class="feature-stat-label">Serving</span>
-                                <span class="feature-stat-value" id="feature-ml-stat3">Realtime Inference Stack</span>
+                            <div class="feature-actions">
+                                <button class="feature-button" id="feature-ml-button"
+                                    onclick="openEngineeringLink('ml')">Open Live Project</button>
+                                <div class="feature-link-note" id="feature-ml-link-note">Live portfolio available now.
+                                </div>
                             </div>
-                        </div>
-                        <div class="feature-actions">
-                            <button class="feature-button" id="feature-ml-button"
-                                onclick="openEngineeringLink('ml')">Open Live Project</button>
-                            <div class="feature-link-note" id="feature-ml-link-note">Live portfolio available now.</div>
-                        </div>
-                    </article>
+                        </article>
                     </div>
-                    <button class="carousel-btn carousel-next disabled" id="engCarouselNext" onclick="scrollEngCarousel(1)">→</button>
+                    <button class="carousel-btn carousel-next disabled" id="engCarouselNext"
+                        onclick="scrollEngCarousel(1)">→</button>
                 </div>
                 <div class="section-cta-wrap">
                     <a href="#pm-cases" class="hero-cta">Product & Strategy Cases <span
@@ -3178,7 +3197,8 @@
                     decision-making, and stakeholder alignment. They're the proof that I think beyond code.
                 </p>
                 <div class="carousel-wrap">
-                    <button class="carousel-btn carousel-prev disabled" id="carouselPrev" onclick="scrollCarousel(-1)">←</button>
+                    <button class="carousel-btn carousel-prev disabled" id="carouselPrev"
+                        onclick="scrollCarousel(-1)">←</button>
                     <div class="landing-pm-grid" id="pmCarousel">
                         <article class="landing-pm-card">
                             <span class="pm-index">PM Case 05</span>
@@ -3193,7 +3213,8 @@
                             <span class="pm-card-meta">Cross-Border Strategy</span>
                             <div class="pm-card-emoji">✈️</div>
                             <h3 class="pm-card-title">Cross-border Commerce & Fintech Ecosystem</h3>
-                            <p class="pm-card-copy" id="nav-p1-desc">Cross-border pricing gap analysis and a B2B pivot strategy built from market validation and operating-flow design.</p>
+                            <p class="pm-card-copy" id="nav-p1-desc">Cross-border pricing gap analysis and a B2B pivot
+                                strategy built from market validation and operating-flow design.</p>
                             <span class="pm-card-link">View Detailed Case ↗</span>
                         </article>
                         <article class="landing-pm-card" onclick="openModal(2)">
@@ -3201,7 +3222,8 @@
                             <span class="pm-card-meta">Logistics Concept</span>
                             <div class="pm-card-emoji">🚚</div>
                             <h3 class="pm-card-title">Hyper-local P2P Delivery</h3>
-                            <p class="pm-card-copy" id="nav-p2-desc">A route-based campus delivery concept using OR-Tools, last-mile logic, and incentive design to reduce cost and distance.</p>
+                            <p class="pm-card-copy" id="nav-p2-desc">A route-based campus delivery concept using
+                                OR-Tools, last-mile logic, and incentive design to reduce cost and distance.</p>
                             <span class="pm-card-link">View Detailed Case ↗</span>
                         </article>
                         <article class="landing-pm-card" onclick="openModal(3)">
@@ -3209,7 +3231,8 @@
                             <span class="pm-card-meta">Internship / UX</span>
                             <div class="pm-card-emoji">💹</div>
                             <h3 class="pm-card-title">Digital Asset Trading & UX Strategy</h3>
-                            <p class="pm-card-copy" id="nav-p3-desc">An internship case focused on trading UX, misclick risk reduction, and interface clarity for high-stakes financial actions.</p>
+                            <p class="pm-card-copy" id="nav-p3-desc">An internship case focused on trading UX, misclick
+                                risk reduction, and interface clarity for high-stakes financial actions.</p>
                             <span class="pm-card-link">View Detailed Case ↗</span>
                         </article>
                         <article class="landing-pm-card" onclick="openModal(4)">
@@ -3217,7 +3240,8 @@
                             <span class="pm-card-meta">Mobility Business Model</span>
                             <div class="pm-card-emoji">🔋</div>
                             <h3 class="pm-card-title">Drive-to-Earn Reward Platform</h3>
-                            <p class="pm-card-copy" id="nav-p4-desc">A mobility fintech concept linking traffic dispersion, incentive design, and payment lock-in through a staged growth model.</p>
+                            <p class="pm-card-copy" id="nav-p4-desc">A mobility fintech concept linking traffic
+                                dispersion, incentive design, and payment lock-in through a staged growth model.</p>
                             <span class="pm-card-link">View Detailed Case ↗</span>
                         </article>
                     </div>
@@ -4416,7 +4440,7 @@
             setTimeout(() => updateCarouselBtns('engCarousel', 'engCarouselPrev', 'engCarouselNext'), 350);
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const pmGrid = document.getElementById('pmCarousel');
             if (pmGrid) {
                 pmGrid.addEventListener('scroll', () => updateCarouselBtns('pmCarousel', 'carouselPrev', 'carouselNext'));
@@ -4499,6 +4523,64 @@
             lucide.createIcons();
             setLanguage('en');
             renderFeaturedProjectLinks();
+
+            // === ALWAYS start at hero ===
+            history.scrollRestoration = 'manual';
+            document.documentElement.style.scrollSnapType = 'none';
+            window.scrollTo({ top: 50, behavior: 'instant' });
+            requestAnimationFrame(() => {
+                document.documentElement.style.scrollSnapType = 'y mandatory';
+            });
+
+            // Smooth scroll for CTA buttons
+            document.querySelectorAll('a.hero-cta[href^="#"]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = document.querySelector(link.getAttribute('href'));
+                    if (target) target.scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+
+            // === FULLPAGE SCROLL: lock between sections ===
+            const sections = document.querySelectorAll('.landing-hero, .landing-featured, .landing-pm');
+            let currentSection = 0;
+            let isScrolling = false;
+
+            window.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                if (isScrolling) return;
+
+                if (e.deltaY > 30 && currentSection < sections.length - 1) {
+                    currentSection++;
+                    isScrolling = true;
+                    sections[currentSection].scrollIntoView({ behavior: 'smooth' });
+                    setTimeout(() => { isScrolling = false; }, 800);
+                } else if (e.deltaY < -30 && currentSection > 0) {
+                    currentSection--;
+                    isScrolling = true;
+                    if (currentSection === 0) {
+                        window.scrollTo({ top: 50, behavior: 'smooth' });
+                    } else {
+                        sections[currentSection].scrollIntoView({ behavior: 'smooth' });
+                    }
+                    setTimeout(() => { isScrolling = false; }, 800);
+                }
+            }, { passive: false });
+
+            // Sync CTA buttons with section tracker
+            document.querySelectorAll('a.hero-cta[href^="#"]').forEach(link => {
+                link.addEventListener('click', () => {
+                    const href = link.getAttribute('href');
+                    sections.forEach((s, i) => {
+                        if (s.id && href === '#' + s.id) currentSection = i;
+                        else if (s.querySelector(href)) currentSection = i;
+                    });
+                    // Also match by section class
+                    if (href === '#projects') currentSection = 1;
+                    if (href === '#pm-cases') currentSection = 2;
+                    if (href === '#hero') currentSection = 0;
+                });
+            });
         });
     </script>
 </body>
