@@ -3128,18 +3128,14 @@
                 padding: 20px;
             }
 
-            /* Mobile: 1 card at a time, centered */
+            /* Mobile: engineering card full width */
             .landing-feature-grid {
-                padding: 4px calc((100% - 85%) / 2);
+                padding: 4px 0;
             }
 
             .landing-feature-grid .landing-feature-card {
-                flex: 0 0 85%;
-                scroll-snap-align: center;
-            }
-
-            .landing-pm-grid .landing-pm-card {
                 flex: 0 0 calc(100% - 16px);
+                scroll-snap-align: start;
             }
 
             .carousel-btn {
