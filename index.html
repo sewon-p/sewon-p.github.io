@@ -3183,8 +3183,22 @@
                 scroll-margin-top: -55px;
             }
 
-            .landing-pm .section-cta-wrap {
-                margin-bottom: 32px;
+            /* Remove carousel arrow space on mobile */
+            .carousel-wrap {
+                padding: 0;
+            }
+
+            /* Replace buttons with simple text on mobile */
+            .section-cta-wrap .hero-cta {
+                border: none;
+                padding: 4px 0;
+                font-size: 0.75rem;
+                color: var(--muted);
+                opacity: 0.6;
+            }
+
+            .section-cta-wrap {
+                margin: 12px 0;
             }
 
             /* Dot indicators for carousels */
