@@ -3162,6 +3162,15 @@
                 display: none;
             }
 
+            .feature-actions {
+                gap: 0;
+            }
+
+            /* Only show first 2 tags on mobile */
+            .feature-tags .feature-tag:nth-child(n+3) {
+                display: none;
+            }
+
             /* Tagline: allow wrap only */
             .hero-tagline {
                 white-space: normal;
