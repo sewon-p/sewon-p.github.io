@@ -3155,9 +3155,8 @@
                 display: none;
             }
 
-            /* Hide detail elements on mobile */
+            /* Hide detail elements on mobile (keep tags visible) */
             .feature-points,
-            .feature-tags,
             .feature-stats {
                 display: none;
             }
@@ -3209,9 +3208,25 @@
                 scroll-margin-top: -55px;
             }
 
-            /* Hide modal link on mobile */
+            /* Replace modal link with desktop notice on mobile */
             .pm-card-link {
-                display: none;
+                pointer-events: none;
+                font-size: 0.75rem;
+                color: var(--muted);
+            }
+            .pm-card-link::after {
+                content: none;
+            }
+            .pm-card-link {
+                visibility: hidden;
+                position: relative;
+            }
+            .pm-card-link::before {
+                content: "View details on desktop";
+                visibility: visible;
+                font-size: 0.75rem;
+                color: var(--muted);
+                font-style: italic;
             }
 
             /* Remove carousel arrow space + side padding on mobile */
@@ -4547,7 +4562,7 @@
             <h1 class="p-title">¥1 Trillion M&A Strategy for a Global Automaker's Infrastructure Pivot</h1>
             <div class="p-meta">🗓️ Jan 2026 &nbsp;·&nbsp; 🧑‍💼 Strategy Consultant (Intern) &nbsp;·&nbsp; 👥 Team: 3 Members</div>
             <div class="award-tag-container" style="margin-top:15px;">
-                <span class="award-tag award-gray">Global Strategy Consulting Firm &middot; Winter Internship</span>
+                <span class="award-tag award-gray">Arthur D. Little (ADL) &middot; Winter Internship '27</span>
             </div>
             <p class="p-subtitle">Proposed a ¥1T acquisition roadmap to transform a top-tier automaker from vehicle manufacturer to mobility infrastructure company — covering resource security, platform strategy, and global expansion</p>
         </div>
@@ -4558,13 +4573,14 @@
             <h3 style="font-size:1.2rem; color:var(--dark); margin-bottom:20px; font-weight:800; line-height:1.4; text-align:center; border-bottom:1px solid var(--surface-border); padding-bottom:15px;">
                 "What is a car in 15 years? Not a product — <span style="color:var(--accent);">a layer stack.</span>"</h3>
             <p style="font-size:0.98rem; color:var(--ink-soft); line-height:1.7; margin-bottom:20px;">
-                The starting point was not "what should the company build next?" but <strong>"what will the automobile mean in 15 years?"</strong> We decomposed the car into five value layers — powertrain, body, software, ownership experience, and ride experience — and analyzed which layers would be disrupted by EV adoption and full autonomous driving.</p>
+                We decomposed the car into five value layers and analyzed which would be disrupted by EV + full autonomous driving.</p>
             <div class="gray-box">
                 <ul>
                     <li><strong>Powertrain Layer</strong><span>ICE → EV transition accelerates. Battery supply chain becomes the bottleneck, not engine technology.</span></li>
                     <li><strong>Software Layer</strong><span>Full autonomous driving eliminates the driver. The car becomes a software-defined space, not a driving machine.</span></li>
                     <li><strong>Ownership Layer</strong><span>Cost structure reversal: taxi at ¥1,050/10km (vs ¥3,500 today) makes sharing economically dominant over ownership.</span></li>
                     <li><strong>Ride Experience Layer</strong><span>With no driver seat, the interior becomes a <strong>"pure space"</strong> — reconfigurable for transit, commerce, work, or healthcare.</span></li>
+                    <li><strong>Brand Invisibility</strong><span>Nobody knows who manufactured their subway car. With ride-hailing, people say "call an Uber" — not "call a Toyota." <strong>The platform owns the brand; the manufacturer becomes invisible.</strong></span></li>
                 </ul>
             </div>
             <div class="insight-box">
@@ -4577,14 +4593,14 @@
         <div class="p-section">
             <div class="p-sec-title">🏭 02. Industry Structure in the Autonomous Era</div>
             <p style="font-size:0.98rem; color:var(--ink-soft); line-height:1.7; margin-bottom:25px;">
-                We mapped the full value chain of the autonomous mobility era to identify where data, revenue, and customer relationships would concentrate. The conclusion was stark: <strong>the platform layer captures everything</strong> — user data, tenant information, dispatch control, and pricing power. The manufacturer is reduced to a hardware supplier with no direct customer contact.</p>
+                We mapped the autonomous era's value chain. The conclusion: <strong>the platform layer captures everything</strong> — data, pricing, and customer contact. The manufacturer becomes a commodity supplier.</p>
 
             <!-- Industry Structure Diagram -->
             <div style="background: white; border: 1px solid var(--surface-border); border-radius: 16px; padding: 30px; margin-bottom:25px;">
                 <h4 style="text-align:center; margin-bottom:20px; font-size:1rem; color:var(--dark); font-weight:700;">Industry Structure: Full Autonomous Driving Era</h4>
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:12px; text-align:center; font-size:0.85rem;">
                     <div style="background:var(--surface); border-radius:12px; padding:16px; border:1px solid var(--surface-border);">
-                        <div style="font-size:1.5rem; margin-bottom:8px;">�icing</div>
+                        <div style="font-size:1.5rem; margin-bottom:8px;">🏭</div>
                         <strong style="color:var(--dark);">Manufacturer</strong>
                         <p style="color:var(--ink-soft); margin-top:6px; font-size:0.8rem; line-height:1.4;">Vehicle supply<br>Maintenance data</p>
                     </div>
@@ -4623,7 +4639,7 @@
             <p style="font-size:1.05rem; font-weight:bold; color:var(--dark); text-align:center; border-bottom:1px solid var(--surface-border); padding-bottom:15px; margin-bottom:25px;">
                 "The car is not a vehicle. It's a <span style="color:var(--accent);">reconfigurable space</span> on wheels."</p>
             <p style="font-size:0.98rem; color:var(--ink-soft); line-height:1.7; margin-bottom:25px;">
-                As a social infrastructure provider, the company must guarantee supply capacity matching peak-hour demand. But peak-sized fleets generate <strong>massive idle assets during off-peak hours</strong> — a direct contradiction of lean manufacturing philosophy. The solution: redefine the vehicle as a variable-purpose space.</p>
+                Peak-hour supply obligation creates <strong>massive idle assets during off-peak</strong>. The solution: redefine the vehicle as a variable-purpose space.</p>
             <div class="sol-grid">
                 <div class="sol-card">
                     <div class="emoji-icon">🕐</div>
@@ -4651,7 +4667,7 @@
         <div class="p-section">
             <div class="p-sec-title">📉 04. Platform Gap Analysis</div>
             <p style="font-size:0.98rem; color:var(--ink-soft); line-height:1.7; margin-bottom:20px;">
-                The client had already attempted to build an in-house MaaS platform — a multimodal transit app integrating rail, bus, taxi, and bike-sharing. The result was a <strong>near-total market failure</strong>.</p>
+                The client's in-house MaaS app was a <strong>near-total market failure</strong>.</p>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:25px;">
                 <div style="background:white; border:1px solid var(--surface-border); border-radius:12px; padding:20px; text-align:center;">
                     <div style="font-size:0.8rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Dominant Map Platform</div>
@@ -4673,7 +4689,7 @@
                 </ul>
             </div>
             <p style="font-size:0.98rem; color:var(--ink-soft); line-height:1.7; margin-top:20px;">
-                <strong>However, one structural opportunity remained:</strong> The domestic market is uniquely fragmented — ride-hailing, restaurant reviews, and transit search all exist as separate, dominant apps. Unlike markets where a single super-app dominates, Japan's segmentation means <strong>an aggregator that unifies these verticals could leapfrog the incumbent map platform</strong>.</p>
+                <strong>But one opportunity remained:</strong> the domestic market is uniquely fragmented — ride-hailing, reviews, and transit exist as separate apps. <strong>An aggregator unifying these verticals could leapfrog the map incumbent.</strong></p>
         </div>
 
         <!-- 05. Strategic Pipeline → Super App -->
@@ -4682,7 +4698,7 @@
             <p style="font-size:1.05rem; font-weight:bold; color:var(--dark); text-align:center; border-bottom:1px solid rgba(239,35,60,0.18); padding-bottom:15px; margin-bottom:20px;">
                 "Three acquisitions. One super app. <span style="color:var(--accent);">A national mobility platform.</span>"</p>
             <p style="font-size:0.98rem; color:var(--ink-soft); line-height:1.7; margin-bottom:25px;">
-                The strategy was not "buy three companies." It was a <strong>single pipeline</strong> where each acquisition solves a specific structural gap, and the three together create a platform that no single company could build from scratch. The logic flows in one direction:</p>
+                Not "buy three companies" — a <strong>single pipeline</strong> where each acquisition solves a prerequisite for the next.</p>
 
             <div class="roadmap-stack">
                 <div class="roadmap-card">
@@ -4733,7 +4749,7 @@
             <p style="font-size:1.05rem; font-weight:bold; color:var(--dark); text-align:center; border-bottom:1px solid var(--surface-border); padding-bottom:15px; margin-bottom:20px;">
                 "Don't ask users to download a new app. <span style="color:var(--accent);">Update their existing one.</span>"</p>
             <p style="font-size:0.98rem; color:var(--ink-soft); line-height:1.7; margin-bottom:25px;">
-                The biggest failure mode for platform businesses is the <strong>cold start problem</strong> — launching with zero users. Our migration strategy eliminated this entirely. Instead of building a new app from scratch, we proposed <strong>unifying the three acquired apps into a single super app via coordinated updates</strong>. On Day 1, the platform launches with the combined user base of all three services — tens of millions of active users — achieving critical mass instantly.</p>
+                Instead of building from scratch, <strong>unify the three acquired apps via coordinated updates</strong>. Day 1: the platform launches with tens of millions of active users. Cold start problem eliminated.</p>
 
             <!-- Pipeline Visualization -->
             <div style="background: white; border: 1px solid var(--surface-border); border-radius: 16px; padding: 30px; margin-bottom:25px;">
@@ -4800,25 +4816,25 @@
             <div class="kpt-item kpt-keep">
                 <span class="kpt-label"><i data-lucide="check-circle-2" size="20"></i> Keep</span>
                 <p class="kpt-desc">
-                    <strong>Structure-First Framing:</strong> The entire ¥1T proposal was defensible because we started from industry structure (ownership → sharing → platform dependency), not from "which company should we buy." The framing made the M&A targets feel inevitable rather than arbitrary. I want to carry this discipline — <strong>define the structural logic first, then let the solution emerge from it</strong> — into every strategic argument I make.
+                    <strong>Structure-First Framing:</strong> Started from industry structure (ownership → sharing → platform dependency), not from "which company should we buy." The framing made M&A targets feel inevitable, not arbitrary.
                 </p>
             </div>
             <div class="kpt-item kpt-keep">
                 <span class="kpt-label"><i data-lucide="check-circle-2" size="20"></i> Keep</span>
                 <p class="kpt-desc">
-                    <strong>Pipeline Thinking:</strong> The three acquisitions were not independent recommendations. They formed a single pipeline where each solves a prerequisite for the next: resources enable fleet scale, user base enables platform launch, content enables daily engagement. Presenting them as a connected system, not a shopping list, was what made the proposal compelling.
+                    <strong>Pipeline Thinking:</strong> Three acquisitions forming one pipeline — resources enable fleet, user base enables platform, content enables engagement. A connected system, not a shopping list.
                 </p>
             </div>
             <div class="kpt-item kpt-problem">
                 <span class="kpt-label"><i data-lucide="alert-triangle" size="20"></i> Problem</span>
                 <p class="kpt-desc">
-                    <strong>Execution Depth on Variable Space:</strong> The "movable real estate" concept was the most original part of the proposal, but it lacked quantitative backing — tenant economics, fleet utilization modeling, and regulatory feasibility were argued conceptually but not simulated. In a real engagement, this would need financial scenario analysis.
+                    <strong>Execution Depth on Variable Space:</strong> The "movable real estate" concept lacked quantitative backing — tenant economics, fleet utilization, and regulatory feasibility were conceptual, not simulated.
                 </p>
             </div>
             <div class="kpt-item kpt-try">
                 <span class="kpt-label"><i data-lucide="rocket" size="20"></i> Try</span>
                 <p class="kpt-desc">
-                    <strong>Simulation-Backed Strategy:</strong> For future strategy work, pair structural arguments with quantitative models — demand forecasting, fleet utilization simulation, and financial scenario planning. The structural logic should be the skeleton; the numbers should be the muscle.
+                    <strong>Simulation-Backed Strategy:</strong> Pair structural arguments with quantitative models — demand forecasting, fleet utilization simulation, financial scenario planning.
                 </p>
             </div>
         </div>
