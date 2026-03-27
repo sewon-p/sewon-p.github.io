@@ -1877,6 +1877,29 @@
             margin-top: auto;
         }
 
+        .feature-btn-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .feature-btn-row .feature-button {
+            flex: 1;
+            font-size: 0.88rem;
+        }
+
+        .feature-button-ghost {
+            background: transparent !important;
+            border: 1.5px solid var(--surface-border) !important;
+            color: var(--dark) !important;
+            text-decoration: none;
+            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+        }
+
+        .feature-button-ghost:hover {
+            border-color: var(--dark) !important;
+            background: rgba(43, 45, 66, 0.04) !important;
+        }
+
         .feature-button {
             display: inline-flex;
             align-items: center;
@@ -3426,11 +3449,11 @@
                                 </div>
                             </div>
                             <div class="feature-actions">
-                                <button class="feature-button" id="feature-llm-button"
-                                    onclick="openEngineeringLink('llm')">Preview Pending</button>
-                                <div class="feature-link-note" id="feature-llm-link-note">Project page URL will be
-                                    attached
-                                    after UI alignment.</div>
+                                <div class="feature-btn-row">
+                                    <button class="feature-button" id="feature-llm-button"
+                                        onclick="openEngineeringLink('llm')">Preview Pending</button>
+                                    <a class="feature-button feature-button-ghost" href="https://github.com/sewon-p" target="_blank">GitHub</a>
+                                </div>
                             </div>
                         </article>
 
@@ -3470,9 +3493,10 @@
                                 </div>
                             </div>
                             <div class="feature-actions">
-                                <button class="feature-button" id="feature-ml-button"
-                                    onclick="openEngineeringLink('ml')">Open Live Project</button>
-                                <div class="feature-link-note" id="feature-ml-link-note">Live portfolio available now.
+                                <div class="feature-btn-row">
+                                    <button class="feature-button" id="feature-ml-button"
+                                        onclick="openEngineeringLink('ml')">Open Project</button>
+                                    <a class="feature-button feature-button-ghost" href="https://github.com/sewon-p/ml-project" target="_blank">GitHub</a>
                                 </div>
                             </div>
                         </article>
