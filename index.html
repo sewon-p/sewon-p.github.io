@@ -1832,6 +1832,50 @@
             font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
         }
 
+        .landing-feature-card .feature-tags {
+            margin-top: auto;
+        }
+
+        .feature-thumbs {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .feature-thumb {
+            aspect-ratio: 16/9;
+            border-radius: 10px;
+            overflow: hidden;
+            background: var(--surface-soft, #f4f4f5);
+            border: 1px solid var(--surface-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .feature-thumb:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(239, 35, 60, 0.12);
+        }
+
+        .feature-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .feature-thumb-pending {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--surface-border, #e0e0e0);
+        }
+
         .feature-stats {
             position: relative;
             z-index: 1;
@@ -3192,6 +3236,7 @@
             /* Hide detail elements on mobile (keep tags visible) */
             .feature-points,
             .feature-stats,
+            .feature-thumbs,
             .feature-link-note {
                 display: none;
             }
@@ -3416,87 +3461,77 @@
                         onclick="scrollEngCarousel(-1)">←</button>
                     <div class="landing-feature-grid" id="engCarousel">
                         <article class="landing-feature-card">
-                            <span class="feature-kicker" id="feature-llm-kicker">LLM Workflow</span>
+                            <span class="feature-kicker" id="feature-llm-kicker">LLM Pipeline</span>
                             <h2 class="feature-title" id="feature-llm-title">Synthetic Driving Scenario Generation</h2>
                             <p class="feature-copy" id="feature-llm-copy">
-                                Natural-language traffic requests are converted into structured SUMO scenarios through
-                                fine-tuned extraction, base-model reasoning, validation, and correction logging.
+                                Converts natural-language traffic descriptions into runnable SUMO simulations through a fine-tuned parameter extractor and role-separated LLM orchestration.
                             </p>
                             <ul class="feature-points" id="feature-llm-points">
-                                <li>Natural language to structured traffic parameters</li>
-                                <li>Role-separated model and tool orchestration</li>
-                                <li>Evaluation, correction logging, and retraining export</li>
+                                <li>Base LLMs hallucinate SUMO parameters (51.5% MAPE) — fine-tuned on real Seoul data, reduced to 10.6%</li>
+                                <li>Simulation failures are domain-specific — correction loop logs field-level errors and exports retraining data</li>
+                                <li>40+ interdependent parameters — role-separated pipeline isolates extraction from geometry reasoning</li>
                             </ul>
                             <div class="feature-tags">
-                                <span class="feature-tag">LLM</span>
-                                <span class="feature-tag">SUMO</span>
-                                <span class="feature-tag">Prompt Design</span>
-                                <span class="feature-tag">Evaluation Loop</span>
+                                <span class="feature-tag">Fine-Tuning</span>
+                                <span class="feature-tag">Prompt Engineering</span>
+                                <span class="feature-tag">AI Agent</span>
                             </div>
-                            <div class="feature-stats">
-                                <div class="feature-stat">
-                                    <span class="feature-stat-label">Core Shape</span>
-                                    <span class="feature-stat-value" id="feature-llm-stat1">NL → Params → XML</span>
+                            <div class="feature-thumbs" id="feature-llm-thumbs">
+                                <div class="feature-thumb" onclick="openThumb(this)">
+                                    <span class="feature-thumb-pending"></span>
                                 </div>
-                                <div class="feature-stat">
-                                    <span class="feature-stat-label">Improvement</span>
-                                    <span class="feature-stat-value" id="feature-llm-stat2">Correction Logging</span>
+                                <div class="feature-thumb" onclick="openThumb(this)">
+                                    <span class="feature-thumb-pending"></span>
                                 </div>
-                                <div class="feature-stat">
-                                    <span class="feature-stat-label">Output</span>
-                                    <span class="feature-stat-value" id="feature-llm-stat3">Runnable SUMO
-                                        Artifacts</span>
+                                <div class="feature-thumb" onclick="openThumb(this)">
+                                    <span class="feature-thumb-pending"></span>
                                 </div>
                             </div>
                             <div class="feature-actions">
                                 <div class="feature-btn-row">
                                     <button class="feature-button" id="feature-llm-button"
-                                        onclick="openEngineeringLink('llm')">Preview Pending</button>
-                                    <a class="feature-button feature-button-ghost" href="https://github.com/sewon-p" target="_blank">GitHub</a>
+                                        onclick="openEngineeringLink('llm')">Open Project</button>
+                                    <a class="feature-button feature-button-ghost" href="https://github.com/sewon-p/sumo-traffic-agent" target="_blank">GitHub</a>
                                 </div>
                             </div>
                         </article>
 
                         <article class="landing-feature-card">
-                            <span class="feature-kicker" id="feature-ml-kicker">ML System</span>
+                            <span class="feature-kicker" id="feature-ml-kicker">Data & ML Pipeline</span>
                             <h2 class="feature-title" id="feature-ml-title">UrbanFlow — Real-Time Traffic Density
                                 Estimation
                             </h2>
                             <p class="feature-copy" id="feature-ml-copy">
-                                A full mobility ML system that combines simulation-based labeling, feature engineering,
-                                model comparison, online inference, GIS matching, dashboards, and cloud deployment.
+                                Ingests real-time GPS streams from probe vehicles, segments by road link distance, and serves per-link density predictions via FastAPI on Cloud Run.
                             </p>
                             <ul class="feature-points" id="feature-ml-points">
-                                <li>Simulation to labeling to model serving as one system</li>
-                                <li>Real-time mobile telemetry ingestion and spatial matching</li>
-                                <li>FastAPI, SQL persistence, streaming, dashboards, and deployment</li>
+                                <li>No roadside sensors — smartphone GPS segmented by road geometry and scored via car-following features</li>
+                                <li>No ground-truth labels — SUMO simulations generate training data mapped to Seoul's 2.2K arterial links</li>
+                                <li>Probes take different routes — Bayesian ensemble aggregates per-link predictions with rolling-window persistence</li>
                             </ul>
                             <div class="feature-tags">
-                                <span class="feature-tag">Machine Learning</span>
-                                <span class="feature-tag">FastAPI</span>
+                                <span class="feature-tag">Data Pipeline</span>
                                 <span class="feature-tag">XGBoost</span>
+                                <span class="feature-tag">FastAPI</span>
+                                <span class="feature-tag">PostgreSQL</span>
                                 <span class="feature-tag">Cloud Run</span>
                             </div>
-                            <div class="feature-stats">
-                                <div class="feature-stat">
-                                    <span class="feature-stat-label">Samples</span>
-                                    <span class="feature-stat-value" id="feature-ml-stat1">176,845</span>
+                            <div class="feature-thumbs" id="feature-ml-thumbs">
+                                <div class="feature-thumb" onclick="openThumb(this)">
+                                    <span class="feature-thumb-pending"></span>
                                 </div>
-                                <div class="feature-stat">
-                                    <span class="feature-stat-label">Features</span>
-                                    <span class="feature-stat-value" id="feature-ml-stat2">32 Engineered Signals</span>
+                                <div class="feature-thumb" onclick="openThumb(this)">
+                                    <span class="feature-thumb-pending"></span>
                                 </div>
-                                <div class="feature-stat">
-                                    <span class="feature-stat-label">Serving</span>
-                                    <span class="feature-stat-value" id="feature-ml-stat3">Realtime Inference
-                                        Stack</span>
+                                <div class="feature-thumb" onclick="openThumb(this)">
+                                    <span class="feature-thumb-pending"></span>
                                 </div>
                             </div>
                             <div class="feature-actions">
                                 <div class="feature-btn-row">
                                     <button class="feature-button" id="feature-ml-button"
                                         onclick="openEngineeringLink('ml')">Open Project</button>
-                                    <a class="feature-button feature-button-ghost" href="https://github.com/sewon-p/ml-project" target="_blank">GitHub</a>
+                                    <a class="feature-button feature-button-ghost" href="https://github.com/sewon-p/ml_project" target="_blank">GitHub</a>
                                 </div>
                             </div>
                         </article>
@@ -4891,8 +4926,8 @@
 
         // Featured project links will be reused when the child project UIs adopt the same system.
         const featuredProjectLinks = {
-            llm: "",
-            ml: "https://traffic-estimator-gcbqhrztha-du.a.run.app/"
+            llm: "https://sumo-traffic-agent-66pav72ktq-an.a.run.app/about",
+            ml: "https://traffic-estimator-gcbqhrztha-du.a.run.app/portfolio"
         };
 
         const featuredLinkCopy = {
@@ -4907,20 +4942,14 @@
             en: {
                 "featured-divider": "Featured Engineering Work",
                 "featured-note": "These two projects show the engineering side — LLM pipeline design and ML system building, both grounded in mobility and traffic simulation.",
-                "feature-llm-kicker": "LLM Workflow",
+                "feature-llm-kicker": "LLM Pipeline",
                 "feature-llm-title": "Synthetic Driving Scenario Generation",
-                "feature-llm-copy": "A workflow that turns natural-language traffic requests into structured SUMO scenarios through fine-tuned extraction, base-model reasoning, validation, and correction logging.",
-                "feature-llm-points": `<li>Natural language to structured traffic parameters</li><li>Role-separated model and tool orchestration</li><li>Evaluation, correction logging, and retraining export</li>`,
-                "feature-llm-stat1": "NL → Params → XML",
-                "feature-llm-stat2": "Correction Logging",
-                "feature-llm-stat3": "Runnable SUMO Artifacts",
-                "feature-ml-kicker": "ML System",
+                "feature-llm-copy": "Converts natural-language traffic descriptions into runnable SUMO simulations through a fine-tuned parameter extractor and role-separated LLM orchestration.",
+                "feature-llm-points": `<li>Base LLMs hallucinate SUMO parameters (51.5% MAPE) — fine-tuned on real Seoul data, reduced to 10.6%</li><li>Simulation failures are domain-specific — correction loop logs field-level errors and exports retraining data</li><li>40+ interdependent parameters — role-separated pipeline isolates extraction from geometry reasoning</li>`,
+                "feature-ml-kicker": "Data & ML Pipeline",
                 "feature-ml-title": "UrbanFlow — Real-Time Traffic Density Estimation",
-                "feature-ml-copy": "A mobility ML system that combines simulation-based labeling, feature engineering, model comparison, online inference, GIS matching, dashboards, and cloud deployment.",
-                "feature-ml-points": `<li>Designed end-to-end from simulation to serving</li><li>Real-time mobile telemetry ingestion and spatial matching</li><li>FastAPI, SQL, streaming, dashboards, and deployment in one stack</li>`,
-                "feature-ml-stat1": "176,845",
-                "feature-ml-stat2": "32 Engineered Signals",
-                "feature-ml-stat3": "Realtime Inference Stack",
+                "feature-ml-copy": "Ingests real-time GPS streams from probe vehicles, segments by road link distance, and serves per-link density predictions via FastAPI on Cloud Run.",
+                "feature-ml-points": `<li>No roadside sensors — smartphone GPS segmented by road geometry and scored via car-following features</li><li>No ground-truth labels — SUMO simulations generate training data mapped to Seoul's 2.2K arterial links</li><li>Probes take different routes — Bayesian ensemble aggregates per-link predictions with rolling-window persistence</li>`,
                 "pm-divider": "Supporting Product & Strategy Cases",
                 "pm-note": "These four cases show the strategic side — market analysis, business model design, UX decision-making, and stakeholder alignment. They're the proof that I think beyond code.",
                 "nav-p1-desc": "A cross-border commerce case built around market validation, pricing-gap analysis, and an operating-flow-based B2B pivot.",
@@ -4959,6 +4988,19 @@
                     note.textContent = copy.pendingNote;
                 }
             });
+        }
+
+        function openThumb(el) {
+            const img = el.querySelector('img');
+            if (!img) return;
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(43,45,66,0.88);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:24px;';
+            const big = document.createElement('img');
+            big.src = img.src;
+            big.style.cssText = 'max-width:90%;max-height:90%;border-radius:12px;box-shadow:0 24px 48px rgba(0,0,0,0.3);';
+            overlay.appendChild(big);
+            overlay.onclick = () => overlay.remove();
+            document.body.appendChild(overlay);
         }
 
         function openEngineeringLink(key) {
