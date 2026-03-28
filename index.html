@@ -1649,23 +1649,30 @@
         .skill-grid {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 0;
+            margin-bottom: 20px;
         }
 
         .skill-row {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(141, 153, 174, 0.12);
+        }
+
+        .skill-row:last-child {
+            border-bottom: none;
         }
 
         .skill-label {
             font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
-            font-size: 0.72rem;
-            font-weight: 700;
+            font-size: 0.78rem;
+            font-weight: 800;
             color: var(--accent);
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            min-width: 80px;
+            letter-spacing: 0.05em;
+            min-width: 96px;
             flex-shrink: 0;
         }
 
