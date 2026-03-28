@@ -1646,6 +1646,35 @@
             font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
         }
 
+        .skill-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .skill-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .skill-label {
+            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            min-width: 80px;
+            flex-shrink: 0;
+        }
+
+        .skill-row .skill-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
         .about-section {
             max-width: 1160px;
             width: 100%;
@@ -3427,19 +3456,42 @@
                     <span class="hero-scholarship">National Science & Engineering Scholar (Full Scholarship)</span>
                 </div>
 
-                <div class="skill-badges hero-skills">
-                    <span class="s-badge">Python</span>
-                    <span class="s-badge">Prompt Engineering</span>
-                    <span class="s-badge">LLM Fine-tuning</span>
-                    <span class="s-badge">RAG</span>
-                    <span class="s-badge">AI Agent Design</span>
-                    <span class="s-badge">SUMO</span>
-                    <span class="s-badge">FastAPI</span>
-                    <span class="s-badge">XGBoost</span>
-                    <span class="s-badge">SQL</span>
-                    <span class="s-badge">Git</span>
-                    <span class="s-badge">Docker</span>
-                    <span class="s-badge">AWS / GCP</span>
+                <div class="skill-grid">
+                    <div class="skill-row">
+                        <span class="skill-label">Domain</span>
+                        <div class="skill-badges">
+                            <span class="s-badge">Transportation Eng.</span>
+                            <span class="s-badge">Mobility Systems</span>
+                            <span class="s-badge">Automotive</span>
+                        </div>
+                    </div>
+                    <div class="skill-row">
+                        <span class="skill-label">ML / LLM</span>
+                        <div class="skill-badges">
+                            <span class="s-badge">Prompt Design</span>
+                            <span class="s-badge">Fine-tuning</span>
+                            <span class="s-badge">AI Agent</span>
+                            <span class="s-badge">Evaluation Pipeline</span>
+                        </div>
+                    </div>
+                    <div class="skill-row">
+                        <span class="skill-label">Tools</span>
+                        <div class="skill-badges">
+                            <span class="s-badge">Python</span>
+                            <span class="s-badge">FastAPI</span>
+                            <span class="s-badge">SUMO</span>
+                            <span class="s-badge">VISSIM</span>
+                            <span class="s-badge">XGBoost</span>
+                            <span class="s-badge">Kafka</span>
+                        </div>
+                    </div>
+                    <div class="skill-row">
+                        <span class="skill-label">Experience</span>
+                        <div class="skill-badges">
+                            <span class="s-badge">Strategy Consulting</span>
+                            <span class="s-badge">Business Development</span>
+                        </div>
+                    </div>
                 </div>
 
                 <p class="hero-contact-line">sw010202@uos.ac.kr · +81 70-8586-6749 · Seoul, Korea · Korean / Japanese /
