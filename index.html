@@ -27,23 +27,12 @@
     <!-- Spline Viewer Script -->
     <script type="module" src="https://unpkg.com/@splinetool/viewer/build/spline-viewer.js"></script>
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@0.460.0"></script>
     <link rel="stylesheet" as="style" crossorigin
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>
         /* 1. Global Reset */
-        :root {
-            --primary: var(--accent);  /* legacy alias → unified to accent */
-            /* Mercari Red */
-            --primary-light: #fdeded;
-            --dark: #191f28;
-            --gray: #8b95a1;
-            --bg: #f5f5f5;
-            --white: #ffffff;
-            --gold: #FFD700;
-            /* Gold for Award */
-            --transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-        }
+        /* Legacy :root removed — canonical variables in Unified Rebuild block below */
 
         * {
             margin: 0;
@@ -54,13 +43,10 @@
 
         html {
             scroll-snap-type: y mandatory;
+            scroll-padding-top: 60px;
             overflow-y: scroll;
             -ms-overflow-style: none;
             scrollbar-width: none;
-        }
-
-        html::-webkit-scrollbar {
-            display: none;
         }
 
         html::-webkit-scrollbar {
@@ -80,7 +66,7 @@
         }
 
         body {
-            background-color: #111;
+            background-color: #EDF2F4;
             color: #333;
             overflow-x: hidden;
             font-size: 16px;
@@ -88,6 +74,50 @@
 
         button {
             cursor: pointer;
+        }
+
+        /* Accessibility: focus indicators */
+        :focus-visible {
+            outline: 2px solid var(--accent, #EF233C);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        /* Accessibility: reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+
+            .landing-feature-card,
+            .landing-pm-card {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+
+        /* Skip link: hidden until focused */
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            left: 16px;
+            z-index: 9999;
+            padding: 10px 18px;
+            background: var(--accent, #EF233C);
+            color: #fff;
+            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: top 0.2s ease;
+        }
+
+        .skip-link:focus {
+            top: 12px;
         }
 
         /* --- Fixed Header (Logo Bar) --- */
@@ -147,7 +177,7 @@
             margin-top: 60px;
 
             /* [최종 배경: 넓은 간격 + 선명한 점] */
-            background-color: var(--white);
+            background-color: #ffffff;
             /* 색상: 잘 보이는 회색 (#cbd5e1) */
             background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
             /* 간격: 처음처럼 넓게 (24px) */
@@ -403,18 +433,7 @@
             border: none;
         }
 
-        /* Responsive Hero — DISABLED, overridden by rebuild @media blocks */
-        /*
-        @media (max-width: 900px) {
-            .profile-container { flex-direction: column; align-items: center; }
-            .profile-left { width: 100%; max-width: 300px; }
-            .profile-img-area { height: 350px; box-shadow: none; border: 5px solid var(--primary-light); margin: 0 auto; }
-            .info-grid { grid-template-columns: 1fr; gap: 10px; }
-            .hero-title { font-size: 2.5rem; text-align: center; }
-            .hero-subtitle { text-align: center; font-size: 1.2rem; }
-            .about-section { grid-template-columns: 1fr; }
-        }
-        */
+        /* Responsive Hero is handled by the Unified Rebuild @media blocks below */
 
         /* --- Section Divider (수정: 틈새 없애기 & 디자인 개선) --- */
         .section-divider {
@@ -1341,6 +1360,79 @@
             color: #888;
         }
 
+        /* --- Modal Content Utilities (extracted from inline styles) --- */
+        .text-accent { color: var(--accent); }
+        .text-dark { color: var(--dark); }
+        .text-ink { color: var(--ink-soft); }
+        .text-muted { color: var(--muted); }
+        .text-center { text-align: center; }
+        .font-bold { font-weight: 700; }
+        .font-xbold { font-weight: 800; }
+
+        .p-section-intro {
+            margin-bottom: 25px;
+            font-size: 1.05rem;
+            color: var(--dark);
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid var(--surface-border);
+            padding-bottom: 15px;
+        }
+
+        .p-block-desc {
+            margin-bottom: 15px;
+            color: var(--ink-soft);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            border-bottom: 1px solid var(--surface-border);
+            padding-bottom: 15px;
+        }
+
+        .p-block-desc--accent {
+            border-bottom-color: rgba(239, 35, 60, 0.18);
+        }
+
+        .p-data-block {
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            color: var(--ink-soft);
+        }
+
+        .p-data-block ul {
+            padding-left: 25px;
+            margin-top: 5px;
+            line-height: 1.6;
+        }
+
+        .p-highlight-section {
+            border: 2px solid var(--primary);
+        }
+
+        .p-kpt-section {
+            background: var(--surface-soft);
+            border-color: var(--surface-border);
+        }
+
+        .site-footer {
+            text-align: center;
+            padding: 24px 20px;
+            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--muted, #4a5568);
+            background: var(--bg, #EDF2F4);
+            letter-spacing: 0.02em;
+        }
+
+        .site-footer a {
+            color: var(--ink-soft, #556070);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .site-footer a:hover {
+            color: var(--accent, #EF233C);
+        }
+
         /* --- Unified Portfolio Rebuild --- */
         :root {
             --primary: #8D99AE;
@@ -1348,7 +1440,7 @@
             --primary-dark: #6f7b90;
             --accent: #EF233C;
             --dark: #2B2D42;
-            --muted: #5f6b80;
+            --muted: #4a5568;
             --bg: #EDF2F4;
             --surface: #ffffff;
             --surface-soft: #f8fafb;
@@ -1397,6 +1489,34 @@
             font-weight: 800;
             color: var(--ink-soft);
             letter-spacing: 0.02em;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-nav-link {
+            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            letter-spacing: 0.02em;
+            transition: color 0.2s ease, background 0.2s ease;
+        }
+
+        .header-nav-link:hover {
+            color: var(--dark);
+            background: rgba(43, 45, 66, 0.06);
+        }
+
+        .header-nav-link.active {
+            color: var(--accent);
+            background: rgba(239, 35, 60, 0.07);
         }
 
         .logo-box {
@@ -2718,16 +2838,124 @@
             }
 
             .p-content {
-                padding: 32px 20px !important;
+                padding: 32px 16px !important;
                 padding-bottom: 48px !important;
             }
 
             .p-title {
-                font-size: 2rem;
+                font-size: 1.6rem;
+                word-break: keep-all;
+            }
+
+            .p-subtitle {
+                font-size: 1.05rem;
             }
 
             .p-section {
-                padding: 22px !important;
+                padding: 18px !important;
+            }
+
+            .p-header {
+                margin-bottom: 30px;
+                padding-bottom: 24px;
+            }
+
+            .p-sec-title {
+                font-size: 1.15rem;
+            }
+
+            /* Modal meta tag: allow wrapping */
+            .p-meta {
+                white-space: normal;
+                font-size: 0.82rem;
+                padding: 8px 16px;
+            }
+
+            /* 2-col grids → single column */
+            .p-grid-2,
+            .big-algo-container {
+                grid-template-columns: 1fr !important;
+                gap: 16px;
+            }
+
+            /* 3-col solution grid → single column */
+            .sol-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            /* Chart container: reduce height, allow wrap */
+            .v-chart-container {
+                height: auto;
+                min-height: 200px;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .v-chart-group {
+                min-height: 200px;
+                flex: 1 1 calc(50% - 6px);
+            }
+
+            /* Roadmap cards: stack vertically */
+            .roadmap-stack {
+                flex-direction: column !important;
+                gap: 16px;
+            }
+
+            .roadmap-card {
+                min-width: 0 !important;
+                width: 100% !important;
+            }
+
+            .rm-header {
+                padding: 16px !important;
+            }
+
+            .rm-details {
+                padding: 16px !important;
+            }
+
+            /* Inline grid overrides: force single column on mobile */
+            [style*="grid-template-columns: 1fr 1fr"],
+            [style*="grid-template-columns:1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            [style*="grid-template-columns: 1fr 1fr 1fr 1fr"],
+            [style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+                grid-template-columns: 1fr 1fr !important;
+            }
+
+            /* Pipeline visualization: 7-col → stacked */
+            [style*="grid-template-columns: 1fr auto 1fr auto"],
+            [style*="grid-template-columns:1fr auto 1fr auto"] {
+                grid-template-columns: 1fr !important;
+                gap: 6px !important;
+            }
+
+            /* Hide the + and → separators on mobile */
+            [style*="grid-template-columns: 1fr auto 1fr auto"] > div[style*="font-size:1.2rem"],
+            [style*="grid-template-columns: 1fr auto 1fr auto"] > div[style*="font-size:1.5rem"],
+            [style*="grid-template-columns:1fr auto 1fr auto"] > div[style*="font-size:1.2rem"],
+            [style*="grid-template-columns:1fr auto 1fr auto"] > div[style*="font-size:1.5rem"] {
+                display: none;
+            }
+
+            /* KPT section spacing */
+            .kpt-item {
+                margin-bottom: 18px;
+            }
+
+            /* Award tags: smaller on mobile */
+            .award-tag {
+                font-size: 0.8rem;
+                padding: 4px 10px;
+            }
+
+            /* Prob box: reduce heading sizes */
+            .prob-box h3 {
+                font-size: 1rem;
             }
         }
 
@@ -2749,22 +2977,19 @@
         }
 
         .landing-featured {
-            padding: 100px 0 38px;
+            padding: 10px 0 38px;
             min-height: 100vh;
             scroll-snap-align: start;
-            scroll-snap-stop: always;
             display: flex;
             align-items: center;
         }
 
         .landing-pm {
-            padding: 40px 0 110px;
+            padding: 0 0 80px;
             min-height: 100vh;
             scroll-snap-align: start;
-            scroll-snap-stop: always;
-            scroll-margin-top: 10px;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
         }
 
         .landing-block {
@@ -2780,11 +3005,10 @@
             display: flex;
             align-items: center;
             scroll-snap-align: start;
-            scroll-snap-stop: always;
         }
 
         .hero-block {
-            padding-top: 80px;
+            padding-top: 20px;
             padding-bottom: 48px;
             max-width: 720px;
         }
@@ -2836,21 +3060,22 @@
 
         .hero-greeting {
             display: block;
-            font-size: 1rem;
-            font-weight: 600;
+            font-size: 1.05rem;
+            font-weight: 800;
             color: var(--accent);
-            letter-spacing: 0.02em;
-            margin-bottom: 16px;
+            letter-spacing: 0.06em;
+            margin-bottom: 12px;
             font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+            text-transform: uppercase;
         }
 
         .hero-name {
-            font-size: clamp(2.8rem, 6vw, 4.5rem);
+            font-size: clamp(3.2rem, 8vw, 5.5rem);
             font-weight: 900;
-            letter-spacing: -0.04em;
-            line-height: 1.05;
+            letter-spacing: -0.05em;
+            line-height: 1.0;
             color: var(--dark);
-            margin: 0 0 20px 0;
+            margin: 0 0 24px 0;
         }
 
         .hero-tagline {
@@ -2868,22 +3093,24 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 14px 28px;
-            background: transparent;
-            color: var(--accent);
-            border: 1.5px solid var(--accent);
-            border-radius: 8px;
+            padding: 15px 32px;
+            background: var(--accent);
+            color: #fff;
+            border: 2px solid var(--accent);
+            border-radius: 10px;
             font-size: 0.95rem;
-            font-weight: 600;
+            font-weight: 700;
             font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
             text-decoration: none;
             transition: all 0.2s ease;
-            letter-spacing: 0.01em;
+            letter-spacing: 0.02em;
         }
 
         .hero-cta:hover {
-            background: var(--accent);
-            color: #fff;
+            background: #d41e34;
+            border-color: #d41e34;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(239, 35, 60, 0.25);
         }
 
         .section-cta-wrap {
@@ -2951,7 +3178,7 @@
         }
 
         .landing-section-note {
-            max-width: 760px;
+            max-width: 100%;
             margin: 0 0 35px;
             color: var(--ink-soft);
             font-size: 1.03rem;
@@ -2962,14 +3189,18 @@
         /* Engineering section: HIGH hierarchy heading */
         .landing-featured .landing-section-kicker {
             color: var(--accent);
+            font-size: 0.82rem;
+            letter-spacing: 0.14em;
         }
 
         .landing-featured .landing-section-title {
-            font-size: clamp(2.1rem, 2.8vw, 2.8rem);
+            font-size: clamp(2.2rem, 3vw, 3rem);
+            font-weight: 900;
         }
 
         .landing-pm .landing-section-title {
-            font-size: clamp(2.1rem, 2.8vw, 2.8rem);
+            font-size: clamp(2.2rem, 3vw, 3rem);
+            font-weight: 900;
         }
 
         .landing-feature-grid {
@@ -2999,11 +3230,12 @@
             display: flex;
             flex-direction: column;
             min-height: auto;
-            padding: 28px 28px;
-            border-radius: 24px;
-            border: 1.5px solid rgba(239, 35, 60, 0.22);
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: none;
+            padding: 32px 32px 32px 28px;
+            border-radius: 20px;
+            border: 1px solid var(--surface-border);
+            border-left: 4px solid var(--accent);
+            background: rgba(255, 255, 255, 0.97);
+            box-shadow: 0 4px 20px rgba(43, 45, 66, 0.04);
         }
 
         .mobile-brief-notice {
@@ -3017,52 +3249,18 @@
             line-height: 1.5;
         }
 
-        .mobile-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(43, 45, 66, 0.85);
-            z-index: 9999;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 24px;
-            cursor: pointer;
+        /* Scroll-triggered entrance animation */
+        .landing-feature-card,
+        .landing-pm-card {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
-        .mobile-overlay-content {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 40px;
-        }
-
-        .mobile-overlay-msg {
-            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.95);
-            line-height: 1.7;
-            margin: 0;
-            font-weight: 700;
-        }
-
-        .mobile-overlay-scroll-hint {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            color: rgba(255, 255, 255, 0.6);
-            font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
-            font-size: 0.75rem;
-        }
-
-        .mobile-overlay-arrow {
-            font-size: 1.2rem;
-            animation: bounceDown 1.5s infinite;
+        .landing-feature-card.visible,
+        .landing-pm-card.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         @keyframes bounceDown {
@@ -3092,9 +3290,10 @@
         }
 
         .landing-feature-card:hover {
-            border-color: rgba(239, 35, 60, 0.38);
-            box-shadow: 0 24px 44px rgba(43, 45, 66, 0.09);
-            transform: translateY(-3px);
+            border-color: var(--surface-border);
+            border-left-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(43, 45, 66, 0.1);
+            transform: translateY(-4px);
             transition: all 0.25s ease;
         }
 
@@ -3103,12 +3302,12 @@
         }
 
         .landing-feature-card .feature-title {
-            font-size: clamp(1.5rem, 2vw, 1.85rem);
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            line-height: 1.2;
+            font-size: clamp(1.6rem, 2.2vw, 2rem);
+            font-weight: 900;
+            letter-spacing: -0.035em;
+            line-height: 1.15;
             color: var(--dark);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .landing-feature-card .feature-copy {
@@ -3247,6 +3446,24 @@
         }
 
         @media (max-width: 640px) {
+            /* Modal: full-screen on mobile */
+            .modal-container {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                max-width: none;
+                overflow-x: hidden;
+            }
+
+            .modal-container * {
+                max-width: 100%;
+                overflow-wrap: break-word;
+            }
+
+            .close-modal {
+                top: 12px;
+                right: 12px;
+            }
             .landing-block {
                 padding: 0 16px;
             }
@@ -3327,40 +3544,26 @@
                 margin: 16px 0;
             }
 
-            /* Reduce hero top space (header hidden) */
+            /* Mobile: header hidden, reset scroll padding */
+            html {
+                scroll-padding-top: 0;
+            }
+
             .landing-hero {
                 padding-top: 24px;
             }
 
-            /* Reduce PM section top padding */
             .landing-pm {
                 padding-top: 0;
-                scroll-margin-top: -28px;
             }
 
             .landing-featured {
-                scroll-margin-top: -55px;
+                padding-top: 60px;
             }
 
-            /* Replace modal link with desktop notice on mobile */
+            /* PM card link: keep visible on mobile */
             .pm-card-link {
-                pointer-events: none;
-                font-size: 0.75rem;
-                color: var(--muted);
-            }
-            .pm-card-link::after {
-                content: none;
-            }
-            .pm-card-link {
-                visibility: hidden;
-                position: relative;
-            }
-            .pm-card-link::before {
-                content: "View details on desktop";
-                visibility: visible;
-                font-size: 0.75rem;
-                color: var(--muted);
-                font-style: italic;
+                font-size: 0.8rem;
             }
 
             /* Remove carousel arrow space + side padding on mobile */
@@ -3427,39 +3630,35 @@
                 border-radius: 4px;
             }
 
-            /* Mobile overlay */
-            .mobile-overlay {
-                display: flex;
-            }
+            /* Mobile overlay removed */
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Mobile overlay -->
-    <div class="mobile-overlay" id="mobileOverlay" onclick="this.style.display='none'">
-        <div class="mobile-overlay-content">
-            <p class="mobile-overlay-msg">This portfolio is abbreviated on mobile.<br>For full details, please view on desktop.</p>
-            <div class="mobile-overlay-scroll-hint">
-                <span>Touch to continue</span>
-                <span class="mobile-overlay-arrow">↓</span>
-            </div>
-        </div>
-    </div>
+    <!-- Skip link for keyboard users -->
+    <a class="skip-link" href="#projects">Skip to projects</a>
+
+    <!-- Mobile overlay removed — mobile is a real experience now -->
 
     <!-- Header -->
-    <div class="header">
+    <header class="header">
         <div class="logo">
             <div class="logo-box">SP</div> Portfolio
         </div>
-    </div>
+        <nav class="header-nav">
+            <a class="header-nav-link active" href="#hero" data-section="landing-hero">About</a>
+            <a class="header-nav-link" href="#projects" data-section="landing-featured">Engineering</a>
+            <a class="header-nav-link" href="#pm-cases" data-section="landing-pm">Strategy</a>
+        </nav>
+    </header>
 
 
 
     <main class="landing-shell">
         <!-- HERO -->
-        <section class="landing-hero">
+        <section class="landing-hero" id="hero">
             <div class="landing-block hero-block">
                 <span class="hero-greeting">Hi, I'm</span>
                 <h1 class="hero-name">Sewon Park.</h1>
@@ -3511,7 +3710,7 @@
                 </div>
                 <div class="carousel-wrap">
                     <button class="carousel-btn carousel-prev disabled" id="engCarouselPrev"
-                        onclick="scrollEngCarousel(-1)">←</button>
+                        onclick="scrollEngCarousel(-1)" aria-label="Previous engineering project">←</button>
                     <div class="landing-feature-grid" id="engCarousel">
                         <article class="landing-feature-card">
                             <span class="feature-kicker" id="feature-llm-kicker">LLM Pipeline</span>
@@ -3530,13 +3729,13 @@
                                 <span class="feature-tag">AI Agent</span>
                             </div>
                             <div class="feature-thumbs" id="feature-llm-thumbs">
-                                <div class="feature-thumb" onclick="openThumb(this)">
+                                <div class="feature-thumb" role="button" tabindex="0" onclick="openThumb(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openThumb(this)}">
                                     <img src="images/llm-run.gif" alt="LLM pipeline execution" loading="lazy">
                                 </div>
-                                <div class="feature-thumb" onclick="openThumb(this)">
+                                <div class="feature-thumb" role="button" tabindex="0" onclick="openThumb(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openThumb(this)}">
                                     <img src="images/llm-admin.png" alt="Admin panel" loading="lazy">
                                 </div>
-                                <div class="feature-thumb" onclick="openThumb(this)">
+                                <div class="feature-thumb" role="button" tabindex="0" onclick="openThumb(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openThumb(this)}">
                                     <img src="images/llm-geometry.gif" alt="Geometry adjustment" loading="lazy">
                                 </div>
                             </div>
@@ -3544,7 +3743,7 @@
                                 <div class="feature-btn-row">
                                     <button class="feature-button" id="feature-llm-button"
                                         onclick="openEngineeringLink('llm')">Open Project</button>
-                                    <a class="feature-button feature-button-ghost" href="https://github.com/sewon-p/sumo-traffic-agent" target="_blank">GitHub</a>
+                                    <a class="feature-button feature-button-ghost" href="https://github.com/sewon-p/sumo-traffic-agent" target="_blank" rel="noopener noreferrer">GitHub</a>
                                 </div>
                             </div>
                         </article>
@@ -3570,13 +3769,13 @@
                                 <span class="feature-tag">Cloud Run</span>
                             </div>
                             <div class="feature-thumbs" id="feature-ml-thumbs">
-                                <div class="feature-thumb" onclick="openThumb(this)">
+                                <div class="feature-thumb" role="button" tabindex="0" onclick="openThumb(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openThumb(this)}">
                                     <img src="images/ml-map.gif" alt="Real-time traffic map" loading="lazy">
                                 </div>
-                                <div class="feature-thumb" onclick="openThumb(this)">
+                                <div class="feature-thumb" role="button" tabindex="0" onclick="openThumb(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openThumb(this)}">
                                     <img src="images/ml-pipeline.png" alt="ML pipeline dashboard" loading="lazy">
                                 </div>
-                                <div class="feature-thumb" onclick="openThumb(this)">
+                                <div class="feature-thumb" role="button" tabindex="0" onclick="openThumb(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openThumb(this)}">
                                     <img src="images/ml-mobile.png" alt="Mobile probe collection" loading="lazy">
                                 </div>
                             </div>
@@ -3584,13 +3783,13 @@
                                 <div class="feature-btn-row">
                                     <button class="feature-button" id="feature-ml-button"
                                         onclick="openEngineeringLink('ml')">Open Project</button>
-                                    <a class="feature-button feature-button-ghost" href="https://github.com/sewon-p/ml_project" target="_blank">GitHub</a>
+                                    <a class="feature-button feature-button-ghost" href="https://github.com/sewon-p/ml_project" target="_blank" rel="noopener noreferrer">GitHub</a>
                                 </div>
                             </div>
                         </article>
                     </div>
                     <button class="carousel-btn carousel-next disabled" id="engCarouselNext"
-                        onclick="scrollEngCarousel(1)">→</button>
+                        onclick="scrollEngCarousel(1)" aria-label="Next engineering project">→</button>
                 </div>
                 <div class="carousel-dots" id="engDots"></div>
                 <div class="section-cta-wrap">
@@ -3602,22 +3801,18 @@
 
         <section class="landing-pm" id="pm-cases">
             <div class="landing-block">
-                <div class="section-cta-wrap">
-                    <a href="#projects" class="hero-cta">Back to Engineering <span class="hero-cta-arrow">↑</span></a>
-                </div>
                 <div class="landing-section-heading">
                     <span class="landing-section-kicker">Strategy</span>
                     <h2 class="landing-section-title" id="pm-divider">Supporting Product & Strategy Cases</h2>
                 </div>
                 <p class="landing-section-note" id="pm-note">
-                    These four cases show the strategic side — market analysis, business model design, UX
-                    decision-making, and stakeholder alignment. They're the proof that I think beyond code.
+                    Engineering solves the problem — but someone has to define the right problem first. These cases show how I validate markets, design business models, make UX trade-offs, and align stakeholders before a single line of code is written.
                 </p>
                 <div class="carousel-wrap">
                     <button class="carousel-btn carousel-prev disabled" id="carouselPrev"
-                        onclick="scrollCarousel(-1)">←</button>
+                        onclick="scrollCarousel(-1)" aria-label="Previous strategy case">←</button>
                     <div class="landing-pm-grid" id="pmCarousel">
-                        <article class="landing-pm-card" onclick="openModal(5)">
+                        <article class="landing-pm-card" tabindex="0" role="button" aria-label="View M&A Strategy case details" onclick="openModal(5)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModal(5)}">
                             <span class="pm-index">2026.01</span>
                             <span class="pm-card-meta">Strategy Consulting</span>
                             <div class="pm-card-emoji">📊</div>
@@ -3625,7 +3820,7 @@
                             <p class="pm-card-copy">A strategy consulting deliverable proposing three acquisitions to transform a global automaker into a mobility infrastructure platform.</p>
                             <span class="pm-card-link">View Detailed Case ↗</span>
                         </article>
-                        <article class="landing-pm-card" onclick="openModal(1)">
+                        <article class="landing-pm-card" tabindex="0" role="button" aria-label="View Cross-border Commerce case details" onclick="openModal(1)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModal(1)}">
                             <span class="pm-index">2025.01</span>
                             <span class="pm-card-meta">Cross-Border Strategy</span>
                             <div class="pm-card-emoji">✈️</div>
@@ -3634,7 +3829,7 @@
                                 strategy built from market validation and operating-flow design.</p>
                             <span class="pm-card-link">View Detailed Case ↗</span>
                         </article>
-                        <article class="landing-pm-card" onclick="openModal(2)">
+                        <article class="landing-pm-card" tabindex="0" role="button" aria-label="View P2P Delivery case details" onclick="openModal(2)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModal(2)}">
                             <span class="pm-index">2024.11</span>
                             <span class="pm-card-meta">Logistics Concept</span>
                             <div class="pm-card-emoji">🚚</div>
@@ -3643,7 +3838,7 @@
                                 OR-Tools, last-mile logic, and incentive design to reduce cost and distance.</p>
                             <span class="pm-card-link">View Detailed Case ↗</span>
                         </article>
-                        <article class="landing-pm-card" onclick="openModal(4)">
+                        <article class="landing-pm-card" tabindex="0" role="button" aria-label="View Drive-to-Earn case details" onclick="openModal(4)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModal(4)}">
                             <span class="pm-index">2021.08</span>
                             <span class="pm-card-meta">Mobility Business Model</span>
                             <div class="pm-card-emoji">🔋</div>
@@ -3652,7 +3847,7 @@
                                 dispersion, incentive design, and payment lock-in through a staged growth model.</p>
                             <span class="pm-card-link">View Detailed Case ↗</span>
                         </article>
-                        <article class="landing-pm-card" onclick="openModal(3)">
+                        <article class="landing-pm-card" tabindex="0" role="button" aria-label="View Digital Asset Trading case details" onclick="openModal(3)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openModal(3)}">
                             <span class="pm-index">2021.05</span>
                             <span class="pm-card-meta">Internship / UX</span>
                             <div class="pm-card-emoji">💹</div>
@@ -3662,7 +3857,7 @@
                             <span class="pm-card-link">View Detailed Case ↗</span>
                         </article>
                     </div>
-                    <button class="carousel-btn carousel-next" id="carouselNext" onclick="scrollCarousel(1)">→</button>
+                    <button class="carousel-btn carousel-next" id="carouselNext" onclick="scrollCarousel(1)" aria-label="Next strategy case">→</button>
                 </div>
                 <div class="carousel-dots" id="pmDots"></div>
             </div>
@@ -3670,9 +3865,9 @@
     </main>
 
     <!-- 3. MODAL CONTAINER -->
-    <div class="modal-overlay" id="projectModal">
+    <div class="modal-overlay" id="projectModal" role="dialog" aria-modal="true" aria-label="Project details">
         <div class="modal-container">
-            <button class="close-modal" onclick="closeModal()">×</button>
+            <button class="close-modal" onclick="closeModal()" aria-label="Close">×</button>
             <div id="modalContent" class="p-content"></div>
         </div>
     </div>
@@ -3711,7 +3906,7 @@
                     </div>
                     <div class="insight-box">
                         <h3>💡 Insight</h3>
-                        <p class="insight-text">"Need a <span style="color:var(--accent);">D2C offline hub</span>
+                        <p class="insight-text">"Need a <span class="text-accent">D2C offline hub</span>
                             targeting global fandoms of Hallyu Brands, where the brand controls 100% of price and
                             experience."</p>
                     </div>
@@ -3720,11 +3915,11 @@
             <div class="p-section">
                 <div class="p-sec-title">📊 02. Market Validation</div>
                 <p
-                    style="margin-bottom:25px; font-size:1.05rem; color:var(--dark); font-weight:bold; text-align:center; border-bottom:1px solid var(--surface-border); padding-bottom:15px;">
-                    "Data Verification: Finding 'Profitable Markets' via<br><span style="color:var(--accent);">Bunjang
+                    class="p-section-intro">
+                    "Data Verification: Finding 'Profitable Markets' via<br><span class="text-accent">Bunjang
                         vs Mercari Data</span>"</p>
-                <div style="margin-bottom:25px; font-size:0.95rem; color:var(--ink-soft);">
-                    <div style="margin-bottom:15px;"><strong style="color:var(--accent);">🎯 Target Selection
+                <div class="p-data-block">
+                    <div style="margin-bottom:15px;"><strong class="text-accent">🎯 Target Selection
                             Criteria</strong>
                         <ul style="padding-left:25px; margin-top:5px; line-height:1.6;">
                             <li><strong>High Liquidity:</strong> K-Fashion top 3 & <strong>Rare K-POP Goods</strong>
@@ -3733,7 +3928,7 @@
                                     Economics</strong> for cross-border shipping (small volume).</li>
                         </ul>
                     </div>
-                    <div><strong style="color:var(--accent);">🧾 Methodology & Verification</strong>
+                    <div><strong class="text-accent">🧾 Methodology & Verification</strong>
                         <p style="margin-top:5px; line-height:1.6; padding-left:25px;">Crawled transaction data from KR
                             <strong>'Bunjang'</strong> and JP <strong>'Mercari'</strong> to prove structural
                             <strong>Arbitrage Price Gap</strong> for identical Used-Good conditions.
@@ -3789,8 +3984,8 @@
         <div class="p-section">
             <div class="p-sec-title">🏗️ 03. Solution: Hybrid Model</div>
             <p
-                style="margin-bottom:25px; font-size:1.05rem; font-weight:bold; color:var(--dark); text-align:center; border-bottom:1px solid var(--surface-border); padding-bottom:15px;">
-                Hybrid Model: <span style="color:var(--accent);">Hook with C2C</span>, <span
+                class="p-section-intro">
+                Hybrid Model: <span class="text-accent">Hook with C2C</span>, <span
                     style="color:var(--dark);">Monetize with B2B</span>"</p>
             <div class="sol-grid">
                 <div class="sol-card">
@@ -3810,7 +4005,7 @@
                 </div>
             </div>
         </div>
-        <div class="p-section" style="border: 2px solid var(--primary);">
+        <div class="p-section p-highlight-section">
             <div class="p-sec-title">🏆 04. Growth Strategy & Roadmap</div>
             <p style="text-align:center; font-weight:bold; font-size:1.1rem; color:var(--muted);">"From Store to
                 Platform: Pivot from Retail to 'Business Solution'"</p>
@@ -3822,7 +4017,7 @@
                     </div>
                     <div class="rm-details">
                         <div
-                            style="margin-bottom:15px; color:var(--ink-soft); font-size:0.95rem; line-height:1.6; border-bottom:1px solid var(--surface-border); padding-bottom:15px;">
+                            class="p-block-desc">
                             Secure traffic and logistics network via hub expansion. Aiming for <strong>Omni-channel
                                 Network Construction</strong>, not just store opening.</div>
                         <div class="rm-item"><span class="rm-label">Action</span><span class="rm-text">Standardize
@@ -3842,7 +4037,7 @@
                     </div>
                     <div class="rm-details">
                         <div
-                            style="margin-bottom:15px; color:var(--ink-soft); font-size:0.95rem; line-height:1.6; border-bottom:1px solid var(--surface-border); padding-bottom:15px;">
+                            class="p-block-desc">
                             Create a <strong>Flywheel Structure</strong> where users continuously trade within the
                             ecosystem.</div>
                         <div class="rm-item"><span class="rm-label">Key Feature</span><span
@@ -3864,7 +4059,7 @@
                     </div>
                     <div class="rm-details">
                         <div
-                            style="margin-bottom:15px; color:var(--ink-soft); font-size:0.95rem; line-height:1.6; border-bottom:1px solid rgba(239,35,60,0.18); padding-bottom:15px;">
+                            class="p-block-desc p-block-desc--accent">
                             Upgrade business model to <strong>B2B Solution</strong> by selling established traffic and
                             infrastructure to KR companies.</div>
                         <div class="rm-item"><span class="rm-label" style="color:var(--accent);">Shift</span><span
@@ -3880,11 +4075,11 @@
                 </div>
             </div>
         </div>
-        <div class="p-section" style="background: var(--surface-soft); border-color: var(--surface-border);">
+        <div class="p-section p-kpt-section">
             <div class="p-sec-title">🏆 05. Outcome & Impact</div>
             <div style="text-align:center; margin-bottom:30px;">
                 <p style="font-size:1.1rem; font-weight:700; color:var(--dark); line-height:1.6; word-break: keep-all;">
-                    "Key to persuasion was not a grand vision,<br>but a <span style="color:var(--accent);">realistic
+                    "Key to persuasion was not a grand vision,<br>but a <span class="text-accent">realistic
                         strategy verified by data</span>."</p>
                 <div class="award-tag-container" style="margin-top:15px; justify-content:center;"><span
                         class="award-tag award-gold" style="font-size:1rem; padding:8px 20px;">🏆 3rd Place in Campus
@@ -3980,7 +4175,7 @@
                 <div class="p-sec-title">🗺️ 02. Solution Strategy</div>
                 <p
                     style="margin-bottom:20px; font-size:1.05rem; font-weight:bold; color:var(--dark); text-align:center; line-height:1.4;">
-                    "<span style="color:var(--accent);">Route-based</span> Dispatch, not Location-based"</p>
+                    "<span class="text-accent">Route-based</span> Dispatch, not Location-based"</p>
                 <div class="gray-box">
                     <h4
                         style="margin-bottom:15px; font-size:1.1rem; color:var(--dark); border-bottom:1px solid var(--surface-border); padding-bottom:10px; display:flex; align-items:center; gap:6px;">
@@ -4009,7 +4204,7 @@
         <div class="p-section" style="background:var(--surface-soft); border-color:var(--surface-border);">
             <div class="p-sec-title">📊 03. Market Validation</div>
             <p style="margin-bottom:20px; text-align:center; color:var(--ink-soft); font-weight:600;">"Beyond technical
-                possibility, verifying <span style="color:var(--accent);">Willingness to Participate</span>"</p>
+                possibility, verifying <span class="text-accent">Willingness to Participate</span>"</p>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                 <div
                     style="background:white; padding:20px; border-radius:12px; border:1px solid var(--surface-border); box-shadow:0 4px 10px rgba(0,0,0,0.03);">
@@ -4088,7 +4283,7 @@
         <div class="p-section">
             <div class="p-sec-title">💻 05. Tech & Verification</div>
             <p style="margin-bottom:20px; font-size:1.1rem; font-weight:bold; color:var(--dark); text-align:center;">
-                "VRP Simulation using <span style="color:var(--accent);">Google OR-Tools</span>"</p>
+                "VRP Simulation using <span class="text-accent">Google OR-Tools</span>"</p>
             <div style="display:flex; flex-direction:column; gap:15px;">
                 <div
                     style="background:var(--surface-soft); border:1px solid var(--surface-border); padding:20px; border-radius:8px;">
@@ -4128,7 +4323,7 @@
                 </div>
             </div>
         </div>
-        <div class="p-section" style="border: 2px solid var(--primary);">
+        <div class="p-section p-highlight-section">
             <div class="p-sec-title">🏆 06. Outcome & Impact</div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
                 <div
@@ -4401,7 +4596,7 @@
                 </div>
             </div>
         </div>
-        <div class="p-section" style="border: 2px solid var(--primary);">
+        <div class="p-section p-highlight-section">
             <div class="p-sec-title">🏆 04. Outcome & Impact</div>
             <div style="display:flex; flex-direction:column; gap:20px;">
                 <div
@@ -4618,7 +4813,7 @@
             </div>
         </div>
         <!-- 06. Outcome (NEW) -->
-        <div class="p-section" style="background: var(--surface-soft); border-color: var(--surface-border);">
+        <div class="p-section p-kpt-section">
             <div class="p-sec-title">🏆 06. Outcome & Impact</div>
             <div style="text-align:center; margin-bottom:30px;">
                 <p style="font-size:1.1rem; font-weight:700; color:var(--dark); line-height:1.6; word-break: keep-all;">
@@ -4704,7 +4899,7 @@
         <div class="p-section">
             <div class="p-sec-title">🔎 01. Redefining the Automobile's Value Layers</div>
             <h3 style="font-size:1.2rem; color:var(--dark); margin-bottom:20px; font-weight:800; line-height:1.4; text-align:center; border-bottom:1px solid var(--surface-border); padding-bottom:15px;">
-                "What is a car in 15 years? Not a product — <span style="color:var(--accent);">a layer stack.</span>"</h3>
+                "What is a car in 15 years? Not a product — <span class="text-accent">a layer stack.</span>"</h3>
             <p style="font-size:0.98rem; color:var(--ink-soft); line-height:1.7; margin-bottom:20px;">
                 We decomposed the car into five value layers and analyzed which would be disrupted by EV + full autonomous driving.</p>
             <div class="gray-box">
@@ -4718,7 +4913,7 @@
             </div>
             <div class="insight-box">
                 <h3>💡 Core Thesis</h3>
-                <p class="insight-text">"When EV + autonomous driving resolve cost and availability constraints, the economic rationality <span style="color:var(--accent);">structurally reverses from ownership to sharing</span>. The manufacturer that doesn't own the platform layer becomes a commodity supplier — <strong>'Car A' on someone else's dispatch screen.</strong>"</p>
+                <p class="insight-text">"When EV + autonomous driving resolve cost and availability constraints, the economic rationality <span class="text-accent">structurally reverses from ownership to sharing</span>. The manufacturer that doesn't own the platform layer becomes a commodity supplier — <strong>'Car A' on someone else's dispatch screen.</strong>"</p>
             </div>
         </div>
 
@@ -4739,7 +4934,7 @@
                     </div>
                     <div style="background:var(--surface); border-radius:12px; padding:16px; border:2px solid var(--accent);">
                         <div style="font-size:1.5rem; margin-bottom:8px;">📱</div>
-                        <strong style="color:var(--accent);">Platform</strong>
+                        <strong class="text-accent">Platform</strong>
                         <p style="color:var(--ink-soft); margin-top:6px; font-size:0.8rem; line-height:1.4;">Dispatch · Matching<br>Data · Pricing<br><strong>All customer contact</strong></p>
                     </div>
                     <div style="background:var(--surface); border-radius:12px; padding:16px; border:1px solid var(--surface-border);">
@@ -4770,7 +4965,7 @@
         <div class="p-section">
             <div class="p-sec-title">🚐 03. From Manufacturer to "Movable Space Developer"</div>
             <p style="font-size:1.05rem; font-weight:bold; color:var(--dark); text-align:center; border-bottom:1px solid var(--surface-border); padding-bottom:15px; margin-bottom:25px;">
-                "The car is not a vehicle. It's a <span style="color:var(--accent);">reconfigurable space</span> on wheels."</p>
+                "The car is not a vehicle. It's a <span class="text-accent">reconfigurable space</span> on wheels."</p>
             <p style="font-size:0.98rem; color:var(--ink-soft); line-height:1.7; margin-bottom:25px;">
                 Peak-hour supply obligation creates <strong>massive idle assets during off-peak</strong>. The solution: redefine the vehicle as a variable-purpose space.</p>
             <div class="sol-grid">
@@ -4829,7 +5024,7 @@
         <div class="p-section" style="border: 2px solid var(--accent);">
             <div class="p-sec-title">🎯 05. The Strategic Pipeline: From Acquisitions to Super App</div>
             <p style="font-size:1.05rem; font-weight:bold; color:var(--dark); text-align:center; border-bottom:1px solid rgba(239,35,60,0.18); padding-bottom:15px; margin-bottom:20px;">
-                "Three acquisitions. One super app. <span style="color:var(--accent);">A national mobility platform.</span>"</p>
+                "Three acquisitions. One super app. <span class="text-accent">A national mobility platform.</span>"</p>
             <p style="font-size:0.98rem; color:var(--ink-soft); line-height:1.7; margin-bottom:25px;">
                 Not "buy three companies" — a <strong>single pipeline</strong> where each acquisition solves a prerequisite for the next.</p>
 
@@ -4840,7 +5035,7 @@
                         <p class="rm-desc">Resource Security · ~¥500B</p>
                     </div>
                     <div class="rm-details">
-                        <div style="margin-bottom:15px; color:var(--ink-soft); font-size:0.95rem; line-height:1.6; border-bottom:1px solid var(--surface-border); padding-bottom:15px;">
+                        <div class="p-block-desc">
                             A top-tier hard-rock lithium producer with world-class reserves, green extraction (zero-carbon, dry processing, hydroelectric power), and immediate production capacity.</div>
                         <div class="rm-item"><span class="rm-label">Problem</span><span class="rm-text">EV scale-up requires lithium volumes the client cannot secure at market prices. Mine development takes 10+ years from scratch.</span></div>
                         <div class="rm-item"><span class="rm-label">Solution</span><span class="rm-text">Full acquisition + on-site refinery construction. Shift from <strong>market-linked procurement to mining-cost basis</strong> — a structural cost advantage.</span></div>
@@ -4853,7 +5048,7 @@
                         <p class="rm-desc">User Base + Dispatch Infra · ~¥150B–250B</p>
                     </div>
                     <div class="rm-details">
-                        <div style="margin-bottom:15px; color:var(--ink-soft); font-size:0.95rem; line-height:1.6; border-bottom:1px solid var(--surface-border); padding-bottom:15px;">
+                        <div class="p-block-desc">
                             The market leader in domestic ride-hailing: 70%+ metro utilization rate, 25M+ downloads, 10M+ monthly rides. Brand recognition equivalent to "ride-hailing = this app."</div>
                         <div class="rm-item"><span class="rm-label">Problem</span><span class="rm-text">The client has no direct customer touchpoint in mobility services. Dispatch, pricing, and user data are all controlled by third-party platforms.</span></div>
                         <div class="rm-item"><span class="rm-label">Solution</span><span class="rm-text">Acquire the irreproducible asset: market share + brand trust. Backend integration only — <strong>preserve the existing brand, UX, and user base intact</strong>.</span></div>
@@ -4866,7 +5061,7 @@
                         <p class="rm-desc">Content + Decision Data · ~¥300B–430B</p>
                     </div>
                     <div class="rm-details">
-                        <div style="margin-bottom:15px; color:var(--ink-soft); font-size:0.95rem; line-height:1.6; border-bottom:1px solid rgba(239,35,60,0.18); padding-bottom:15px;">
+                        <div class="p-block-desc p-block-desc--accent">
                             ~97M MAU. Decades of accumulated review data and venue ratings that represent the <strong>single most trusted source for dining decisions</strong> in the domestic market. This trust cannot be replicated with capital or time.</div>
                         <div class="rm-item"><span class="rm-label" style="color:var(--accent);">Why Food?</span><span class="rm-text">"Food" is the #1 driver of location-based search behavior. It generates the highest-frequency, most habitual user engagement — the ideal anchor for a life portal.</span></div>
                         <div class="rm-item"><span class="rm-label" style="color:var(--accent);">Integration</span><span class="rm-text">Merge <strong>"where to go" (reviews) + "how to get there" (dispatch)</strong> into a single flow. Destination decision and movement become seamless.</span></div>
@@ -4880,7 +5075,7 @@
         <div class="p-section">
             <div class="p-sec-title">📱 06. Convergence: The Super App as Platform</div>
             <p style="font-size:1.05rem; font-weight:bold; color:var(--dark); text-align:center; border-bottom:1px solid var(--surface-border); padding-bottom:15px; margin-bottom:20px;">
-                "Don't ask users to download a new app. <span style="color:var(--accent);">Update their existing one.</span>"</p>
+                "Don't ask users to download a new app. <span class="text-accent">Update their existing one.</span>"</p>
             <p style="font-size:0.98rem; color:var(--ink-soft); line-height:1.7; margin-bottom:25px;">
                 Instead of building from scratch, <strong>unify the three acquired apps via coordinated updates</strong>. Day 1: the platform launches with tens of millions of active users. Cold start problem eliminated.</p>
 
@@ -5004,7 +5199,7 @@
                 "feature-ml-copy": "Ingests real-time GPS streams from probe vehicles, segments by road link distance, and serves per-link density predictions via FastAPI on Cloud Run.",
                 "feature-ml-points": `<li>No roadside sensors — smartphone GPS segmented by road geometry and scored via car-following features</li><li>No ground-truth labels — SUMO simulations generate training data mapped to Seoul's 2.2K arterial links</li><li>Probes take different routes — Bayesian ensemble aggregates per-link predictions with rolling-window persistence</li>`,
                 "pm-divider": "Supporting Product & Strategy Cases",
-                "pm-note": "These four cases show the strategic side — market analysis, business model design, UX decision-making, and stakeholder alignment. They're the proof that I think beyond code.",
+                "pm-note": "Engineering solves the problem — but someone has to define the right problem first. These cases show how I validate markets, design business models, make UX trade-offs, and align stakeholders before a single line of code is written.",
                 "nav-p1-desc": "A cross-border commerce case built around market validation, pricing-gap analysis, and an operating-flow-based B2B pivot.",
                 "nav-p2-desc": "A campus delivery concept combining OR-Tools routing, last-mile operations thinking, and incentive design.",
                 "nav-p3-desc": "An internship case focused on reducing trading-interface misclick risk and redesigning information hierarchy for financial UX.",
@@ -5048,12 +5243,25 @@
             if (!img) return;
             const overlay = document.createElement('div');
             overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(43,45,66,0.88);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:24px;';
+            overlay.setAttribute('role', 'dialog');
+            overlay.setAttribute('aria-label', 'Image preview');
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '×';
+            closeBtn.setAttribute('aria-label', 'Close');
+            closeBtn.style.cssText = 'position:absolute;top:16px;right:16px;width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+            closeBtn.onclick = (e) => { e.stopPropagation(); overlay.remove(); };
             const big = document.createElement('img');
             big.src = img.src;
-            big.style.cssText = 'max-width:90%;max-height:90%;border-radius:12px;box-shadow:0 24px 48px rgba(0,0,0,0.3);';
+            big.alt = img.alt || 'Project screenshot';
+            big.style.cssText = 'max-width:90%;max-height:85%;border-radius:12px;box-shadow:0 24px 48px rgba(0,0,0,0.3);';
+            overlay.appendChild(closeBtn);
             overlay.appendChild(big);
             overlay.onclick = () => overlay.remove();
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', handler); }
+            });
             document.body.appendChild(overlay);
+            closeBtn.focus();
         }
 
         function openEngineeringLink(key) {
@@ -5111,27 +5319,30 @@
             // Replace placeholder content
             placeholder.innerHTML = '';
             placeholder.appendChild(viewer);
-            // Remove placeholder class to reset styles if needed (optional)
-            // placeholder.classList.remove('spline-placeholder'); 
-            // Better to keep wrapper but change style if needed.
             placeholder.style.background = 'transparent';
         }
 
+        // Debounced carousel button state updater (prevents layout thrashing)
+        const _carouselRAFs = {};
         function updateCarouselBtns(gridId, prevId, nextId) {
-            const grid = document.getElementById(gridId);
-            const prev = document.getElementById(prevId);
-            const next = document.getElementById(nextId);
-            if (!grid || !prev || !next) return;
-            if (grid.scrollLeft <= 5) {
-                prev.classList.add('disabled');
-            } else {
-                prev.classList.remove('disabled');
-            }
-            if (grid.scrollLeft + grid.offsetWidth >= grid.scrollWidth - 5) {
-                next.classList.add('disabled');
-            } else {
-                next.classList.remove('disabled');
-            }
+            if (_carouselRAFs[gridId]) return; // Already scheduled
+            _carouselRAFs[gridId] = requestAnimationFrame(() => {
+                _carouselRAFs[gridId] = null;
+                const grid = document.getElementById(gridId);
+                const prev = document.getElementById(prevId);
+                const next = document.getElementById(nextId);
+                if (!grid || !prev || !next) return;
+                if (grid.scrollLeft <= 5) {
+                    prev.classList.add('disabled');
+                } else {
+                    prev.classList.remove('disabled');
+                }
+                if (grid.scrollLeft + grid.offsetWidth >= grid.scrollWidth - 5) {
+                    next.classList.add('disabled');
+                } else {
+                    next.classList.remove('disabled');
+                }
+            });
         }
 
         function scrollCarousel(direction) {
@@ -5164,7 +5375,7 @@
         });
 
         function openModal(projectId) {
-            if (window.innerWidth <= 640) return;
+            modalTrigger = document.activeElement; // Save trigger for focus restore
             window.currentProjectId = projectId;
             const modal = document.getElementById('projectModal');
             const contentContainer = document.getElementById('modalContent');
@@ -5178,7 +5389,7 @@
             if (template) {
                 contentContainer.innerHTML = template.innerHTML;
             } else {
-                // Fallback 
+                // Fallback
                 const fallbackTemplate = document.getElementById('project' + projectId + '-content');
                 if (fallbackTemplate) {
                     contentContainer.innerHTML = fallbackTemplate.innerHTML;
@@ -5197,6 +5408,10 @@
 
                 // Re-init icons
                 lucide.createIcons();
+
+                // Focus the close button for keyboard users
+                const closeBtn = modal.querySelector('.close-modal');
+                if (closeBtn) closeBtn.focus();
             }, 300);
         }
 
@@ -5208,6 +5423,12 @@
             document.body.style.overflow = 'auto';
             document.documentElement.style.scrollSnapType = 'y mandatory';
             window.currentProjectId = null;
+
+            // Restore focus to the element that opened the modal
+            if (modalTrigger && modalTrigger.focus) {
+                setTimeout(() => modalTrigger.focus(), 100);
+                modalTrigger = null;
+            }
 
             // Cleanup: Remove content to kill WebGL context
             setTimeout(() => {
@@ -5232,6 +5453,36 @@
             if (e.target === this) closeModal();
         });
 
+        // === MODAL ACCESSIBILITY ===
+        let modalTrigger = null; // Track which element opened the modal
+
+        // ESC key closes modal
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('projectModal');
+                if (modal.classList.contains('active')) {
+                    closeModal();
+                }
+            }
+        });
+
+        // Focus trap inside modal
+        document.getElementById('projectModal').addEventListener('keydown', function (e) {
+            if (e.key !== 'Tab') return;
+            const modal = this.querySelector('.modal-container');
+            const focusable = modal.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])');
+            if (focusable.length === 0) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             setLanguage('en');
@@ -5239,12 +5490,8 @@
 
             // === ALWAYS start at hero ===
             history.scrollRestoration = 'manual';
-            document.documentElement.style.scrollSnapType = 'none';
+            window.scrollTo({ top: 0, behavior: 'instant' });
             const isMobile = window.innerWidth <= 640;
-            window.scrollTo({ top: isMobile ? 0 : 50, behavior: 'instant' });
-            requestAnimationFrame(() => {
-                document.documentElement.style.scrollSnapType = 'y mandatory';
-            });
 
             // Smooth scroll for CTA buttons
             document.querySelectorAll('a.hero-cta[href^="#"]').forEach(link => {
@@ -5255,77 +5502,54 @@
                 });
             });
 
-            // === FULLPAGE SCROLL: lock between sections ===
-            const sections = document.querySelectorAll('.landing-hero, .landing-featured, .landing-pm');
-            let currentSection = 0;
-            let isScrolling = false;
+            // Scroll snap is handled by CSS (scroll-snap-type: y mandatory)
+            // No JS wheel/touch hijacking — native browser behavior is sufficient
 
-            window.addEventListener('wheel', (e) => {
-                if (document.getElementById('projectModal').classList.contains('active')) return;
-                e.preventDefault();
-                if (isScrolling) return;
-
-                if (e.deltaY > 30 && currentSection < sections.length - 1) {
-                    currentSection++;
-                    isScrolling = true;
-                    sections[currentSection].scrollIntoView({ behavior: 'smooth' });
-                    setTimeout(() => { isScrolling = false; }, 800);
-                } else if (e.deltaY < -30 && currentSection > 0) {
-                    currentSection--;
-                    isScrolling = true;
-                    if (currentSection === 0) {
-                        window.scrollTo({ top: window.innerWidth <= 640 ? 0 : 50, behavior: 'smooth' });
-                    } else {
-                        sections[currentSection].scrollIntoView({ behavior: 'smooth' });
+            // === HEADER NAV: highlight active section ===
+            const navLinks = document.querySelectorAll('.header-nav-link');
+            const sectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const sectionClass = entry.target.classList.contains('landing-hero') ? 'landing-hero'
+                            : entry.target.classList.contains('landing-featured') ? 'landing-featured'
+                            : 'landing-pm';
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.dataset.section === sectionClass);
+                        });
                     }
-                    setTimeout(() => { isScrolling = false; }, 800);
-                }
-            }, { passive: false });
-
-            // Sync CTA buttons with section tracker
-            document.querySelectorAll('a.hero-cta[href^="#"]').forEach(link => {
-                link.addEventListener('click', () => {
-                    const href = link.getAttribute('href');
-                    sections.forEach((s, i) => {
-                        if (s.id && href === '#' + s.id) currentSection = i;
-                        else if (s.querySelector(href)) currentSection = i;
-                    });
-                    if (href === '#projects') currentSection = 1;
-                    if (href === '#pm-cases') currentSection = 2;
-                    if (href === '#hero') currentSection = 0;
                 });
+            }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+
+            document.querySelectorAll('.landing-hero, .landing-featured, .landing-pm').forEach(s => {
+                sectionObserver.observe(s);
             });
 
-            // === MOBILE: touch snap between sections ===
-            if (isMobile) {
-                let touchStartY = 0;
-                window.addEventListener('touchstart', (e) => {
-                    touchStartY = e.touches[0].clientY;
-                }, { passive: true });
-
-                window.addEventListener('touchend', (e) => {
-                    if (document.getElementById('projectModal').classList.contains('active')) return;
-                    if (isScrolling) return;
-                    const diff = touchStartY - e.changedTouches[0].clientY;
-                    if (Math.abs(diff) < 50) return;
-
-                    if (diff > 0 && currentSection < sections.length - 1) {
-                        currentSection++;
-                        isScrolling = true;
-                        sections[currentSection].scrollIntoView({ behavior: 'smooth' });
-                        setTimeout(() => { isScrolling = false; }, 800);
-                    } else if (diff < 0 && currentSection > 0) {
-                        currentSection--;
-                        isScrolling = true;
-                        if (currentSection === 0) {
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                        } else {
-                            sections[currentSection].scrollIntoView({ behavior: 'smooth' });
-                        }
-                        setTimeout(() => { isScrolling = false; }, 800);
+            // === CARD ENTRANCE ANIMATION ===
+            const cardObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry, i) => {
+                    if (entry.isIntersecting) {
+                        // Stagger: each card delays slightly
+                        const card = entry.target;
+                        const siblings = Array.from(card.parentElement.children);
+                        const idx = siblings.indexOf(card);
+                        setTimeout(() => card.classList.add('visible'), idx * 80);
+                        cardObserver.unobserve(card);
                     }
-                }, { passive: true });
-            }
+                });
+            }, { threshold: 0.15 });
+
+            document.querySelectorAll('.landing-feature-card, .landing-pm-card').forEach(c => {
+                cardObserver.observe(c);
+            });
+
+            // Nav link smooth scroll
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = document.querySelector(link.getAttribute('href'));
+                    if (target) target.scrollIntoView({ behavior: 'smooth' });
+                });
+            });
 
             // === CAROUSEL INDICATOR ===
             function initCarouselIndicator(gridId, barId) {
@@ -5342,11 +5566,16 @@
                         dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
                         bar.appendChild(dot);
                     }
+                    let dotRAF = null;
                     grid.addEventListener('scroll', () => {
-                        const cardWidth = cards[0].offsetWidth + 18;
-                        const activeIdx = Math.round(grid.scrollLeft / cardWidth);
-                        bar.querySelectorAll('.carousel-dot').forEach((d, i) => {
-                            d.classList.toggle('active', i === activeIdx);
+                        if (dotRAF) return;
+                        dotRAF = requestAnimationFrame(() => {
+                            dotRAF = null;
+                            const cardWidth = cards[0].offsetWidth + 18;
+                            const activeIdx = Math.round(grid.scrollLeft / cardWidth);
+                            bar.querySelectorAll('.carousel-dot').forEach((d, i) => {
+                                d.classList.toggle('active', i === activeIdx);
+                            });
                         });
                     });
                 } else {
@@ -5355,6 +5584,7 @@
                     const progress = document.createElement('div');
                     progress.className = 'carousel-progress';
                     bar.appendChild(progress);
+                    let progressRAF = null;
                     function update() {
                         const maxScroll = grid.scrollWidth - grid.clientWidth;
                         if (maxScroll <= 0) { bar.style.display = 'none'; return; }
@@ -5364,7 +5594,13 @@
                         progress.style.width = segW + '%';
                         progress.style.left = (ratio * (100 - segW)) + '%';
                     }
-                    grid.addEventListener('scroll', update);
+                    grid.addEventListener('scroll', () => {
+                        if (progressRAF) return;
+                        progressRAF = requestAnimationFrame(() => {
+                            progressRAF = null;
+                            update();
+                        });
+                    });
                     update();
                 }
             }
@@ -5372,6 +5608,10 @@
             initCarouselIndicator('pmCarousel', 'pmDots');
         });
     </script>
+
+    <footer class="site-footer" role="contentinfo">
+        <p>© 2026 Sewon Park · <a href="mailto:sw010202@uos.ac.kr">Email</a> · <a href="https://github.com/sewon-p" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+    </footer>
 </body>
 
 </html>
