@@ -3750,16 +3750,16 @@
 
                         <article class="landing-feature-card">
                             <span class="feature-kicker" id="feature-ml-kicker">Data & ML Pipeline</span>
-                            <h2 class="feature-title" id="feature-ml-title">UrbanFlow — Real-Time Traffic Density
+                            <h2 class="feature-title" id="feature-ml-title">ProbeDensity — End-to-End Traffic Density
                                 Estimation
                             </h2>
                             <p class="feature-copy" id="feature-ml-copy">
-                                Ingests real-time GPS streams from probe vehicles, segments by road link distance, and serves per-link density predictions via FastAPI on Cloud Run.
+                                Turns smartphone probe trajectories into deployable road-link density estimates through an end-to-end pipeline covering simulation, training, inference, storage, and live inspection.
                             </p>
                             <ul class="feature-points" id="feature-ml-points">
-                                <li>No roadside sensors — smartphone GPS segmented by road geometry and scored via car-following features</li>
-                                <li>No ground-truth labels — SUMO simulations generate training data mapped to Seoul's 2.2K arterial links</li>
-                                <li>Probes take different routes — Bayesian ensemble aggregates per-link predictions with rolling-window persistence</li>
+                                <li>No roadside sensors — smartphone GPS and accelerometer streams are segmented by road-link geometry and scored with trajectory features</li>
+                                <li>No field labels at scale — SUMO simulation generates training data, then the model is served over Seoul's 2.2K arterial links</li>
+                                <li>Real probes do not align — each traversal is predicted first, then overlapping links are aggregated into deployable multi-probe density estimates</li>
                             </ul>
                             <div class="feature-tags">
                                 <span class="feature-tag">Data Pipeline</span>
@@ -5195,9 +5195,9 @@
                 "feature-llm-copy": "Converts natural-language traffic descriptions into runnable SUMO simulations through a fine-tuned parameter extractor and role-separated LLM orchestration.",
                 "feature-llm-points": `<li>Base LLMs hallucinate SUMO parameters (51.5% MAPE) — fine-tuned on real Seoul data, reduced to 10.6%</li><li>Simulation failures are domain-specific — correction loop logs field-level errors and exports retraining data</li><li>40+ interdependent parameters — role-separated pipeline isolates extraction from geometry reasoning</li>`,
                 "feature-ml-kicker": "Data & ML Pipeline",
-                "feature-ml-title": "UrbanFlow — Real-Time Traffic Density Estimation",
-                "feature-ml-copy": "Ingests real-time GPS streams from probe vehicles, segments by road link distance, and serves per-link density predictions via FastAPI on Cloud Run.",
-                "feature-ml-points": `<li>No roadside sensors — smartphone GPS segmented by road geometry and scored via car-following features</li><li>No ground-truth labels — SUMO simulations generate training data mapped to Seoul's 2.2K arterial links</li><li>Probes take different routes — Bayesian ensemble aggregates per-link predictions with rolling-window persistence</li>`,
+                "feature-ml-title": "ProbeDensity — End-to-End Traffic Density Estimation",
+                "feature-ml-copy": "Turns smartphone probe trajectories into deployable road-link density estimates through an end-to-end pipeline covering simulation, training, inference, storage, and live inspection.",
+                "feature-ml-points": `<li>No roadside sensors — smartphone GPS and accelerometer streams are segmented by road-link geometry and scored with trajectory features</li><li>No field labels at scale — SUMO simulation generates training data, then the model is served over Seoul's 2.2K arterial links</li><li>Real probes do not align — each traversal is predicted first, then overlapping links are aggregated into deployable multi-probe density estimates</li>`,
                 "pm-divider": "Supporting Product & Strategy Cases",
                 "pm-note": "Engineering solves the problem — but someone has to define the right problem first. These cases show how I validate markets, design business models, make UX trade-offs, and align stakeholders before a single line of code is written.",
                 "nav-p1-desc": "A cross-border commerce case built around market validation, pricing-gap analysis, and an operating-flow-based B2B pivot.",
