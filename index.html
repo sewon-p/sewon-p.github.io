@@ -3530,12 +3530,11 @@
 
             /* PM cards: centered with peek on both sides */
             .landing-pm-grid {
-                padding: 4px 12px;
-                scroll-padding: 0 calc((100% - 88%) / 2);
+                padding: 4px calc((100% - 80%) / 2);
             }
 
             .landing-pm-grid .landing-pm-card {
-                flex: 0 0 88%;
+                flex: 0 0 80%;
                 scroll-snap-align: center;
             }
 
@@ -3579,6 +3578,7 @@
             /* Replace buttons with simple text on mobile */
             .section-cta-wrap .hero-cta {
                 border: none;
+                background: none;
                 padding: 4px 0;
                 font-size: 0.72rem;
                 color: var(--muted);
