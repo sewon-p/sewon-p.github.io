@@ -503,6 +503,247 @@
             transform: translateY(0);
         }
 
+        .dbc-modal-container {
+            max-width: 560px;
+            padding: 36px 32px;
+        }
+
+        .dbc-modal-content {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .dbc-header {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 50px;
+        }
+
+        .dbc-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--dark, #1a1a1a);
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+
+        .dbc-privacy {
+            font-family: var(--font-mono, 'JetBrains Mono', monospace);
+            font-size: 0.78rem;
+            color: #666;
+            background: #f5f5f7;
+            padding: 6px 10px;
+            border-radius: 6px;
+            align-self: flex-start;
+        }
+
+        .dbc-step {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .dbc-step-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--dark, #1a1a1a);
+        }
+
+        .dbc-step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background: var(--dark, #1a1a1a);
+            color: #fff;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: var(--font-mono, monospace);
+        }
+
+        .dbc-step-text {
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.55;
+            padding-left: 32px;
+        }
+
+        .dbc-theme-row {
+            display: flex;
+            gap: 12px;
+            padding-left: 32px;
+            flex-wrap: wrap;
+        }
+
+        .dbc-theme-btn {
+            display: inline-block;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        .dbc-theme-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.92;
+        }
+
+        .dbc-theme-btn img {
+            height: 52px;
+            display: block;
+        }
+
+        .dbc-dropzone {
+            display: block;
+            margin-left: 32px;
+            border: 2px dashed #d0d0d5;
+            border-radius: 12px;
+            padding: 28px 20px;
+            background: #fafafb;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .dbc-dropzone:hover,
+        .dbc-dropzone:focus,
+        .dbc-dropzone.dragging {
+            border-color: var(--accent, #e63946);
+            background: #fff5f6;
+            outline: none;
+        }
+
+        .dbc-dropzone-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dbc-dropzone-icon {
+            font-size: 1.4rem;
+            color: #999;
+        }
+
+        .dbc-dropzone-text {
+            font-size: 0.92rem;
+            color: var(--dark, #1a1a1a);
+            font-weight: 600;
+        }
+
+        .dbc-dropzone-hint {
+            font-family: var(--font-mono, monospace);
+            font-size: 0.72rem;
+            color: #888;
+        }
+
+        .dbc-step-disabled {
+            opacity: 0.5;
+        }
+
+        .dbc-result {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #f5f5f7;
+            border-radius: 10px;
+            margin-left: 32px;
+        }
+
+        .dbc-result-status {
+            font-family: var(--font-mono, monospace);
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .dbc-result-status.ready {
+            color: #2a8a3e;
+        }
+
+        .dbc-copy-btn {
+            background: var(--dark, #1a1a1a);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease;
+            font-family: inherit;
+        }
+
+        .dbc-copy-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .dbc-copy-btn:not(:disabled):hover {
+            background: var(--accent, #e63946);
+        }
+
+        .dbc-copy-btn.copied {
+            background: #2a8a3e;
+        }
+
+        .dbc-result-hint {
+            font-family: var(--font-mono, monospace);
+            font-size: 0.72rem;
+            color: #888;
+            padding-left: 32px;
+        }
+
+        .dbc-result-hint code {
+            background: #f0f0f2;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 0.95em;
+        }
+
+        .dbc-footer {
+            margin-top: 8px;
+            padding-top: 18px;
+            border-top: 1px solid #ececef;
+            font-size: 0.85rem;
+            color: #666;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .dbc-footer a {
+            color: var(--accent, #e63946);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .dbc-footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 540px) {
+            .dbc-modal-container {
+                padding: 28px 20px;
+            }
+
+            .dbc-theme-row,
+            .dbc-step-text,
+            .dbc-dropzone,
+            .dbc-result,
+            .dbc-result-hint {
+                padding-left: 0;
+                margin-left: 0;
+            }
+
+            .dbc-theme-btn img {
+                height: 44px;
+            }
+        }
+
         .close-modal {
             position: absolute;
             top: 25px;
@@ -2041,6 +2282,22 @@
             background: var(--surface-border, #e0e0e0);
         }
 
+        .feature-thumb-empty {
+            background: #f4f4f5;
+            border: 1px dashed #d4d4d8;
+            cursor: default;
+        }
+
+        .feature-thumb-empty:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .feature-thumb-wide {
+            grid-column: span 2;
+            aspect-ratio: auto;
+        }
+
         .feature-stats {
             position: relative;
             z-index: 1;
@@ -2083,7 +2340,6 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            margin-top: auto;
         }
 
         .feature-btn-row {
@@ -3713,20 +3969,55 @@
                         onclick="scrollEngCarousel(-1)" aria-label="Previous engineering project">←</button>
                     <div class="landing-feature-grid" id="engCarousel">
                         <article class="landing-feature-card">
-                            <span class="feature-kicker" id="feature-llm-kicker">LLM Pipeline</span>
+                            <span class="feature-kicker" id="feature-dbc-kicker">iOS · Open Source</span>
+                            <h2 class="feature-title" id="feature-dbc-title">Digital Business Card — Built Entirely as an Apple Shortcut</h2>
+                            <p class="feature-copy" id="feature-dbc-copy">
+                                A QR-based business card you can fork, rebrand, and send — built as a single Apple Shortcut that runs fully on-device. No app, no server, no signup.
+                            </p>
+                            <ul class="feature-points" id="feature-dbc-points">
+                                <li>Paid alternatives lock customization behind subscriptions — this one is free, MIT-licensed, and rebrandable</li>
+                                <li>Built fully Shortcut-native — entire pipeline (Dictionary → vCard QR → composition → Photos export) runs on-device with Base64-embedded assets for offline rendering</li>
+                                <li>Built for makers — published the 1290×2590 canvas spec, design tokens, and SVG infographic for custom theming</li>
+                            </ul>
+                            <div class="feature-tags">
+                                <span class="feature-tag">Apple Shortcuts</span>
+                                <span class="feature-tag">iOS</span>
+                                <span class="feature-tag">Image Pipeline</span>
+                                <span class="feature-tag">Open Source</span>
+                                <span class="feature-tag">MIT</span>
+                            </div>
+                            <div class="feature-thumbs" id="feature-dbc-thumbs">
+                                <div class="feature-thumb" role="button" tabindex="0" onclick="openThumb(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openThumb(this)}">
+                                    <img src="images/dbc-card.png" alt="Digital business card preview" loading="lazy">
+                                </div>
+                                <div class="feature-thumb feature-thumb-wide" role="button" tabindex="0" onclick="openThumb(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openThumb(this)}">
+                                    <img src="images/dbc-workflow.png" alt="Setup workflow — Open Edit, Fill Dictionary, Paste Base64, Run Shortcut" loading="lazy">
+                                </div>
+                            </div>
+                            <div class="feature-actions">
+                                <div class="feature-btn-row">
+                                    <button class="feature-button" onclick="openDbcModal()">Make It Yours</button>
+                                    <a class="feature-button feature-button-ghost" href="https://github.com/sewon-p/digital-business-card" target="_blank" rel="noopener noreferrer">GitHub</a>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="landing-feature-card">
+                            <span class="feature-kicker" id="feature-llm-kicker">Full-Stack LLM Service</span>
                             <h2 class="feature-title" id="feature-llm-title">Synthetic Driving Scenario Generation</h2>
                             <p class="feature-copy" id="feature-llm-copy">
                                 Converts natural-language traffic descriptions into runnable SUMO simulations through a fine-tuned parameter extractor and role-separated LLM orchestration.
                             </p>
                             <ul class="feature-points" id="feature-llm-points">
-                                <li>Base LLMs hallucinate SUMO parameters (51.5% MAPE) — fine-tuned on real Seoul data, reduced to 10.6%</li>
-                                <li>Simulation failures are domain-specific — correction loop logs field-level errors and exports retraining data</li>
-                                <li>40+ interdependent parameters — role-separated pipeline isolates extraction from geometry reasoning</li>
+                                <li>Base LLMs hallucinate SUMO parameters (51.5% MAPE, +68% speed bias) — fine-tuned on 2,450 Seoul pairs, reduced to 10.6% with 0% JSON failures</li>
+                                <li>Simulation failures are domain-specific — admin logs field-level edits with trainable flags, exports JSONL retraining data</li>
+                                <li>Parameters cascade through dependencies (speed↔V/C↔sigma/tau) — role-separated pipeline isolates extraction from geometry reasoning</li>
                             </ul>
                             <div class="feature-tags">
                                 <span class="feature-tag">Fine-Tuning</span>
                                 <span class="feature-tag">Prompt Engineering</span>
                                 <span class="feature-tag">AI Agent</span>
+                                <span class="feature-tag">RAG</span>
                             </div>
                             <div class="feature-thumbs" id="feature-llm-thumbs">
                                 <div class="feature-thumb" role="button" tabindex="0" onclick="openThumb(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openThumb(this)}">
@@ -3757,9 +4048,9 @@
                                 Turns smartphone probe trajectories into deployable road-link density estimates through an end-to-end pipeline covering simulation, training, inference, storage, and live inspection.
                             </p>
                             <ul class="feature-points" id="feature-ml-points">
-                                <li>No roadside sensors — smartphone GPS and accelerometer streams are segmented by road-link geometry and scored with trajectory features</li>
-                                <li>No field labels at scale — SUMO simulation generates training data, then the model is served over Seoul's 2.2K arterial links</li>
-                                <li>Real probes do not align — each traversal is predicted first, then overlapping links are aggregated into deployable multi-probe density estimates</li>
+                                <li>End-to-end pipeline — SUMO simulation → FastAPI inference → live dashboard, trained on 49K scenarios and deployed over 2.2K Seoul arterial links.</li>
+                                <li>GPS-only density from 32 trajectory features replaces roadside detectors, achieving MAE 1.78 across 0–67 veh/km/lane.</li>
+                                <li>Multi-probe aggregation handles asynchronous arrivals — per-traversal prediction, CF-weighted ensemble over 15-min rolling windows (HCM LOS).</li>
                             </ul>
                             <div class="feature-tags">
                                 <span class="feature-tag">Data Pipeline</span>
@@ -3869,6 +4160,62 @@
         <div class="modal-container">
             <button class="close-modal" onclick="closeModal()" aria-label="Close">×</button>
             <div id="modalContent" class="p-content"></div>
+        </div>
+    </div>
+
+    <!-- Digital Business Card · Make It Yours modal -->
+    <div class="modal-overlay" id="dbcModal" role="dialog" aria-modal="true" aria-label="Make Your Card">
+        <div class="modal-container dbc-modal-container">
+            <button class="close-modal" onclick="closeDbcModal()" aria-label="Close">×</button>
+            <div class="dbc-modal-content">
+                <div class="dbc-header">
+                    <h2 class="dbc-title">Make Your Card</h2>
+                    <span class="dbc-privacy">🔒 Runs locally — your image never leaves your device</span>
+                </div>
+
+                <div class="dbc-step">
+                    <div class="dbc-step-label"><span class="dbc-step-num">1</span> Pick a theme &amp; install</div>
+                    <div class="dbc-theme-row">
+                        <a href="https://www.icloud.com/shortcuts/a9389cdd28624595848a3b978c6f049e" target="_blank" rel="noopener noreferrer" class="dbc-theme-btn">
+                            <img src="images/button-dark.svg" alt="Download Dark Theme">
+                        </a>
+                        <a href="https://www.icloud.com/shortcuts/8ef8349704fa49ecb0b293131a7e0265" target="_blank" rel="noopener noreferrer" class="dbc-theme-btn">
+                            <img src="images/button-light.svg" alt="Download Light Theme">
+                        </a>
+                    </div>
+                </div>
+
+                <div class="dbc-step">
+                    <div class="dbc-step-label"><span class="dbc-step-num">2</span> Drop a background or logo image</div>
+                    <label class="dbc-dropzone" id="dbcDropzone" for="dbcFileInput" tabindex="0">
+                        <input type="file" id="dbcFileInput" accept="image/png,image/jpeg" hidden>
+                        <div class="dbc-dropzone-inner" id="dbcDropzoneInner">
+                            <div class="dbc-dropzone-icon">⬆</div>
+                            <div class="dbc-dropzone-text">Drag image here or click to select</div>
+                            <div class="dbc-dropzone-hint">Background: 1290 × 2590 px · Logo: square · PNG / JPG</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="dbc-step dbc-step-3 dbc-step-disabled" id="dbcStep3">
+                    <div class="dbc-step-label"><span class="dbc-step-num">3</span> Copy the Base64</div>
+                    <div class="dbc-result" id="dbcResult">
+                        <span class="dbc-result-status" id="dbcResultStatus">Waiting for image…</span>
+                        <button class="dbc-copy-btn" id="dbcCopyBtn" onclick="copyDbcBase64()" disabled>Copy Base64</button>
+                    </div>
+                    <div class="dbc-result-hint">Auto-prepends the correct <code>data:image/...</code> prefix</div>
+                </div>
+
+                <div class="dbc-step">
+                    <div class="dbc-step-label"><span class="dbc-step-num">4</span> Paste into the Shortcut</div>
+                    <div class="dbc-step-text">Open the Shortcut → tap <b>Edit</b> (⋯) → find the labeled comment for <b>Logo</b> or <b>Background</b>, then paste into the text box right below it.</div>
+                </div>
+
+                <div class="dbc-footer">
+                    Need fonts, layout, or full design spec?
+                    <a href="https://github.com/sewon-p/digital-business-card" target="_blank" rel="noopener noreferrer">View detailed guide on GitHub →</a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -5190,14 +5537,14 @@
             en: {
                 "featured-divider": "Featured Engineering Work",
                 "featured-note": "These two projects show the engineering side — LLM pipeline design and ML system building, both grounded in mobility and traffic simulation.",
-                "feature-llm-kicker": "LLM Pipeline",
+                "feature-llm-kicker": "Full-Stack LLM Service",
                 "feature-llm-title": "Synthetic Driving Scenario Generation",
                 "feature-llm-copy": "Converts natural-language traffic descriptions into runnable SUMO simulations through a fine-tuned parameter extractor and role-separated LLM orchestration.",
-                "feature-llm-points": `<li>Base LLMs hallucinate SUMO parameters (51.5% MAPE) — fine-tuned on real Seoul data, reduced to 10.6%</li><li>Simulation failures are domain-specific — correction loop logs field-level errors and exports retraining data</li><li>40+ interdependent parameters — role-separated pipeline isolates extraction from geometry reasoning</li>`,
+                "feature-llm-points": `<li>Base LLMs hallucinate SUMO parameters (51.5% MAPE, +68% speed bias) — fine-tuned on 2,450 Seoul pairs, reduced to 10.6% with 0% JSON failures</li><li>Simulation failures are domain-specific — admin logs field-level edits with trainable flags, exports JSONL retraining data</li><li>Parameters cascade through dependencies (speed↔V/C↔sigma/tau) — role-separated pipeline isolates extraction from geometry reasoning</li>`,
                 "feature-ml-kicker": "Data & ML Pipeline",
                 "feature-ml-title": "ProbeDensity — End-to-End Traffic Density Estimation",
                 "feature-ml-copy": "Turns smartphone probe trajectories into deployable road-link density estimates through an end-to-end pipeline covering simulation, training, inference, storage, and live inspection.",
-                "feature-ml-points": `<li>No roadside sensors — smartphone GPS and accelerometer streams are segmented by road-link geometry and scored with trajectory features</li><li>No field labels at scale — SUMO simulation generates training data, then the model is served over Seoul's 2.2K arterial links</li><li>Real probes do not align — each traversal is predicted first, then overlapping links are aggregated into deployable multi-probe density estimates</li>`,
+                "feature-ml-points": `<li>End-to-end pipeline — SUMO simulation → FastAPI inference → live dashboard, trained on 49K scenarios and deployed over 2.2K Seoul arterial links.</li><li>GPS-only density from 32 trajectory features replaces roadside detectors, achieving MAE 1.78 across 0–67 veh/km/lane.</li><li>Multi-probe aggregation handles asynchronous arrivals — per-traversal prediction, CF-weighted ensemble over 15-min rolling windows (HCM LOS).</li>`,
                 "pm-divider": "Supporting Product & Strategy Cases",
                 "pm-note": "Engineering solves the problem — but someone has to define the right problem first. These cases show how I validate markets, design business models, make UX trade-offs, and align stakeholders before a single line of code is written.",
                 "nav-p1-desc": "A cross-border commerce case built around market validation, pricing-gap analysis, and an operating-flow-based B2B pivot.",
@@ -5269,6 +5616,109 @@
             if (!url) return;
             window.open(url, '_blank', 'noopener,noreferrer');
         }
+
+        // === Digital Business Card · Make It Yours modal ===
+        let dbcBase64Result = '';
+
+        function openDbcModal() {
+            const modal = document.getElementById('dbcModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.scrollSnapType = 'none';
+            if (location.hash !== '#make-yours') {
+                history.replaceState(null, '', '#make-yours');
+            }
+            setTimeout(() => {
+                const closeBtn = modal.querySelector('.close-modal');
+                if (closeBtn) closeBtn.focus();
+            }, 300);
+        }
+
+        function closeDbcModal() {
+            const modal = document.getElementById('dbcModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            document.documentElement.style.scrollSnapType = 'y mandatory';
+            if (location.hash === '#make-yours') {
+                history.replaceState(null, '', location.pathname + location.search);
+            }
+        }
+
+        // Auto-open modal if URL has #make-yours
+        window.addEventListener('load', () => {
+            if (location.hash === '#make-yours') {
+                setTimeout(openDbcModal, 100);
+            }
+        });
+
+        function processDbcFile(file) {
+            if (!file) return;
+            if (!/^image\/(png|jpeg)$/.test(file.type)) {
+                document.getElementById('dbcResultStatus').textContent = 'Only PNG or JPG supported';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                dbcBase64Result = e.target.result;
+                const sizeKb = Math.round(file.size / 1024);
+                const sizeText = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`;
+                const status = document.getElementById('dbcResultStatus');
+                status.textContent = `✓ Converted (${sizeText})`;
+                status.classList.add('ready');
+                document.getElementById('dbcStep3').classList.remove('dbc-step-disabled');
+                const btn = document.getElementById('dbcCopyBtn');
+                btn.disabled = false;
+                btn.classList.remove('copied');
+                btn.textContent = 'Copy Base64';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function copyDbcBase64() {
+            if (!dbcBase64Result) return;
+            navigator.clipboard.writeText(dbcBase64Result).then(() => {
+                const btn = document.getElementById('dbcCopyBtn');
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy Base64';
+                    btn.classList.remove('copied');
+                }, 1800);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropzone = document.getElementById('dbcDropzone');
+            const input = document.getElementById('dbcFileInput');
+            if (!dropzone || !input) return;
+
+            input.addEventListener('change', (e) => processDbcFile(e.target.files[0]));
+
+            ['dragenter', 'dragover'].forEach(ev => dropzone.addEventListener(ev, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragging');
+            }));
+            ['dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragging');
+            }));
+            dropzone.addEventListener('drop', (e) => {
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    processDbcFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            // Close on backdrop click
+            const dbcModal = document.getElementById('dbcModal');
+            if (dbcModal) {
+                dbcModal.addEventListener('click', (e) => {
+                    if (e.target === dbcModal) closeDbcModal();
+                });
+                dbcModal.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') closeDbcModal();
+                });
+            }
+        });
 
         function setLanguage(lang) {
             currentLang = 'en';

@@ -3,3 +3,7 @@
 .vscode/
 *.pdf
 *.md
+backups/
+workflow-builder.html
+images/STEP*.PNG
+images/STEP*.jpeg
