@@ -757,16 +757,19 @@
             align-items: center;
             cursor: pointer;
             color: #333;
-            transition: 0.2s;
+            transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+            transform-origin: center center;
             border: none;
             font-size: 1.5rem;
+            line-height: 1;
+            padding: 0;
             z-index: 20;
         }
 
         .close-modal:hover {
             background: var(--primary);
             color: white;
-            transform: rotate(90deg);
+            transform: scale(1.08);
         }
 
         /* Project Content */
