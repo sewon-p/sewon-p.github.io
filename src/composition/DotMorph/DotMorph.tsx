@@ -82,15 +82,24 @@ export function DotMorph({
 
   // sample new target whenever text changes
   const targetDots: DotPoint[] = useMemo(() => {
-    if (typeof document === 'undefined') return [];
+    if (typeof document === 'undefined' || !ready) return [];
     return sampleTextDots({ text, font, width, height, step, threshold });
-  }, [text, font, width, height, step, threshold]);
+  }, [ready, text, font, width, height, step, threshold]);
 
-  // wait one frame to ensure the document fonts are ready before sampling
+  // Ensure the exact canvas font is loaded before sampling. Otherwise a cold
+  // production visit can sample fallback glyphs while local HMR appears correct.
   useEffect(() => {
     let cancelled = false;
     if (typeof document === 'undefined') return;
-    document.fonts?.ready?.then(() => {
+    const fonts = document.fonts;
+    if (!fonts) {
+      setReady(true);
+      return;
+    }
+    Promise.all([
+      fonts.load(font),
+      fonts.ready,
+    ]).then(() => {
       if (!cancelled) setReady(true);
     }).catch(() => {
       if (!cancelled) setReady(true);
@@ -98,7 +107,7 @@ export function DotMorph({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [font]);
 
   // when target changes, match against current cloud and migrate ids
   useEffect(() => {
