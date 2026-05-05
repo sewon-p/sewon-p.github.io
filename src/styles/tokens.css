@@ -1,0 +1,123 @@
+/*
+ * sewon park — design tokens
+ *
+ * single source of truth. every value in the system is one of these.
+ * if a component uses a value not defined here, the system is wrong,
+ * not the component.
+ *
+ * see project_personal_brand.md in /memory for the rationale behind
+ * each decision. do not introduce new values without revisiting it.
+ */
+
+:root {
+  /* ── color ───────────────────────────────────────────────── */
+  --ink: #0A0E14;
+  --paper: #F1F2F4;        /* darker than v1 to give Surface visible separation */
+  --surface: #FFFFFF;
+  --mute: #6B7280;
+  --hairline: #E5E7EB;
+  --tint: #3B6EF5;
+  --tint-hover: #2952D9;
+
+  /* system colors — functional, not brand */
+  --error: #DC2626;
+  --warning: #D97706;
+  --success: #059669;
+
+  /* ── spacing (8px base) ──────────────────────────────────── */
+  --xs: 8px;
+  --sm: 16px;
+  --md: 24px;
+  --lg: 48px;
+  --xl: 96px;
+  --xxl: 144px;
+  --xxxl: 192px;
+
+  /* ── layout ──────────────────────────────────────────────── */
+  --container: 720px;
+  --col-count: 8;
+  --col-gutter: 16px;
+
+  /* ── corner radius (3-step scale + pill) ─────────────────── */
+  --radius-sm: 6px;     /* button, input, chip, small interactive */
+  --radius-md: 12px;    /* card, tile, section container */
+  --radius-lg: 24px;    /* modal, large surface, lifted overlay */
+  --radius-pill: 999px; /* pill / capsule (explicit only) */
+  /* legacy alias — points at -md so old code does not break */
+  --radius: var(--radius-md);
+
+  /* ── typography (sizes & line-heights, 7 steps only) ─────── */
+  --font-sans:
+    'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica,
+    Arial, sans-serif;
+  --font-mono:
+    'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
+
+  /* signature display fonts — never body, never paragraphs */
+  --font-pixel-square: 'Geist Pixel Square', 'Geist Mono', monospace;
+  --font-pixel-grid:   'Geist Pixel Grid',   'Geist Mono', monospace;
+  --font-pixel-line:   'Geist Pixel Line',   'Geist Mono', monospace;
+
+  --text-display: 48px;  --lh-display: 56px;  --tracking-display: -2.40px;
+  --text-h1: 32px;       --lh-h1: 40px;       --tracking-h1: -1.28px;
+  --text-h2: 24px;       --lh-h2: 32px;       --tracking-h2: -0.96px;
+  --text-h3: 20px;       --lh-h3: 28px;       --tracking-h3: -0.48px;
+  --text-body: 16px;     --lh-body: 24px;     --tracking-body: 0;
+  --text-small: 14px;    --lh-small: 20px;    --tracking-small: 0;
+  --text-mono: 14px;     --lh-mono: 20px;     --tracking-mono: 0;
+  --tracking-tight: -0.32px;  /* 16px semibold emphasis */
+
+  /* ── weights (3-tier strict policy) ───────────────────────── */
+  --weight-body: 400;
+  --weight-ui: 500;
+  --weight-headline: 600;
+
+  /* ── motion ──────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* signature motion — "rise + settle".
+     applied site-wide for any element entering the viewport, opening,
+     or transitioning between states. one curve, one duration. spring
+     and scale are forbidden — Rams things do not bounce, do not zoom.
+     the asymmetric ease-out gives a soft mechanical detent at the end. */
+  --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-rise: 280ms;
+
+  --dur-micro: 150ms;   /* hover, color change */
+  --dur-base: 300ms;    /* modal, card, toggle */
+  --dur-sig: 480ms;     /* signature motion (line → surface → line) */
+  --dur-large: 600ms;   /* page transitions */
+
+  /* ── shadow-as-border (Vercel pattern, tuned for our cool ink) ─ */
+  /* lower alpha than Vercel's 0.08 — our ink #0A0E14 has blue undertone
+     that reads heavier; 0.06 matches the same visual weight as Vercel's */
+  --ring:        0 0 0 1px rgba(10, 14, 20, 0.06);
+  --ring-strong: 0 0 0 1px rgba(10, 14, 20, 0.12);
+  --ring-tint:   0 0 0 1px var(--tint);
+
+  /* ── elevation (4-layer stack: ring + mid + distant) ─────── */
+  --elev-card:
+    var(--ring),
+    0 2px 2px rgba(10, 14, 20, 0.04),
+    0 8px 8px -8px rgba(10, 14, 20, 0.04);
+  --elev-card-hover:
+    var(--ring-strong),
+    0 4px 8px rgba(10, 14, 20, 0.06),
+    0 16px 24px -8px rgba(10, 14, 20, 0.08);
+  --elev-modal:
+    var(--ring),
+    0 8px 16px rgba(10, 14, 20, 0.08),
+    0 32px 64px -16px rgba(10, 14, 20, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-micro: 0ms;
+    --dur-base: 0ms;
+    --dur-sig: 0ms;
+    --dur-large: 0ms;
+    --dur-rise: 0ms;
+  }
+}

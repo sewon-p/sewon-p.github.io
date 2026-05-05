@@ -1,0 +1,65 @@
+@import './reset.css';
+@import './tokens.css';
+
+/* Geist variable fonts — single woff2 each, supports weights 100–900 */
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/Geist-Variable.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMono-Variable.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Geist Pixel — three signature display variants (square, grid, line)
+   used for brand display only. never body text. */
+@font-face {
+  font-family: 'Geist Pixel Square';
+  src: url('/fonts/GeistPixel-Square.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Pixel Grid';
+  src: url('/fonts/GeistPixel-Grid.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Pixel Line';
+  src: url('/fonts/GeistPixel-Line.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+html, body, #root {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Hide native scrollbars — the brand's only progress indicator is
+   the top-right accent bar (HomeSequence). Scroll still works. */
+html { scrollbar-width: none; }
+body { -ms-overflow-style: none; }
+body::-webkit-scrollbar { width: 0; height: 0; }
+
+#root { min-height: 100vh; }
+
+/* selection */
+::selection { background: var(--ink); color: var(--paper); }

@@ -1,7 +1,16 @@
 .DS_Store
 .claude/
 .vscode/
+node_modules/
+dist/
+dist-ssr/
+*.local
+logs/
+*.log
+legacy/
+*.zip
 *.pdf
+!public/SewonPark_CV.pdf
 *.md
 backups/
 workflow-builder.html

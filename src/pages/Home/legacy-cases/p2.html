@@ -1,0 +1,249 @@
+<div class="p-header">
+  <span class="p-badge">PROJECT 02</span>
+  <h1 class="p-title">Hyper-local P2P Delivery</h1>
+  <div class="p-meta">Aug 2024 – Nov 2024 · PM &amp; Python Dev · Team of 2</div>
+  <p class="p-subtitle">
+    Campus gig economy that converts movement data into a logistics network.
+  </p>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">01. Problem Discovery</div>
+  <p class="p-section-intro">
+    Potential demand explodes — last-mile trapped in inefficiency.
+  </p>
+  <div class="gap-causes">
+    <h4>Where the cost lives</h4>
+    <ul>
+      <li>
+        <strong>Inefficiency</strong>
+        <span>Riders move to <strong>catch orders</strong>. On campus — hills, restricted entry, long
+          vertical time — last-mile cost is abnormally high.</span>
+      </li>
+      <li>
+        <strong>Unmet Demand</strong>
+        <span>Students want coffee but break time (10–15 min) is too short for a round trip. Demand
+          stays latent because the fixed cost can't be amortised.</span>
+      </li>
+    </ul>
+  </div>
+  <p class="gap-opportunity">
+    <strong>Insight:</strong> no need for professional riders. <strong>Students moving to that
+    building anyway</strong> can deliver — supply is already on the route.
+  </p>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">02. Solution Strategy</div>
+  <p class="p-section-intro">Route-based dispatch, not location-based.</p>
+  <div class="gap-causes">
+    <h4>Paradigm Shift</h4>
+    <ul>
+      <li>
+        <strong>As-Is</strong>
+        <span>Rider moves to order origin → pickup → delivery.
+          <strong>Move to deliver.</strong></span>
+      </li>
+      <li>
+        <strong>To-Be</strong>
+        <span>Orderer picks last-mile destination, system matches a student already moving there.
+          <strong>Deliver while moving.</strong></span>
+      </li>
+    </ul>
+  </div>
+  <p class="gap-opportunity">
+    <strong>Mechanism:</strong> student couriers pick up coffee on their way to class. Delivery
+    cost collapses; mover efficiency maxes out.
+  </p>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">03. Market Validation</div>
+  <p class="p-section-intro">
+    Beyond technical feasibility — verifying willingness to participate.
+  </p>
+  <div class="gap-metrics">
+    <div class="gap-metric">
+      <span class="gap-label">user survey · n=100</span>
+      <strong class="gap-value">68%</strong>
+      <span class="gap-caption">positive response: <strong>"will deliver if route matches 90%"</strong> ·
+        framed as <strong>monetising idle time</strong></span>
+    </div>
+    <div class="gap-delta" aria-hidden="true">·</div>
+    <div class="gap-metric">
+      <span class="gap-label">unit economics</span>
+      <strong class="gap-value">&lt; 1,000 KRW</strong>
+      <span class="gap-caption">matched fee per delivery · <strong>70% cheaper</strong> than the 3,000
+        KRW standard. Validates a micro-delivery market.</span>
+    </div>
+  </div>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">04. Algorithm Comparison</div>
+  <p class="gap-lede">
+    Same start and pickup. Legacy solves scattered drops as a shortest tour.
+    Campus fixes the student's endpoint first, then places drops on that route.
+  </p>
+  <div class="big-algo-container">
+    <div class="big-algo-box">
+      <div class="big-algo-title">Legacy</div>
+      <div class="big-visual">
+        <svg viewBox="-10 -20 320 240" preserveAspectRatio="xMidYMid meet" class="algo-grid-svg">
+          <line class="grid-line" x1="0" y1="40"  x2="300" y2="40"/>
+          <line class="grid-line" x1="0" y1="100" x2="300" y2="100"/>
+          <line class="grid-line" x1="0" y1="160" x2="300" y2="160"/>
+          <line class="grid-line" x1="40"  y1="0" x2="40"  y2="200"/>
+          <line class="grid-line" x1="120" y1="0" x2="120" y2="200"/>
+          <line class="grid-line" x1="200" y1="0" x2="200" y2="200"/>
+          <line class="grid-line" x1="270" y1="0" x2="270" y2="200"/>
+
+          <path id="legacy-route" class="svg-path-dashed"
+            d="M 40,160
+               L 40,140
+               L 80,140
+               L 120,140
+               L 120,40
+               L 210,40
+               L 210,70
+               L 270,70
+               L 270,160" />
+
+          <rect class="svg-node node-start" x="32"  y="152" width="16" height="16" rx="2"/>
+          <text class="svg-label" x="40"  y="186">Student</text>
+
+          <rect class="svg-node node-cafe"  x="72"  y="132" width="16" height="16" rx="2"/>
+          <text class="svg-label" x="80"  y="166">Cafe</text>
+
+          <rect class="svg-node node-drop"  x="112" y="32"  width="16" height="16" rx="2"/>
+          <text class="svg-label" x="120" y="22">Drop1</text>
+
+          <rect class="svg-node node-drop"  x="202" y="62"  width="16" height="16" rx="2"/>
+          <text class="svg-label" x="210" y="56">Drop2</text>
+
+          <rect class="svg-node node-dest"  x="262" y="152" width="16" height="16" rx="2"/>
+          <text class="svg-label" x="270" y="186">Drop3</text>
+
+          <circle class="svg-mover-dot" r="4">
+            <animateMotion dur="9s" repeatCount="indefinite">
+              <mpath href="#legacy-route" />
+            </animateMotion>
+          </circle>
+        </svg>
+      </div>
+      <div class="big-caption">After the same pickup, scattered drops define the path. The route becomes a delivery tour.</div>
+    </div>
+    <div class="big-algo-box">
+      <div class="big-algo-title">Campus (Proposed)</div>
+      <div class="big-visual">
+        <svg viewBox="-10 -20 320 240" preserveAspectRatio="xMidYMid meet" class="algo-grid-svg">
+          <line class="grid-line" x1="0" y1="40"  x2="300" y2="40"/>
+          <line class="grid-line" x1="0" y1="100" x2="300" y2="100"/>
+          <line class="grid-line" x1="0" y1="160" x2="300" y2="160"/>
+          <line class="grid-line" x1="40"  y1="0" x2="40"  y2="200"/>
+          <line class="grid-line" x1="120" y1="0" x2="120" y2="200"/>
+          <line class="grid-line" x1="200" y1="0" x2="200" y2="200"/>
+          <line class="grid-line" x1="270" y1="0" x2="270" y2="200"/>
+
+          <path id="campus-route" class="svg-path-dashed"
+            d="M 40,160
+               L 40,140
+               L 80,140
+               L 140,140
+               L 140,110
+               L 210,110
+               L 210,70
+               L 270,70
+               L 270,40" />
+
+          <rect class="svg-node node-start" x="32"  y="152" width="16" height="16" rx="2"/>
+          <text class="svg-label" x="40"  y="186">Student</text>
+
+          <rect class="svg-node node-cafe"  x="72"  y="132" width="16" height="16" rx="2"/>
+          <text class="svg-label" x="80"  y="166">Cafe</text>
+
+          <rect class="svg-node node-drop"  x="132" y="102" width="16" height="16" rx="2"/>
+          <text class="svg-label" x="140" y="136">Drop1</text>
+
+          <rect class="svg-node node-drop"  x="202" y="62"  width="16" height="16" rx="2"/>
+          <text class="svg-label" x="210" y="56">Drop2</text>
+
+          <rect class="svg-node node-dest"  x="262" y="32"  width="16" height="16" rx="2"/>
+          <text class="svg-label" x="270" y="22">Class</text>
+
+          <circle class="svg-mover-dot" r="4">
+            <animateMotion dur="9s" repeatCount="indefinite">
+              <mpath href="#campus-route" />
+            </animateMotion>
+          </circle>
+        </svg>
+      </div>
+      <div class="big-caption">The endpoint stays fixed. Drops are placed between student and class, so walking carries the delivery.</div>
+    </div>
+  </div>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">05. Tech &amp; Verification</div>
+  <p class="p-section-intro">VRP simulation using Google OR-Tools.</p>
+  <div class="gap-causes">
+    <h4>Approach</h4>
+    <ul>
+      <li>
+        <strong>Algorithm</strong>
+        <span>Derived optimal routes with the <strong>Google OR-Tools</strong> library, matching
+          multiple students (vehicles) against orders (nodes).</span>
+      </li>
+      <li>
+        <strong>Constraints</strong>
+        <span>Modeled real campus variables — <strong>time window</strong> (class schedule),
+          <strong>vertical time</strong> (building entry), <strong>walking speed</strong> — not just
+          horizontal distance.</span>
+      </li>
+    </ul>
+  </div>
+  <div class="gap-metrics">
+    <div class="gap-metric">
+      <span class="gap-label">simulation</span>
+      <strong class="gap-value">−40%</strong>
+      <span class="gap-caption">total distance reduced. Python prototype on real campus map data
+        using OR-Tools route matching.</span>
+    </div>
+  </div>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">06. Outcome &amp; Impact</div>
+  <p class="p-section-intro">
+    The 40% distance cut converts directly into delivery cost.
+  </p>
+  <div class="gap-metrics">
+    <div class="gap-metric">
+      <span class="gap-label">cost per delivery</span>
+      <strong class="gap-value">3,000 → 900 KRW</strong>
+      <span class="gap-caption"><strong>70% saving</strong> proven against the standard 3,000 KRW
+        rate.</span>
+    </div>
+  </div>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">07. Retrospective — KPT</div>
+  <div class="kpt-item kpt-keep">
+    <span class="kpt-label">Keep</span>
+    <p class="kpt-desc"><strong>Route-based, not location-based.</strong> Designed a model that uses
+      idle resources without adding labour input. Supply is already moving.</p>
+  </div>
+  <div class="kpt-item kpt-problem">
+    <span class="kpt-label">Problem</span>
+    <p class="kpt-desc"><strong>Supply-demand sync.</strong> Orders and couriers surge during breaks
+      and vanish during classes — couriers also have to attend class. The peak-time supply crunch
+      was structural, not a tuning problem.</p>
+  </div>
+  <div class="kpt-item kpt-try">
+    <span class="kpt-label">Try</span>
+    <p class="kpt-desc"><strong>Dynamic pricing</strong> — 1.5× incentive during in-class hours to
+      pull supply across the trough. <strong>Pickup zones</strong> near classrooms to drive wait
+      time toward zero.</p>
+  </div>
+</div>

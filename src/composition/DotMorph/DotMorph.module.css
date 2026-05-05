@@ -1,0 +1,13 @@
+/*
+ * DotMorph — point-cloud morph between two text strings.
+ *
+ * Each dot has a stable id, so its color persists through the morph.
+ * A few dots wear the tint color and travel with it across letters,
+ * giving the morph a signature "color flowing through" feel.
+ */
+
+.canvas {
+  position: relative;
+  display: inline-block;
+  /* sized by the consumer via inline width/height */
+}

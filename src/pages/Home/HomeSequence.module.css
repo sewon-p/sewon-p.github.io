@@ -1,0 +1,707 @@
+/*
+ * HomeSequence — scroll-driven hero sequence.
+ *
+ * v3 changes:
+ *   - casePoints: removed `→` arrow + tint; replaced with mono `01/02/03`
+ *     prefix column. Type size + indent carries the hierarchy now.
+ *   - caseLayer entry: spring → rise+settle (ease-settle, 280ms).
+ *   - profile credentials: kept; same readability strategy.
+ */
+
+.zone {
+  /* total scroll length: 4 sections × ~150vh each */
+  position: relative;
+  height: 600vh;
+  background: var(--paper);
+  scroll-snap-type: y mandatory;
+  scroll-snap-stop: always;
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.frame {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+/* ── 5-column vertical guides ─────────────────────────── */
+.guides {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  opacity: 0.6;
+}
+.guide {
+  border-left: 1px solid color-mix(in srgb, var(--hairline) 70%, transparent);
+}
+.guide:first-child { border-left: 0; }
+
+/* ── right-edge chapter rail ──────────────────────────── */
+.accentTrack {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--lg);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.accentRail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--sm);
+  width: calc(var(--xs) / 8);
+  background: color-mix(in srgb, var(--hairline) 76%, transparent);
+}
+
+.accentStop {
+  position: absolute;
+  right: calc(var(--sm) - var(--xs) / 4);
+  width: var(--xs);
+  height: calc(var(--xs) / 4);
+  background: var(--hairline);
+  transform: translateY(-50%);
+}
+
+.accentStopStart { top: 0; }
+.accentStopProfile { top: 25%; }
+.accentStopEngineering { top: 50%; }
+.accentStopStrategy { top: 75%; }
+.accentStopEnd { top: 100%; }
+
+.accentBar {
+  position: absolute;
+  right: 0;
+  width: calc(var(--lg) - var(--sm));
+  height: var(--xs);
+  background: var(--tint);
+  transform: translateY(-50%);
+}
+
+.scrollCue {
+  position: absolute;
+  bottom: var(--md);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+  text-align: center;
+  letter-spacing: var(--tracking-mono);
+  text-transform: lowercase;
+  pointer-events: none;
+}
+.scrollCue::after {
+  content: '▾';
+  display: block;
+  margin-top: var(--xs);
+  color: var(--mute);
+  font-size: var(--text-mono);
+}
+
+.chapterDotBox {
+  position: absolute;
+  top: var(--xl);
+  left: var(--lg);
+  width: calc(var(--xxxl) + var(--xxl));
+  height: var(--xl);
+  pointer-events: none;
+}
+
+.dotAnchor {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.dotStage {
+  display: block;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.heroTagline {
+  position: absolute;
+  left: var(--xl);
+  right: var(--xl);
+  bottom: calc(var(--xl) + var(--md));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--xl);
+  align-items: baseline;
+  pointer-events: none;
+}
+
+/* ── profile (Section 1) ─────────────────────────────── */
+.profileLayer {
+  position: absolute;
+  top: 56%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--lg);
+  padding: 0 var(--xl);
+  pointer-events: none;
+}
+
+.profileStatement {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-headline);
+  font-size: var(--text-h2);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--tracking-h2);
+  color: var(--ink);
+  text-align: center;
+}
+
+.profileCredentials {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: min(640px, 100%);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.profileRow {
+  display: grid;
+  grid-template-columns: var(--xl) 1fr;
+  align-items: baseline;
+  gap: var(--md);
+  padding: var(--xs) 0;
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+}
+
+.profileLabel {
+  margin: 0;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-mono);
+}
+
+.profileValue {
+  margin: 0;
+  color: var(--ink);
+}
+
+.profileLinks {
+  pointer-events: auto;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+}
+
+.profileLinks a {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: var(--ink);
+  text-decoration: none;
+  transition: color var(--dur-micro) var(--ease-out);
+}
+
+.profileLinks a:hover,
+.profileLinks a:focus-visible {
+  color: var(--tint);
+}
+
+.taglineLeft {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-headline);
+  font-size: var(--text-h3);
+  line-height: var(--lh-h3);
+  letter-spacing: var(--tracking-h3);
+  color: var(--ink);
+}
+
+.taglineRight {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-mono);
+  text-align: right;
+}
+
+/* ── case study layer ─────────────────────────────────── */
+.caseLayer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas: 'main side';
+  justify-content: center;
+  align-items: center;
+  column-gap: var(--xxl);
+  padding: calc(var(--xxl) + var(--xl)) var(--lg) var(--xl);
+  pointer-events: auto;
+}
+
+.caseLayerLabel {
+  position: absolute;
+  top: calc(var(--xxl) + var(--lg));
+  left: var(--lg);
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-mono);
+}
+
+.case {
+  display: contents;
+}
+
+.caseMain {
+  grid-area: main;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  width: 52ch;
+  max-width: 100%;
+  min-height: calc(var(--xxxl) + var(--xxl));
+}
+
+.caseDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md);
+  width: 100%;
+  will-change: opacity, filter;
+}
+
+.caseHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--md);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+}
+
+.caseNumber {
+  color: var(--ink);
+  letter-spacing: var(--tracking-mono);
+}
+
+.caseKicker {
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-mono);
+}
+
+.caseTitle {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-headline);
+  font-size: var(--text-h2);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--tracking-h2);
+  color: var(--ink);
+  max-width: 24ch;
+}
+
+.caseBlurb {
+  margin: 0;
+  max-width: 48ch;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-body);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  color: var(--ink);
+}
+
+/* casePoints — v3 redesign.
+   removed: `→` glyph + tint color.
+   added: tabular mono `01/02/03` index column + size jump.
+   each item: a paragraph block with a left index col, generous
+   row-gap to substitute for the missing visual separator. */
+.casePoints {
+  list-style: none;
+  margin: var(--xs) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--md);
+  max-width: 56ch;
+  counter-reset: casepoint;
+}
+.casePoints li {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--md) 1fr;
+  column-gap: var(--sm);
+  padding: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-body);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  color: var(--ink);
+  counter-increment: casepoint;
+}
+.casePoints li::before {
+  content: counter(casepoint, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-body);
+  color: var(--ink);
+  opacity: 0.4;
+  letter-spacing: var(--tracking-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.caseTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sm);
+  margin-top: var(--sm);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+  text-transform: lowercase;
+  letter-spacing: var(--tracking-mono);
+}
+
+.caseActions {
+  display: flex;
+  gap: var(--sm);
+  margin-top: var(--sm);
+  flex-wrap: wrap;
+}
+
+.caseButton {
+  display: inline-flex;
+  align-items: center;
+  height: var(--lg);
+  padding: 0 var(--md);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: 1;
+  letter-spacing: var(--tracking-mono);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out),
+    box-shadow var(--dur-micro) var(--ease-out);
+}
+
+.caseButtonPrimary {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: var(--ring);
+}
+.caseButtonPrimary:hover {
+  background: color-mix(in srgb, var(--ink) 88%, var(--mute));
+}
+
+.caseButtonGhost {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--ring);
+}
+.caseButtonGhost:hover {
+  box-shadow: var(--ring-strong);
+}
+
+/* ── side index ─────────────────────────────────────────── */
+.caseSide {
+  grid-area: side;
+  align-self: center;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 var(--md);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.caseSide::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--xs) / 8);
+  background: var(--hairline);
+}
+
+.caseSideRow {
+  position: relative;
+  border-top: 1px solid var(--hairline);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+}
+.caseSideRow:last-child { border-bottom: 1px solid var(--hairline); }
+
+.caseSideLink {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--md) 1fr auto;
+  gap: var(--sm);
+  padding: var(--sm) 0;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  font: inherit;
+  transition: color var(--dur-micro) var(--ease-out);
+}
+.caseSideLink:hover { color: var(--ink); }
+.caseSideLink:hover .caseSideTitle { color: var(--ink); }
+
+.caseSideThumb {
+  position: absolute;
+  left: calc(-1 * var(--md));
+  top: var(--xs);
+  bottom: var(--xs);
+  width: calc(var(--xs) / 4);
+  background: var(--tint);
+  pointer-events: none;
+}
+
+.caseSideRowActive .caseSideNum,
+.caseSideRowActive .caseSideTitle,
+.caseSideRowActive .caseSideYear {
+  color: var(--ink);
+}
+
+.caseSideNum {
+  color: var(--mute);
+  letter-spacing: var(--tracking-mono);
+}
+
+.caseSideTitle {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  color: var(--mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--dur-micro) var(--ease-out);
+}
+
+.caseSideYear {
+  color: var(--mute);
+  letter-spacing: var(--tracking-mono);
+}
+
+/* ── strategy modal ───────────────────────────────────── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--xl) var(--md);
+  background: color-mix(in srgb, var(--ink) 32%, transparent);
+  backdrop-filter: blur(calc(var(--xs) / 4));
+  -webkit-backdrop-filter: blur(calc(var(--xs) / 4));
+}
+
+.modalCardWrap {
+  position: relative;
+  width: min(
+    calc(var(--xxxl) + var(--xxxl) + var(--xxxl) + var(--xxxl) + var(--xxxl) + var(--xxxl)),
+    100%
+  );
+  max-height: calc(100vh - var(--xl));
+  display: flex;
+}
+
+.modalShell {
+  position: relative;
+  width: 100%;
+  max-height: calc(100vh - var(--xl));
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-modal);
+  scrollbar-width: none;
+}
+.modalShell::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.modalCard {
+  width: 100%;
+  max-height: 100%;
+  padding: var(--xl);
+  box-shadow: var(--elev-modal) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+.modalCloseFloat {
+  position: absolute;
+  top: var(--md);
+  right: var(--md);
+  margin: 0;
+  width: var(--lg);
+  height: var(--lg);
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+  cursor: pointer;
+  text-transform: lowercase;
+  letter-spacing: var(--tracking-mono);
+  z-index: 4;
+  transition:
+    background var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out),
+    box-shadow var(--dur-micro) var(--ease-out);
+}
+.modalCloseFloat:hover {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--ring-strong);
+}
+
+.modalProgressTrack {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--lg);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.modalProgressRail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--sm);
+  width: calc(var(--xs) / 8);
+  background: color-mix(in srgb, var(--hairline) 76%, transparent);
+}
+
+.modalProgressBar {
+  position: absolute;
+  right: 0;
+  width: calc(var(--lg) - var(--sm));
+  height: var(--xs);
+  background: var(--tint);
+}
+
+.modalClose {
+  margin-left: auto;
+  padding: var(--xs) var(--sm);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--ring);
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+  line-height: 1;
+  letter-spacing: var(--tracking-mono);
+  color: var(--mute);
+  cursor: pointer;
+  text-transform: lowercase;
+  transition:
+    color var(--dur-micro) var(--ease-out),
+    box-shadow var(--dur-micro) var(--ease-out);
+}
+.modalClose:hover {
+  color: var(--ink);
+  box-shadow: var(--ring-strong);
+}
+
+.modalTitle {
+  font-size: var(--text-h2) !important;
+  line-height: var(--lh-h2) !important;
+  letter-spacing: var(--tracking-h2) !important;
+}
+
+
+@media (max-width: 720px) {
+  .heroTagline {
+    grid-template-columns: 1fr;
+    gap: var(--sm);
+    left: var(--md);
+    right: var(--md);
+  }
+  .taglineRight { text-align: left; }
+  .frame { height: 100svh; }
+  .chapterDotBox {
+    top: var(--xl);
+    left: var(--md);
+    width: calc(100% - var(--lg));
+  }
+  .caseLayer {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'main'
+      'side';
+    padding: var(--xl) var(--md) var(--md);
+    row-gap: var(--lg);
+    column-gap: 0;
+  }
+  .caseLayerLabel {
+    top: calc(var(--xxl) + var(--lg));
+    left: var(--md);
+  }
+  .caseMain { max-width: none; }
+  .profileLayer { padding: 0 var(--md); top: 60%; }
+  .profileStatement { font-size: var(--text-h3); line-height: var(--lh-h3); }
+  .profileRow { grid-template-columns: var(--xl) 1fr; gap: var(--sm); }
+}

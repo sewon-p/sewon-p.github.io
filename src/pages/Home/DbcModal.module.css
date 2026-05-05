@@ -1,0 +1,280 @@
+/*
+ * DbcModal — interactive Make-Your-Card flow restyled to brand
+ * tokens. Visual language matches CaseModal and the rest of Home.
+ *
+ * Hierarchy without color:
+ *   col-1 — mono index (01/02/03/04), 28px ink @ 0.35 opacity
+ *   col-2 — content; lede 22px ink semibold, body 16px mute
+ *   group separation — single hairline, --xl vertical padding
+ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--xl) var(--md);
+  background: color-mix(in srgb, var(--ink) 32%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.cardWrap {
+  width: min(960px, 100%);
+  max-height: calc(100vh - var(--xxl));
+  display: flex;
+}
+
+.card {
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: var(--xl);
+  gap: 0; /* groups own their own spacing via stepBody padding */
+  box-shadow: var(--elev-modal) !important;
+  border-radius: var(--radius-lg) !important;
+  scrollbar-width: none;
+}
+.card::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-headline);
+  font-size: var(--text-h2);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--tracking-h2);
+  color: var(--ink);
+  text-transform: none;
+}
+
+.privacy {
+  margin-left: var(--sm);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+  text-transform: lowercase;
+  letter-spacing: var(--tracking-mono);
+}
+
+.close {
+  margin-left: auto;
+  padding: var(--xs) var(--sm);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--ring);
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+  line-height: 1;
+  color: var(--mute);
+  cursor: pointer;
+  text-transform: lowercase;
+  letter-spacing: var(--tracking-mono);
+  transition:
+    color var(--dur-micro) var(--ease-out),
+    box-shadow var(--dur-micro) var(--ease-out);
+}
+.close:hover {
+  color: var(--ink);
+  box-shadow: var(--ring-strong);
+}
+
+/* ── steps ──────────────────────────────────────────────── */
+
+/* group layout — mono index col + body col, single hairline below.
+   first step has top hairline; last step has none below. */
+.step {
+  display: grid;
+  grid-template-columns: var(--lg) 1fr;
+  column-gap: var(--md);
+  padding: var(--lg) 0;
+  border-bottom: 1px solid var(--hairline);
+  transition: opacity var(--dur-micro) var(--ease-out);
+}
+.step:first-of-type {
+  border-top: 1px solid var(--hairline);
+}
+
+.stepDisabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* big mono index — type-size hierarchy in place of color */
+.stepNum {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: 28px;
+  line-height: 1.05;
+  color: var(--ink);
+  opacity: 0.35;
+  letter-spacing: var(--tracking-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md);
+  min-width: 0;
+}
+
+/* lede — what the step *is*. semibold ink, 22px → 1.4× body. */
+.stepLede {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-headline);
+  font-size: 22px;
+  line-height: 28px;
+  letter-spacing: -0.4px;
+  color: var(--ink);
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sm);
+}
+
+.stepText {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-body);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  color: var(--mute);
+}
+.stepText b {
+  color: var(--ink);
+  font-weight: var(--weight-ui);
+}
+.stepText code {
+  padding: 2px var(--xs);
+  background: var(--paper);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+  color: var(--ink);
+}
+
+/* ── step 1: theme picker ──────────────────────────────── */
+
+.themeRow {
+  display: flex;
+  gap: var(--sm);
+  flex-wrap: wrap;
+}
+
+/* ── step 2: dropzone ──────────────────────────────────── */
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--xs);
+  padding: var(--md);
+  background: var(--paper);
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  cursor: pointer;
+  transition:
+    box-shadow var(--dur-rise) var(--ease-settle),
+    background var(--dur-rise) var(--ease-settle);
+}
+.dropzone:hover,
+.dropzoneActive {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.dropzoneText {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  color: var(--ink);
+}
+
+.dropzoneHint {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+}
+
+/* ── step 3: result ────────────────────────────────────── */
+
+.result {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+  flex-wrap: wrap;
+}
+
+.resultStatus {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+  text-transform: lowercase;
+}
+
+/* ready state — ink, not tint. weight carries the signal. */
+.resultStatusReady {
+  color: var(--ink);
+  font-weight: var(--weight-headline);
+}
+
+.resultHint {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+}
+.resultHint code {
+  padding: 0 var(--xs);
+  background: var(--paper);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+}
+
+/* ── footer ──────────────────────────────────────────────── */
+
+.footerLink {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 3px;
+  transition:
+    color var(--dur-micro) var(--ease-out),
+    text-decoration-color var(--dur-micro) var(--ease-out);
+}
+.footerLink:hover {
+  color: var(--tint);
+  text-decoration-color: var(--tint);
+}
+
+/* ── narrow viewport — collapse columns ─────────────────── */
+
+@media (max-width: 560px) {
+  .step {
+    grid-template-columns: 1fr;
+    row-gap: var(--xs);
+  }
+  .stepNum {
+    font-size: 20px;
+  }
+}

@@ -1,0 +1,129 @@
+/*
+ * Card primitive — Vercel pattern: shadow-as-border, no CSS border.
+ * Variants:
+ *   l1   ring only (static surface)
+ *   l2   ring + multi-layer elevation (lifted card)
+ *
+ * Composable slots: Card.Kicker / .Head / .Title / .Body / .Points
+ * / .Tags / .Actions / .Meta — all use brand tokens, no magic px.
+ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md);
+  padding: var(--md);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  transition:
+    box-shadow var(--dur-base) var(--ease-out),
+    background-color var(--dur-micro) var(--ease-out);
+}
+
+/* L1 — ring only */
+.l1 { box-shadow: var(--ring); }
+.l1:hover { box-shadow: var(--ring-strong); }
+
+/* L2 — ring + multi-layer elevation */
+.l2 { box-shadow: var(--elev-card); }
+.l2:hover { box-shadow: var(--elev-card-hover); }
+
+/* ── slots ───────────────────────────────────────────────── */
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--md);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-mono);
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-mono);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-headline);
+  font-size: var(--text-h3);
+  line-height: var(--lh-h3);
+  letter-spacing: var(--tracking-h3);
+  color: var(--ink);
+}
+
+.body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--weight-body);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--ink);
+}
+
+.meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-mono);
+}
+
+.points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--xs);
+  font-family: var(--font-sans);
+  font-weight: var(--weight-body);
+  font-size: var(--text-small);
+  line-height: var(--lh-small);
+  color: var(--ink);
+}
+.points li {
+  position: relative;
+  padding-left: var(--md);
+}
+.points li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--tint);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sm);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  color: var(--mute);
+  text-transform: lowercase;
+  letter-spacing: var(--tracking-mono);
+}
+
+.actions {
+  display: flex;
+  gap: var(--sm);
+  margin-top: var(--xs);
+  flex-wrap: wrap;
+}

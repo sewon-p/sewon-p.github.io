@@ -1,0 +1,177 @@
+<div class="p-header">
+  <span class="p-badge">PROJECT 03</span>
+  <h1 class="p-title">Digital Asset Trading & UX Strategy</h1>
+  <div class="p-meta">Jan 2021 – May 2021 · Product Intern (QA) · Cross-functional team of 8</div>
+  <div class="p-tags">
+    <span class="p-tag p-tag-strong">Pre-A · 300M JPY raised</span>
+    <span class="p-tag">Internship</span>
+  </div>
+  <p class="p-subtitle">
+    REC &amp; Carbon Credit trading platform. Designing intuitiveness that persuades institutional
+    investors — escaping conventional HTS UI.
+  </p>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">01. Context &amp; Problem</div>
+  <p class="gap-lede">
+    Conventional HTS UI missed the essence of energy trading. Joined the MVP as <strong>QA Intern</strong>
+    on a small team building a blockchain platform for REC and Carbon Credits.
+  </p>
+  <div class="gap-causes">
+    <h4>Issue Discovery</h4>
+    <ul>
+      <li>
+        <strong>Trigger</strong>
+        <span>Human error from <strong>buy/sell button colors</strong> set opposite to local convention
+          (US vs Asia). The misclick wasn't user fault — the interface contradicted muscle memory.</span>
+      </li>
+      <li>
+        <strong>Root Cause</strong>
+        <span>Customers were not day traders but <strong>institutional managers</strong> handling
+          portfolios. They needed accuracy and condition comparison, not speed. Standard HTS density
+          imposed unnecessary cognitive load.</span>
+      </li>
+    </ul>
+  </div>
+  <p class="gap-opportunity">
+    <strong>Insight:</strong> design an experience where the user trades intuitively, without hesitation
+    — structure first, speed second.
+  </p>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">02. Hypothesis &amp; Solution</div>
+  <p class="gap-lede">
+    <strong>Hypothesis:</strong> a bulletin-style structure with explicit information hierarchy reduces
+    error risk and increases trust. <strong>Goal:</strong> zero malfunction, minimised learning cost.
+  </p>
+  <div class="gap-causes">
+    <h4>Action · Logic &amp; Prioritisation</h4>
+    <ul>
+      <li>
+        <strong>Data-Driven Persuasion</strong>
+        <span>Convinced the planning team with <strong>color-culture differences</strong> and
+          <strong>F-pattern eye-tracking</strong> data. Demonstrated that list visibility, not chart
+          density, drives accuracy for this user.</span>
+      </li>
+      <li>
+        <strong>Engineering Collaboration</strong>
+        <span>Compromised on <strong>CSS / layout adjustments</strong> instead of full redevelopment.
+          Held structural intuitiveness and data integrity as the immovable priorities to meet the MVP
+          deadline.</span>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">03. UX Transformation — Before vs After</div>
+  <p class="p-section-intro">
+    Abstract wireframes to comply with security regulations.
+  </p>
+  <div class="big-algo-container">
+    <div class="big-algo-box">
+      <div class="big-algo-title">Before — HTS Style</div>
+      <div class="big-visual">
+        <div class="ux-hts">
+          <div class="ux-hts-chart"></div>
+          <div class="ux-hts-orderbook">
+            <span class="ux-bar-65"></span>
+            <span class="ux-bar-90"></span>
+            <span class="ux-bar-45"></span>
+            <span class="ux-bar-75"></span>
+            <span class="ux-bar-55"></span>
+            <span class="ux-bar-80"></span>
+          </div>
+          <div class="ux-hts-actions">
+            <div class="ux-btn ux-btn-buy"><span>BUY</span></div>
+            <div class="ux-btn ux-btn-sell"><span>SELL</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="big-caption">Color-standard conflict. Cognitive dissonance under speed.</div>
+    </div>
+    <div class="big-algo-box ux-interactive" onclick="window.toggleUxBulletin && window.toggleUxBulletin(this)">
+      <div class="big-algo-title">After — Bulletin Style</div>
+      <div class="big-visual">
+        <div class="ux-list">
+          <div class="ux-list-row"><span class="ux-bar"></span><span class="ux-pill"></span></div>
+          <div class="ux-list-row"><span class="ux-bar wide"></span><span class="ux-pill"></span></div>
+          <div class="ux-list-row"><span class="ux-bar narrow"></span><span class="ux-pill"></span></div>
+          <div class="ux-list-row"><span class="ux-bar"></span><span class="ux-pill"></span></div>
+        </div>
+        <div class="ux-anim-overlay">
+          <div class="ux-anim-elem ux-anim-elem-1">
+            <span class="ux-anim-bar ux-anim-bar-strong"></span>
+            <span class="ux-anim-bar"></span>
+            <span class="ux-anim-bar"></span>
+          </div>
+          <div class="ux-anim-elem ux-anim-elem-2">
+            <span class="ux-anim-bar-tag"></span>
+            <span class="ux-anim-bar-line"></span>
+          </div>
+          <div class="ux-anim-elem ux-anim-elem-3">
+            <span class="ux-anim-chip"></span>
+            <span class="ux-anim-chip"></span>
+            <span class="ux-anim-chip"></span>
+          </div>
+          <div class="ux-anim-elem ux-anim-elem-4">
+            <span class="ux-anim-block-label">Trade Terms</span>
+            <span class="ux-anim-bar-line"></span>
+            <span class="ux-anim-bar-line short"></span>
+            <span class="ux-anim-bar-line shorter"></span>
+          </div>
+        </div>
+        <span class="ux-demo-hint">click to demo</span>
+      </div>
+      <div class="big-caption">Clear hierarchy. List-driven. Zero errors in usability tests.</div>
+    </div>
+  </div>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">04. Outcome &amp; Impact</div>
+  <div class="gap-metrics">
+    <div class="gap-metric">
+      <span class="gap-label">macro</span>
+      <strong class="gap-value">300M JPY</strong>
+      <span class="gap-caption">Pre-A round secured · MVP demonstrated with improved UX</span>
+    </div>
+    <div class="gap-delta" aria-hidden="true">·</div>
+    <div class="gap-metric">
+      <span class="gap-label">micro · QA</span>
+      <strong class="gap-value">0%</strong>
+      <span class="gap-caption">error rate in internal usability tests after List UI applied</span>
+    </div>
+  </div>
+  <div class="gap-causes">
+    <h4>Contribution</h4>
+    <ul>
+      <li>
+        <strong>UX Pivot</strong>
+        <span>Persuaded planning and design — as an intern — to redirect the core UX from HTS density to
+          bulletin clarity. The pivot held through to launch.</span>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="p-section">
+  <div class="p-sec-title">05. Retrospective — KPT</div>
+  <div class="kpt-item kpt-keep">
+    <span class="kpt-label">Keep</span>
+    <p class="kpt-desc"><strong>Data-driven persuasion.</strong> Used eye-tracking data and cultural
+      conventions as objective evidence to move stakeholders past "this is how we always did it."</p>
+  </div>
+  <div class="kpt-item kpt-problem">
+    <span class="kpt-label">Problem</span>
+    <p class="kpt-desc"><strong>Cost of late discovery.</strong> A fatal design error surfaced only at QA
+      phase, forcing a hotfix path instead of a clean redesign.</p>
+  </div>
+  <div class="kpt-item kpt-try">
+    <span class="kpt-label">Try</span>
+    <p class="kpt-desc"><strong>Shift left.</strong> Quality control belongs at planning, not QA. Run
+      usability tests at the wireframe stage to minimise rework cost.</p>
+  </div>
+</div>
