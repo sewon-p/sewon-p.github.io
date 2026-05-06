@@ -145,7 +145,7 @@
 
 .scrollCue {
   position: absolute;
-  bottom: var(--md);
+  bottom: max(var(--md), env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-mono);
@@ -805,28 +805,37 @@
   .stage { height: 100svh; }
   .frame {
     height: 100svh;
-    /* Use the desktop --logo-bottom on mobile too. Pulling it higher
-       crammed the chapter card against the top edge; keep the same
-       breathing room as desktop and let the slider area fill the
-       rest of the screen naturally. */
+    /* Recompute --logo-bottom for the mobile chapterDotBox position
+       (pinned to safe-area top instead of var(--lg)). The variable
+       cascades into caseLayer padding + caseLayerLabel position so
+       the chapter card hugs the artwork tightly with no spare zone. */
+    --logo-bottom: calc(
+      max(var(--xs), env(safe-area-inset-top)) + var(--xl) / 2 + 100px * var(--chapter-scale)
+    );
   }
   .heroTagline {
     grid-template-columns: 1fr;
     gap: var(--sm);
-    left: var(--md);
-    right: var(--md);
-    /* Lifted up to clear the scroll cue that lives at bottom: var(--md).
-       Two rows of tagline + a swipe-prompt below need separation. */
-    bottom: var(--xl);
+    left: var(--xs);
+    right: var(--xs);
+    /* Pull above the scroll cue (which lives at safe-area-inset-bottom
+       + var(--xs) below). The tagline still has clear air above the
+       phone home indicator. */
+    bottom: calc(max(var(--xs), env(safe-area-inset-bottom)) + var(--xxl));
   }
   .taglineRight { text-align: left; }
   .accentTrack { display: none; }
   .modalProgressTrack { display: none; }
   .modalCard { padding: var(--md); }
+  /* Pinned to the system safe area only — no decorative top padding.
+     env(safe-area-inset-top) returns the notch height (≈47 px on a
+     Dynamic Island iPhone, 0 on Android). Falls back to var(--xs)
+     when env() is unsupported so the artwork never touches a hard
+     bezel edge. */
   .chapterDotBox {
-    top: var(--md);
-    left: var(--md);
-    width: calc(100% - var(--lg));
+    top: max(var(--xs), env(safe-area-inset-top));
+    left: var(--xs);
+    width: calc(100% - var(--md));
   }
   .caseLayer {
     grid-template-columns: 1fr;
@@ -834,7 +843,12 @@
     grid-template-areas:
       'header'
       'main';
-    padding: calc(var(--logo-bottom) + var(--xs)) 0 var(--md);
+    /* Top: just below the chapter logo (logo-bottom).
+       Bottom: phone home-indicator only. No decorative buffer. */
+    padding:
+      calc(var(--logo-bottom) + var(--xs))
+      0
+      max(var(--xs), env(safe-area-inset-bottom));
     row-gap: var(--xs);
     column-gap: 0;
   }
@@ -868,7 +882,7 @@
   .caseSlide {
     flex: 0 0 100%;
     scroll-snap-align: start;
-    padding: 0 var(--md);
+    padding: 0 var(--sm);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -891,8 +905,8 @@
     grid-area: header;
     display: flex;
     align-items: center;
-    gap: var(--md);
-    padding: 0 var(--md);
+    gap: var(--sm);
+    padding: 0 var(--sm);
   }
   .caseSliderCounter {
     display: inline-flex;
@@ -912,7 +926,7 @@
      would override the centering. The dot cloud lifts to ~30 % of the
      frame above center so the credentials list reads cleanly below. */
   .profileLayer {
-    padding: 0 var(--md);
+    padding: 0 var(--sm);
     top: 0;
     bottom: 0;
     justify-content: center;
