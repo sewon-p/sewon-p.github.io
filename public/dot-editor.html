@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dot editor — sewon park</title>
+  <style>
+    @font-face {
+      font-family: 'Geist Pixel Square';
+      src: url('/fonts/GeistPixel-Square.woff2') format('woff2');
+      font-display: block;
+    }
+    @font-face {
+      font-family: 'Geist Pixel Circle';
+      src: url('/fonts/GeistPixel-Circle.woff2') format('woff2');
+      font-display: block;
+    }
+    @font-face {
+      font-family: 'Geist Pixel Grid';
+      src: url('/fonts/GeistPixel-Grid.woff2') format('woff2');
+      font-display: block;
+    }
+    @font-face {
+      font-family: 'Geist Pixel Line';
+      src: url('/fonts/GeistPixel-Line.woff2') format('woff2');
+      font-display: block;
+    }
+    @font-face {
+      font-family: 'Geist';
+      src: url('/fonts/Geist-Variable.woff2') format('woff2-variations');
+      font-weight: 100 900;
+    }
+    @font-face {
+      font-family: 'Geist Mono';
+      src: url('/fonts/GeistMono-Variable.woff2') format('woff2-variations');
+      font-weight: 100 900;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #f1f2f4;
+      color: #0a0e14;
+      font-family: 'Geist', system-ui, sans-serif;
+      font-size: 14px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+    }
+    .toolbar label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 12px;
+      color: #5b616b;
+    }
+    .toolbar select,
+    .toolbar input,
+    .toolbar button {
+      font-family: 'Geist Mono', monospace;
+      font-size: 12px;
+      padding: 6px 10px;
+      border: 1px solid #d4d7dc;
+      border-radius: 4px;
+      background: #fff;
+      color: #0a0e14;
+    }
+    .toolbar button {
+      cursor: pointer;
+      background: #0a0e14;
+      color: #fff;
+      border-color: #0a0e14;
+    }
+    .toolbar button.ghost {
+      background: #fff;
+      color: #0a0e14;
+    }
+    .toolbar input[type="number"] { width: 64px; }
+    .toolbar .spacer { flex: 1; }
+    .stage {
+      position: relative;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      overflow: auto;
+      max-width: 100%;
+    }
+    .stage-inner {
+      position: relative;
+      width: 1400px;
+      height: 360px;
+    }
+    canvas.layer {
+      position: absolute;
+      inset: 0;
+      width: 1400px;
+      height: 360px;
+      display: block;
+      image-rendering: pixelated;
+    }
+    canvas#bg { z-index: 1; opacity: 0.18; }
+    canvas#grid { z-index: 2; opacity: 0.4; pointer-events: none; }
+    canvas#dots { z-index: 3; cursor: crosshair; }
+    .help {
+      margin-top: 8px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      color: #5b616b;
+      line-height: 1.5;
+    }
+    .help kbd {
+      padding: 1px 6px;
+      background: #fff;
+      border: 1px solid #d4d7dc;
+      border-radius: 3px;
+      font-family: inherit;
+    }
+    .stat {
+      display: inline-flex;
+      gap: 4px;
+      align-items: baseline;
+      font-family: 'Geist Mono', monospace;
+      font-size: 12px;
+      padding: 6px 10px;
+      background: #f1f2f4;
+      border-radius: 4px;
+    }
+    .stat b { color: #0a0e14; font-weight: 600; }
+    textarea {
+      width: 100%;
+      height: 180px;
+      margin-top: 8px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      padding: 8px;
+      border: 1px solid #d4d7dc;
+      border-radius: 4px;
+      background: #fff;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+  <h1>Dot editor — manually mark Geist Pixel dots</h1>
+
+  <div class="toolbar">
+    <label>label
+      <select id="label">
+        <option value="sewon park.">sewon park.</option>
+        <option value="engineering">engineering</option>
+        <option value="strategy">strategy</option>
+      </select>
+    </label>
+
+    <label>font
+      <select id="font">
+        <option value="Geist Pixel Circle">Geist Pixel Circle</option>
+        <option value="Geist Pixel Square">Geist Pixel Square</option>
+        <option value="Geist Pixel Grid">Geist Pixel Grid</option>
+        <option value="Geist Pixel Line">Geist Pixel Line</option>
+        <option value="Geist">Geist (sans, current)</option>
+      </select>
+    </label>
+
+    <label>font size
+      <input type="number" id="fontSize" value="200" min="40" max="320" step="4" />
+    </label>
+
+    <label>grid
+      <input type="number" id="step" value="8" min="2" max="64" step="0.5" />
+    </label>
+
+    <label>off X
+      <input type="number" id="offsetX" value="0" min="-32" max="32" step="0.5" />
+    </label>
+
+    <label>off Y
+      <input type="number" id="offsetY" value="0" min="-32" max="32" step="0.5" />
+    </label>
+
+    <label>dot ⌀
+      <input type="number" id="diameter" value="8" min="0.5" max="48" step="0.5" />
+    </label>
+
+    <button class="ghost" id="matchSize">⌀ = grid</button>
+
+    <label>tool
+      <select id="tool">
+        <option value="dot">dot (left)</option>
+        <option value="accent">accent (left)</option>
+        <option value="erase">erase (left)</option>
+      </select>
+    </label>
+
+    <span class="spacer"></span>
+
+    <button class="ghost" id="vectorize">Vectorize from font</button>
+    <button class="ghost" id="autofill">Autofill (grid)</button>
+    <button class="ghost" id="clear">Clear</button>
+    <button id="export">Export all → JSON</button>
+  </div>
+
+  <div class="stage">
+    <div class="stage-inner">
+      <canvas id="bg" class="layer" width="1400" height="360"></canvas>
+      <canvas id="grid" class="layer" width="1400" height="360"></canvas>
+      <canvas id="dots" class="layer" width="1400" height="360"></canvas>
+    </div>
+  </div>
+
+  <div class="help">
+    <span class="stat">canvas <b>1400 × 360</b></span>
+    <span class="stat">dots <b id="count">0</b></span>
+    <span class="stat">accent <b id="countAccent">0</b></span>
+    <span class="stat">step <b id="stepLabel">8</b> px</span>
+    <br>
+    Left click — apply current tool · <kbd>Shift</kbd>+click — accent ·
+    <kbd>Alt</kbd>+click — erase · drag to mass-apply ·
+    <kbd>Cmd/Ctrl</kbd>+<kbd>Z</kbd> — undo
+  </div>
+
+  <textarea id="output" placeholder="Export output appears here…" spellcheck="false"></textarea>
+
+  <script>
+    // ─── canvas + state ────────────────────────────────────────────────
+    const W = 1400;
+    const H = 360;
+    const DPR = Math.max(1, window.devicePixelRatio || 1);
+    const bgCanvas = document.getElementById('bg');
+    const gridCanvas = document.getElementById('grid');
+    const dotsCanvas = document.getElementById('dots');
+    const bgCtx = bgCanvas.getContext('2d');
+    const gridCtx = gridCanvas.getContext('2d');
+    const dotsCtx = dotsCanvas.getContext('2d');
+
+    /* Bring all three canvases up to the device pixel ratio. Without
+       this the 1400 × 360 backing stores get scaled up 2× by retina
+       displays, blurring both the pixel font in the bg layer and the
+       round dots in the dots layer. CSS size stays 1400 × 360. */
+    function setupHiDPI(canvas, ctx) {
+      canvas.width = W * DPR;
+      canvas.height = H * DPR;
+      canvas.style.width = `${W}px`;
+      canvas.style.height = `${H}px`;
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    setupHiDPI(bgCanvas, bgCtx);
+    setupHiDPI(gridCanvas, gridCtx);
+    setupHiDPI(dotsCanvas, dotsCtx);
+
+    /* State: per-label dot map keyed by absolute (x,y) string in
+       canvas coordinates. Storing absolute (not grid-relative) means
+       changing the grid step / offset never moves dots that have
+       already been placed — the grid is purely a visual snap helper. */
+    const labels = ['sewon park.', 'engineering', 'strategy'];
+    /** @type {Record<string, Map<string, 'dot' | 'accent'>>} */
+    const data = Object.fromEntries(labels.map((l) => [l, new Map()]));
+    /** @type {Record<string, Array<Map<string, 'dot' | 'accent'>>>} */
+    const undoStacks = Object.fromEntries(labels.map((l) => [l, []]));
+
+    const labelEl = document.getElementById('label');
+    const fontEl = document.getElementById('font');
+    const fontSizeEl = document.getElementById('fontSize');
+    const stepEl = document.getElementById('step');
+    const offsetXEl = document.getElementById('offsetX');
+    const offsetYEl = document.getElementById('offsetY');
+    const diameterEl = document.getElementById('diameter');
+    const toolEl = document.getElementById('tool');
+    const countEl = document.getElementById('count');
+    const countAccentEl = document.getElementById('countAccent');
+    const stepLabelEl = document.getElementById('stepLabel');
+    const outputEl = document.getElementById('output');
+
+    // ─── grid helpers ──────────────────────────────────────────────────
+    function gridParams() {
+      return {
+        step: parseFloat(stepEl.value) || 8,
+        offX: parseFloat(offsetXEl.value) || 0,
+        offY: parseFloat(offsetYEl.value) || 0,
+      };
+    }
+
+    /**
+     * Snap a canvas-pixel point to the nearest grid-cell CENTER given
+     * the current step + offset. Returns absolute canvas coords.
+     */
+    function snapToCellCenter(absX, absY) {
+      const { step, offX, offY } = gridParams();
+      const cellX = Math.floor((absX - offX) / step);
+      const cellY = Math.floor((absY - offY) / step);
+      const x = cellX * step + offX + step / 2;
+      const y = cellY * step + offY + step / 2;
+      return { x, y };
+    }
+
+    function keyFor(x, y) {
+      // round to 0.5 px so floating-point drift never produces dupe keys
+      const r = (n) => Math.round(n * 2) / 2;
+      return `${r(x)},${r(y)}`;
+    }
+
+    // ─── rendering ─────────────────────────────────────────────────────
+    async function ensureFontLoaded() {
+      const font = fontEl.value;
+      const size = parseInt(fontSizeEl.value, 10);
+      const spec = `500 ${size}px '${font}'`;
+      try {
+        await document.fonts.load(spec, labelEl.value);
+      } catch (_) {
+        // ignore — will fall back to system mono
+      }
+    }
+
+    async function drawBackground() {
+      await ensureFontLoaded();
+      bgCtx.clearRect(0, 0, W, H);
+      const text = labelEl.value;
+      const font = fontEl.value;
+      const size = parseInt(fontSizeEl.value, 10);
+      bgCtx.fillStyle = '#0a0e14';
+      bgCtx.font = `500 ${size}px '${font}', 'Geist Mono', monospace`;
+      bgCtx.textBaseline = 'middle';
+      bgCtx.textAlign = 'center';
+      bgCtx.fillText(text, W / 2, H / 2);
+    }
+
+    function drawGrid() {
+      gridCtx.clearRect(0, 0, W, H);
+      const { step, offX, offY } = gridParams();
+      gridCtx.strokeStyle = '#94a3b8';
+      gridCtx.lineWidth = 1;
+      gridCtx.beginPath();
+      // start the first vertical line at the offset, mod step,
+      // then walk every `step` to W. Same for horizontal.
+      const startX = ((offX % step) + step) % step;
+      const startY = ((offY % step) + step) % step;
+      for (let x = startX; x <= W; x += step) {
+        gridCtx.moveTo(x + 0.5, 0);
+        gridCtx.lineTo(x + 0.5, H);
+      }
+      for (let y = startY; y <= H; y += step) {
+        gridCtx.moveTo(0, y + 0.5);
+        gridCtx.lineTo(W, y + 0.5);
+      }
+      gridCtx.stroke();
+      stepLabelEl.textContent = String(step);
+    }
+
+    function drawDots() {
+      dotsCtx.clearRect(0, 0, W, H);
+      const map = data[labelEl.value];
+      const radius = (parseFloat(diameterEl.value) || 0) / 2;
+      let dotCount = 0;
+      let accentCount = 0;
+      for (const [key, kind] of map) {
+        const [x, y] = key.split(',').map(Number);
+        dotsCtx.beginPath();
+        dotsCtx.fillStyle = kind === 'accent' ? '#3b6ef5' : '#0a0e14';
+        dotsCtx.arc(x, y, radius, 0, Math.PI * 2);
+        dotsCtx.fill();
+        if (kind === 'accent') accentCount += 1;
+        else dotCount += 1;
+      }
+      countEl.textContent = String(dotCount + accentCount);
+      countAccentEl.textContent = String(accentCount);
+    }
+
+    async function redraw() {
+      await drawBackground();
+      drawGrid();
+      drawDots();
+    }
+
+    // ─── interactions ──────────────────────────────────────────────────
+    function pushUndo() {
+      const map = data[labelEl.value];
+      undoStacks[labelEl.value].push(new Map(map));
+      if (undoStacks[labelEl.value].length > 50) undoStacks[labelEl.value].shift();
+    }
+
+    function pointFromEvent(e) {
+      const rect = dotsCanvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      const absX = (e.clientX - rect.left) * scaleX;
+      const absY = (e.clientY - rect.top) * scaleY;
+      return snapToCellCenter(absX, absY);
+    }
+
+    function applyAt(x, y, kind) {
+      const map = data[labelEl.value];
+      const key = keyFor(x, y);
+      if (kind === 'erase') map.delete(key);
+      else map.set(key, kind);
+    }
+
+    let dragging = false;
+    let dragKind = null;
+    let lastKey = null;
+
+    function resolveKind(e) {
+      if (e.altKey) return 'erase';
+      if (e.shiftKey) return 'accent';
+      return toolEl.value;
+    }
+
+    dotsCanvas.addEventListener('mousedown', (e) => {
+      pushUndo();
+      dragging = true;
+      dragKind = resolveKind(e);
+      const { x, y } = pointFromEvent(e);
+      lastKey = keyFor(x, y);
+      applyAt(x, y, dragKind);
+      drawDots();
+      e.preventDefault();
+    });
+
+    dotsCanvas.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const { x, y } = pointFromEvent(e);
+      const key = keyFor(x, y);
+      if (key === lastKey) return;
+      lastKey = key;
+      applyAt(x, y, dragKind);
+      drawDots();
+    });
+
+    window.addEventListener('mouseup', () => {
+      dragging = false;
+      dragKind = null;
+      lastKey = null;
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+        const stack = undoStacks[labelEl.value];
+        const prev = stack.pop();
+        if (prev) {
+          data[labelEl.value] = prev;
+          drawDots();
+        }
+        e.preventDefault();
+      }
+    });
+
+    // ─── autofill from font (sampler algorithm) ────────────────────────
+    async function autofillFromFont() {
+      await ensureFontLoaded();
+      pushUndo();
+      const map = data[labelEl.value];
+      map.clear();
+
+      // Sampler canvas — backing store kept at logical 1400 × 360
+      // because we read pixels at integer logical coords; scaling
+      // here would only complicate getImageData lookups.
+      const sampler = document.createElement('canvas');
+      sampler.width = W;
+      sampler.height = H;
+      const ctx = sampler.getContext('2d');
+      ctx.fillStyle = '#000';
+      ctx.font = `500 ${fontSizeEl.value}px '${fontEl.value}', 'Geist Mono', monospace`;
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      ctx.fillText(labelEl.value, W / 2, H / 2);
+
+      const img = ctx.getImageData(0, 0, W, H).data;
+      const { step, offX, offY } = gridParams();
+      // Walk grid cell centers across the canvas using current offset.
+      const startX = ((offX % step) + step) % step + step / 2;
+      const startY = ((offY % step) + step) % step + step / 2;
+      for (let cy = startY; cy < H; cy += step) {
+        for (let cx = startX; cx < W; cx += step) {
+          const px = Math.floor(cx);
+          const py = Math.floor(cy);
+          const idx = (py * W + px) * 4;
+          const a = img[idx + 3];
+          const luminance = (img[idx] + img[idx + 1] + img[idx + 2]) / 3;
+          if (a > 80 && luminance < 140) {
+            map.set(keyFor(cx, cy), 'dot');
+          }
+        }
+      }
+      drawDots();
+    }
+
+    // ─── vectorize: extract dot centers from font's pixel circles ────
+    /**
+     * Geist Pixel circles are typically rendered touching each other,
+     * so a plain connected-component pass sees one whole letter as a
+     * single cluster. We use a 2-pass distance transform instead:
+     * for every dark pixel, compute the Euclidean distance to the
+     * nearest light pixel; the centers of the circles are the local
+     * maxima of that distance map. Adjacent circles still produce
+     * distinct peaks because the saddle between them sits at a lower
+     * distance value than either centroid.
+     *
+     * After detection, non-maximum suppression keeps only the
+     * strongest peak inside a radius so we never get duplicates.
+     */
+    async function vectorize() {
+      await ensureFontLoaded();
+
+      const SCALE = 2; // 2× supersampling for sub-pixel center accuracy
+      const sw = W * SCALE;
+      const sh = H * SCALE;
+      const sampler = document.createElement('canvas');
+      sampler.width = sw;
+      sampler.height = sh;
+      const ctx = sampler.getContext('2d');
+      ctx.scale(SCALE, SCALE);
+      ctx.fillStyle = '#000';
+      ctx.font = `500 ${fontSizeEl.value}px '${fontEl.value}', 'Geist Mono', monospace`;
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      ctx.fillText(labelEl.value, W / 2, H / 2);
+
+      const img = ctx.getImageData(0, 0, sw, sh).data;
+      const dark = new Uint8Array(sw * sh);
+      for (let i = 0; i < sw * sh; i += 1) {
+        const idx = i * 4;
+        const a = img[idx + 3];
+        const lum = (img[idx] + img[idx + 1] + img[idx + 2]) / 3;
+        dark[i] = a > 120 && lum < 100 ? 1 : 0;
+      }
+
+      // ─── 2-pass Euclidean distance transform (Felzenszwalb-ish). ────
+      // dist[i] = distance from pixel i to the nearest light pixel.
+      // For light pixels, dist = 0. For dark pixels, dist = +inf, then
+      // relaxed by neighbour passes.
+      const INF = 1e9;
+      const dist = new Float32Array(sw * sh);
+      for (let i = 0; i < sw * sh; i += 1) {
+        dist[i] = dark[i] ? INF : 0;
+      }
+      const D1 = 1;
+      const D2 = Math.SQRT2;
+      // forward pass
+      for (let y = 0; y < sh; y += 1) {
+        for (let x = 0; x < sw; x += 1) {
+          const i = y * sw + x;
+          let d = dist[i];
+          if (y > 0) {
+            if (x > 0) d = Math.min(d, dist[i - sw - 1] + D2);
+            d = Math.min(d, dist[i - sw] + D1);
+            if (x < sw - 1) d = Math.min(d, dist[i - sw + 1] + D2);
+          }
+          if (x > 0) d = Math.min(d, dist[i - 1] + D1);
+          dist[i] = d;
+        }
+      }
+      // backward pass
+      for (let y = sh - 1; y >= 0; y -= 1) {
+        for (let x = sw - 1; x >= 0; x -= 1) {
+          const i = y * sw + x;
+          let d = dist[i];
+          if (x < sw - 1) d = Math.min(d, dist[i + 1] + D1);
+          if (y < sh - 1) {
+            if (x > 0) d = Math.min(d, dist[i + sw - 1] + D2);
+            d = Math.min(d, dist[i + sw] + D1);
+            if (x < sw - 1) d = Math.min(d, dist[i + sw + 1] + D2);
+          }
+          dist[i] = d;
+        }
+      }
+
+      // ─── Find local maxima ─────────────────────────────────────────
+      // A pixel is a peak if its distance is greater than every 3×3
+      // neighbour AND above a noise floor (skip thin strokes).
+      const peaks = [];
+      const minPeak = 1.5; // pixels in the 2× supersampled space
+      for (let y = 1; y < sh - 1; y += 1) {
+        for (let x = 1; x < sw - 1; x += 1) {
+          const i = y * sw + x;
+          const v = dist[i];
+          if (v < minPeak) continue;
+          let isMax = true;
+          for (let dy = -1; dy <= 1 && isMax; dy += 1) {
+            for (let dx = -1; dx <= 1 && isMax; dx += 1) {
+              if (dx === 0 && dy === 0) continue;
+              if (dist[i + dy * sw + dx] > v) isMax = false;
+            }
+          }
+          if (isMax) peaks.push({ x, y, v });
+        }
+      }
+
+      // ─── Non-maximum suppression ──────────────────────────────────
+      // Sort by peak value desc; keep peaks that are not within
+      // (median peak distance × 0.6) of an already-kept stronger peak.
+      peaks.sort((a, b) => b.v - a.v);
+      const minSep2 = (() => {
+        if (peaks.length === 0) return 0;
+        const medianV = peaks[Math.floor(peaks.length / 2)].v;
+        const sep = medianV * 1.4; // a bit more than the radius
+        return sep * sep;
+      })();
+      const kept = [];
+      for (const p of peaks) {
+        let ok = true;
+        for (const k of kept) {
+          const dx = p.x - k.x;
+          const dy = p.y - k.y;
+          if (dx * dx + dy * dy < minSep2) { ok = false; break; }
+        }
+        if (ok) kept.push(p);
+      }
+
+      // Suggested dot diameter — peak distance ≈ circle radius in
+      // supersampled units; convert back to logical pixels and double.
+      if (kept.length > 0) {
+        const radii = kept.map((p) => p.v).sort((a, b) => a - b);
+        const median = radii[Math.floor(radii.length / 2)];
+        const suggested = Math.max(2, Math.round((2 * median / SCALE) * 10) / 10);
+        diameterEl.value = String(suggested);
+      }
+
+      pushUndo();
+      const map = data[labelEl.value];
+      map.clear();
+      for (const p of kept) {
+        map.set(keyFor(p.x / SCALE, p.y / SCALE), 'dot');
+      }
+      drawDots();
+    }
+
+    // ─── export ────────────────────────────────────────────────────────
+    function exportAll() {
+      const { step, offX, offY } = gridParams();
+      const diameter = parseFloat(diameterEl.value);
+      const font = fontEl.value;
+      const fontSize = parseInt(fontSizeEl.value, 10);
+      const out = {};
+      for (const label of labels) {
+        const map = data[label];
+        const dots = [];
+        const accents = [];
+        for (const [key, kind] of map) {
+          const [x, y] = key.split(',').map(Number);
+          if (kind === 'accent') accents.push({ x, y });
+          else dots.push({ x, y });
+        }
+        out[label] = {
+          width: W,
+          height: H,
+          step,
+          offsetX: offX,
+          offsetY: offY,
+          diameter,
+          font,
+          fontSize,
+          dots,
+          accents,
+        };
+      }
+      const json = JSON.stringify(out, null, 2);
+      outputEl.value = json;
+      navigator.clipboard?.writeText(json).catch(() => {});
+      // also offer download
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'dot-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ─── wire-up ───────────────────────────────────────────────────────
+    /* Grid step / offset only changes the visual snap helper — dots
+       in `data` stay at their already-recorded absolute coordinates,
+       so reshaping the grid never moves what the user has placed. */
+    [labelEl, fontEl, fontSizeEl, stepEl, offsetXEl, offsetYEl, diameterEl].forEach((el) => {
+      el.addEventListener('input', redraw);
+      el.addEventListener('change', redraw);
+    });
+    document.getElementById('matchSize').addEventListener('click', () => {
+      const { step } = gridParams();
+      diameterEl.value = String(step);
+      drawDots();
+    });
+    document.getElementById('vectorize').addEventListener('click', vectorize);
+    document.getElementById('autofill').addEventListener('click', autofillFromFont);
+    document.getElementById('clear').addEventListener('click', () => {
+      pushUndo();
+      data[labelEl.value].clear();
+      drawDots();
+    });
+    document.getElementById('export').addEventListener('click', exportAll);
+
+    // wait for fonts then first draw
+    document.fonts?.ready?.then(redraw).catch(() => redraw());
+    redraw();
+  </script>
+</body>
+</html>

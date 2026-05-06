@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { matchDots, type Pair } from './match';
 import { sampleTextDots, type DotPoint } from './sample';
+import { lookupPreset } from './dot-presets';
 import styles from './DotMorph.module.css';
 
 /*
@@ -81,9 +82,13 @@ export function DotMorph({
   const rafStartRef = useRef<(() => void) | null>(null);
   const [ready, setReady] = useState(false);
 
-  // sample new target whenever text changes
+  // Resolve target dots — preset (manually placed against Geist Pixel
+  // Circle in /dot-editor.html) takes precedence; runtime sampling
+  // stays as the fallback for any string not in the preset map.
   const targetDots: DotPoint[] = useMemo(() => {
     if (typeof document === 'undefined' || !ready) return [];
+    const preset = lookupPreset(text);
+    if (preset) return preset;
     return sampleTextDots({ text, font, width, height, step, threshold });
   }, [ready, text, font, width, height, step, threshold]);
 

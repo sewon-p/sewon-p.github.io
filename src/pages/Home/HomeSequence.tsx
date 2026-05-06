@@ -419,7 +419,7 @@ export function HomeSequence(): ReactElement {
                 step={8}
                 dotRadius={3.2}
                 threshold={110}
-                accentCount={16}
+                accentCount={32}
                 font={DOT_FONT}
               />
             </motion.div>
