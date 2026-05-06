@@ -8,8 +8,10 @@ import {
   type RefObject,
 } from 'react';
 import {
+  animate,
   AnimatePresence,
   motion,
+  useMotionValue,
   useReducedMotion,
   useScroll,
   useTransform,
@@ -236,6 +238,71 @@ export function HomeSequence(): ReactElement {
     [0, 0, PROFILE_LIFT_Y, PROFILE_LIFT_Y, chapterDotTarget.y],
   );
 
+  /*
+   * Mobile dot canvas — driven by activeIndex, NOT live scrollYProgress.
+   * On a phone the live tracking causes the cloud to scrub continuously
+   * while the user is still mid-swipe, which makes touch areas shift
+   * under the finger and feels jerky. Instead we observe activeIndex
+   * (which only flips after the snap settles on the next section) and
+   * tween three motion values to the discrete target with our signature
+   * ease-settle curve. Desktop keeps the live scroll behaviour.
+   */
+  const isMobileViewport = useIsMobile();
+  const dotScaleM = useMotionValue(heroFitScale);
+  const dotXM = useMotionValue(0);
+  const dotYM = useMotionValue(0);
+
+  useEffect(() => {
+    if (!isMobileViewport) return;
+    let scaleTarget: number;
+    let xTarget: number;
+    let yTarget: number;
+    switch (activeIndex) {
+      case 0:
+        scaleTarget = HERO_DOT_SCALE;
+        xTarget = 0;
+        yTarget = 0;
+        break;
+      case 1:
+        scaleTarget = PROFILE_SCALE;
+        xTarget = 0;
+        yTarget = PROFILE_LIFT_Y;
+        break;
+      case 2:
+      case 3:
+      default:
+        scaleTarget = chapterDotScale;
+        xTarget = chapterDotTarget.x;
+        yTarget = chapterDotTarget.y;
+        break;
+    }
+    const opts = { duration: 0.36, ease: CASE_EASE };
+    const a1 = animate(dotScaleM, scaleTarget, opts);
+    const a2 = animate(dotXM, xTarget, opts);
+    const a3 = animate(dotYM, yTarget, opts);
+    return () => {
+      a1.stop();
+      a2.stop();
+      a3.stop();
+    };
+  }, [
+    activeIndex,
+    isMobileViewport,
+    HERO_DOT_SCALE,
+    PROFILE_SCALE,
+    PROFILE_LIFT_Y,
+    chapterDotScale,
+    chapterDotTarget.x,
+    chapterDotTarget.y,
+    dotScaleM,
+    dotXM,
+    dotYM,
+  ]);
+
+  const dotScale = isMobileViewport ? dotScaleM : dotScaleRaw;
+  const dotX = isMobileViewport ? dotXM : dotXRaw;
+  const dotY = isMobileViewport ? dotYM : dotYRaw;
+
   // hero tagline — visible only at section 0
   const heroTaglineOpacity = useTransform(
     scrollYProgress,
@@ -326,7 +393,7 @@ export function HomeSequence(): ReactElement {
           <div className={styles.dotAnchor}>
             <motion.div
               className={styles.dotStage}
-              style={{ scale: dotScaleRaw, x: dotXRaw, y: dotYRaw }}
+              style={{ scale: dotScale, x: dotX, y: dotY }}
             >
               <DotMorph
                 text={activeLabel}
