@@ -137,6 +137,10 @@ export function DotMorph({
         };
       });
       dotsRef.current = newDots;
+      // re-arm the rAF loop. The animation effect ran first (before
+      // fonts were ready) and settled with no dots; we need to kick
+      // it back into motion now that the first cloud has landed.
+      rafStartRef.current?.();
       return;
     }
 

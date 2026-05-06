@@ -33,6 +33,11 @@
   height: 100vh;
   background: var(--paper);
   overflow: hidden;
+  /* --chapter-scale set inline by HomeSequence.tsx; fallback for SSR/initial */
+  --chapter-scale: 0.38;
+  /* visible dot text bottom = chapterDotBox center (lg + xl/2 = 96)
+     plus half the scaled glyph (200px font * scale / 2 = 100px * scale) */
+  --logo-bottom: calc(var(--lg) + var(--xl) / 2 + 100px * var(--chapter-scale));
 }
 
 /* ── 5-column vertical guides ─────────────────────────── */
@@ -265,13 +270,13 @@
   justify-content: center;
   align-items: start;
   column-gap: var(--xxl);
-  padding: calc(var(--xxl) + var(--xl)) var(--lg) var(--xl);
+  padding: calc(var(--logo-bottom) + var(--xl)) var(--lg) var(--xl);
   pointer-events: auto;
 }
 
 .caseLayerLabel {
   position: absolute;
-  top: calc(var(--xxl) + var(--xs));
+  top: calc(var(--logo-bottom) + var(--xs));
   left: var(--lg);
   margin: 0;
   font-family: var(--font-mono);

@@ -3,6 +3,7 @@ import {
   useId,
   useRef,
   useState,
+  type CSSProperties,
   type ReactElement,
   type RefObject,
 } from 'react';
@@ -71,7 +72,12 @@ const SECTIONS = [
 const HERO_DOT_WIDTH = 1400;
 const HERO_DOT_HEIGHT = 360;
 const DOT_FONT = "500 200px 'Geist', system-ui, sans-serif";
-const CHAPTER_DOT_SCALE = 0.38;
+const CHAPTER_DOT_SCALE_MAX = 0.38;
+const CHAPTER_DOT_SCALE_MIN = 0.16;
+// scale = clamp(MIN, frameWidth / DIVISOR, MAX). 5000 was tuned so a
+// 1900px frame lands exactly at MAX (0.38) and a 720px frame at 0.144,
+// which clamps to MIN (0.16). Linear in between.
+const CHAPTER_SCALE_DIVISOR = 5000;
 const CHAPTER_DOT_FALLBACK = { x: -HERO_DOT_WIDTH * 0.26, y: -HERO_DOT_HEIGHT * 1.05 };
 const PROFILE_TEXT_START = 0.20;
 const ENGINEERING_TEXT_START = 0.40;
@@ -87,6 +93,7 @@ export function HomeSequence(): ReactElement {
   const frameRef = useRef<HTMLDivElement>(null);
   const chapterDotBoxRef = useRef<HTMLSpanElement>(null);
   const [chapterDotTarget, setChapterDotTarget] = useState(CHAPTER_DOT_FALLBACK);
+  const [chapterScale, setChapterScale] = useState(CHAPTER_DOT_SCALE_MAX);
   const { scrollYProgress } = useScroll({
     target: zoneRef,
     offset: ['start start', 'end end'],
@@ -129,8 +136,14 @@ export function HomeSequence(): ReactElement {
       const boxCenterY = boxRect.top + boxRect.height / 2;
       const textWidth = measureDotTextWidth(chapterLabel, DOT_FONT);
 
+      const nextScale = Math.max(
+        CHAPTER_DOT_SCALE_MIN,
+        Math.min(CHAPTER_DOT_SCALE_MAX, frameRect.width / CHAPTER_SCALE_DIVISOR),
+      );
+
+      setChapterScale((prev) => (Math.abs(prev - nextScale) < 0.002 ? prev : nextScale));
       setChapterDotTarget({
-        x: boxRect.left - frameCenterX + (textWidth * CHAPTER_DOT_SCALE) / 2,
+        x: boxRect.left - frameCenterX + (textWidth * nextScale) / 2,
         y: boxCenterY - frameCenterY,
       });
     };
@@ -159,7 +172,7 @@ export function HomeSequence(): ReactElement {
   const dotScaleRaw = useTransform(
     scrollYProgress,
     [0, 0.12, PROFILE_TEXT_START, 0.32, ENGINEERING_TEXT_START],
-    [1, 1, PROFILE_SCALE, PROFILE_SCALE, CHAPTER_DOT_SCALE],
+    [1, 1, PROFILE_SCALE, PROFILE_SCALE, chapterScale],
   );
   const dotXRaw = useTransform(
     scrollYProgress,
@@ -201,7 +214,11 @@ export function HomeSequence(): ReactElement {
   return (
     <div ref={zoneRef} className={styles.zone}>
       <div className={styles.stage}>
-        <div ref={frameRef} className={styles.frame}>
+        <div
+          ref={frameRef}
+          className={styles.frame}
+          style={{ '--chapter-scale': chapterScale } as CSSProperties}
+        >
           {/* chrome */}
           <div className={styles.guides} aria-hidden="true">
             <span className={styles.guide} />
