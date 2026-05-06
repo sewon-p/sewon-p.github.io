@@ -201,6 +201,17 @@ export function HomeSequence(): ReactElement {
   const heroOnlyOpacity = activeIndex === 0 ? heroTaglineOpacity : 0;
   const heroOnlyCueOpacity = activeIndex === 0 ? cueOpacity : 0;
   const profileLayerOpacity = activeIndex === 1 ? profileOpacity : 0;
+  const fieldOpacityRaw = useTransform(
+    scrollYProgress,
+    [0.34, ENGINEERING_TEXT_START, 0.96],
+    [0, 1, 1],
+  );
+  const fieldOpacity = activeIndex >= 2 ? fieldOpacityRaw : 0;
+  const fieldY = useTransform(
+    scrollYProgress,
+    [ENGINEERING_TEXT_START, STRATEGY_TEXT_START, 1],
+    [0, -12 * densityScale, -24 * densityScale],
+  );
 
 
   return (
@@ -219,6 +230,11 @@ export function HomeSequence(): ReactElement {
             <span className={styles.guide} />
             <span className={styles.guide} />
           </div>
+          <motion.span
+            className={styles.tonalField}
+            style={{ opacity: fieldOpacity, y: fieldY }}
+            aria-hidden="true"
+          />
           {/* right-edge rail + thumb — physical chapter selector. */}
           <div className={styles.accentTrack} aria-hidden="true">
             <span className={styles.accentRail} />

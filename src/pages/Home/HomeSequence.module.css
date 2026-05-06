@@ -88,6 +88,17 @@
 }
 .guide:first-child { border-left: 0; }
 
+.tonalField {
+  position: absolute;
+  top: calc(var(--xl) + var(--lg));
+  left: calc(50% - var(--xxxl) - var(--xl));
+  width: calc(var(--xxxl) + var(--xxxl) + var(--xl));
+  aspect-ratio: 1;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--surface) 56%, transparent);
+  pointer-events: none;
+}
+
 /* ── right-edge chapter rail ──────────────────────────── */
 .accentTrack {
   position: absolute;
