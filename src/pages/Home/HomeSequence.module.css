@@ -680,6 +680,9 @@
   letter-spacing: var(--tracking-h2) !important;
 }
 
+@media (min-width: 721px) and (max-width: 1800px) {
+  .frame { --chapter-scale: 0.342; }
+}
 
 @media (max-width: 720px) {
   .stage { height: 100svh; }

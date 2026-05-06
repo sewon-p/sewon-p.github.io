@@ -120,6 +120,49 @@
     0 32px 64px -16px rgba(10, 14, 20, 0.12);
 }
 
+@media (min-width: 721px) and (max-width: 1800px) {
+  :root {
+    /* Compact desktop density.
+       This is a content breakpoint, not device compensation: once the
+       workspace narrows below the 15-inch composition, the system steps
+       down by roughly one browser zoom notch while staying on tokens. */
+    --xs: 7.2px;
+    --sm: 14.4px;
+    --md: 21.6px;
+    --lg: 43.2px;
+    --xl: 86.4px;
+    --xxl: 129.6px;
+    --xxxl: 172.8px;
+
+    --container: 648px;
+    --col-gutter: 14.4px;
+
+    --radius-sm: 5.4px;
+    --radius-md: 10.8px;
+    --radius-lg: 21.6px;
+
+    --text-display: 43.2px;
+    --lh-display: 50.4px;
+    --tracking-display: -2.16px;
+    --text-h1: 28.8px;
+    --lh-h1: 36px;
+    --tracking-h1: -1.15px;
+    --text-h2: 21.6px;
+    --lh-h2: 28.8px;
+    --tracking-h2: -0.86px;
+    --text-h3: 18px;
+    --lh-h3: 25.2px;
+    --tracking-h3: -0.43px;
+    --text-body: 14.4px;
+    --lh-body: 21.6px;
+    --text-small: 12.6px;
+    --lh-small: 18px;
+    --text-mono: 12.6px;
+    --lh-mono: 18px;
+    --tracking-tight: -0.29px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --dur-micro: 0ms;

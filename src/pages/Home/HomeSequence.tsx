@@ -72,6 +72,8 @@ const HERO_DOT_WIDTH = 1400;
 const HERO_DOT_HEIGHT = 360;
 const DOT_FONT = "500 200px 'Geist', system-ui, sans-serif";
 const CHAPTER_DOT_SCALE = 0.38;
+const COMPACT_DESKTOP_QUERY = '(min-width: 721px) and (max-width: 1800px)';
+const COMPACT_DENSITY_SCALE = 0.9;
 const CHAPTER_DOT_FALLBACK = { x: -HERO_DOT_WIDTH * 0.26, y: -HERO_DOT_HEIGHT * 1.05 };
 const PROFILE_TEXT_START = 0.20;
 const ENGINEERING_TEXT_START = 0.40;
@@ -87,6 +89,8 @@ export function HomeSequence(): ReactElement {
   const frameRef = useRef<HTMLDivElement>(null);
   const chapterDotBoxRef = useRef<HTMLSpanElement>(null);
   const [chapterDotTarget, setChapterDotTarget] = useState(CHAPTER_DOT_FALLBACK);
+  const densityScale = useMediaQuery(COMPACT_DESKTOP_QUERY) ? COMPACT_DENSITY_SCALE : 1;
+  const chapterDotScale = CHAPTER_DOT_SCALE * densityScale;
   const { scrollYProgress } = useScroll({
     target: zoneRef,
     offset: ['start start', 'end end'],
@@ -130,7 +134,7 @@ export function HomeSequence(): ReactElement {
       const textWidth = measureDotTextWidth(chapterLabel, DOT_FONT);
 
       setChapterDotTarget({
-        x: boxRect.left - frameCenterX + (textWidth * CHAPTER_DOT_SCALE) / 2,
+        x: boxRect.left - frameCenterX + (textWidth * chapterDotScale) / 2,
         y: boxCenterY - frameCenterY,
       });
     };
@@ -147,19 +151,20 @@ export function HomeSequence(): ReactElement {
       observer.disconnect();
       window.removeEventListener('resize', measureChapterBox);
     };
-  }, [chapterLabel]);
+  }, [chapterDotScale, chapterLabel]);
 
   // Dot canvas transforms — three keyframes:
   //   0.00 (hero)    : centered, scale 1
   //   0.20 (profile) : lifted up, slight shrink to make room for credentials
   //   0.40 (chapter) : top-left chapter heading position (measured live)
-  const PROFILE_LIFT_Y = -HERO_DOT_HEIGHT * 0.55;
-  const PROFILE_SCALE = 0.66;
+  const HERO_DOT_SCALE = densityScale;
+  const PROFILE_LIFT_Y = -HERO_DOT_HEIGHT * 0.55 * densityScale;
+  const PROFILE_SCALE = 0.66 * densityScale;
 
   const dotScaleRaw = useTransform(
     scrollYProgress,
     [0, 0.12, PROFILE_TEXT_START, 0.32, ENGINEERING_TEXT_START],
-    [1, 1, PROFILE_SCALE, PROFILE_SCALE, CHAPTER_DOT_SCALE],
+    [HERO_DOT_SCALE, HERO_DOT_SCALE, PROFILE_SCALE, PROFILE_SCALE, chapterDotScale],
   );
   const dotXRaw = useTransform(
     scrollYProgress,
@@ -761,6 +766,30 @@ function CaseStudy({
       </ul>
     </div>
   );
+}
+
+/*
+ * useMediaQuery — content breakpoints only. This is deliberately not
+ * tied to devicePixelRatio, browser brand, or display hardware.
+ */
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia(query).matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const media = window.matchMedia(query);
+    const update = (): void => setMatches(media.matches);
+
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, [query]);
+
+  return matches;
 }
 
 /*
