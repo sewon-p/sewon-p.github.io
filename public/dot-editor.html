@@ -5,24 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dot editor — sewon park</title>
   <style>
+    /* Geist Pixel are single-design fonts (not variable). Declaring
+       font-weight: 100 900 just tells the browser this family is
+       used across the full weight range so canvas font matching at
+       weight 500/700/900 still hits this face — actual bold effect
+       comes from the canvas stroke pass below. */
     @font-face {
       font-family: 'Geist Pixel Square';
       src: url('/fonts/GeistPixel-Square.woff2') format('woff2');
+      font-weight: 100 900;
       font-display: block;
     }
     @font-face {
       font-family: 'Geist Pixel Circle';
       src: url('/fonts/GeistPixel-Circle.woff2') format('woff2');
+      font-weight: 100 900;
       font-display: block;
     }
     @font-face {
       font-family: 'Geist Pixel Grid';
       src: url('/fonts/GeistPixel-Grid.woff2') format('woff2');
+      font-weight: 100 900;
       font-display: block;
     }
     @font-face {
       font-family: 'Geist Pixel Line';
       src: url('/fonts/GeistPixel-Line.woff2') format('woff2');
+      font-weight: 100 900;
       font-display: block;
     }
     @font-face {
@@ -140,6 +149,64 @@
       border-radius: 4px;
     }
     .stat b { color: #0a0e14; font-weight: 600; }
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .pills .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border: 1px solid #d4d7dc;
+      border-radius: 999px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      background: #fff;
+      cursor: pointer;
+      color: #5b616b;
+    }
+    .pills .pill.active {
+      background: #0a0e14;
+      color: #fff;
+      border-color: #0a0e14;
+    }
+    .pills .pill .x {
+      opacity: 0.6;
+      cursor: pointer;
+      padding: 0 2px;
+    }
+    .pills .pill .x:hover { opacity: 1; }
+    .dropzone {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border: 1px dashed #94a3b8;
+      border-radius: 4px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px;
+      color: #5b616b;
+      background: #fff;
+      cursor: pointer;
+    }
+    .dropzone.over {
+      background: #e8efff;
+      border-color: #3b6ef5;
+      color: #2952d9;
+    }
+    input[type="color"] {
+      width: 32px;
+      height: 26px;
+      padding: 2px;
+      border: 1px solid #d4d7dc;
+      border-radius: 4px;
+      background: #fff;
+      cursor: pointer;
+    }
     textarea {
       width: 100%;
       height: 180px;
@@ -157,29 +224,64 @@
 <body>
   <h1>Dot editor — manually mark Geist Pixel dots</h1>
 
+  <div class="pills" id="pills"></div>
+
   <div class="toolbar">
-    <label>label
-      <select id="label">
-        <option value="sewon park.">sewon park.</option>
-        <option value="engineering">engineering</option>
-        <option value="strategy">strategy</option>
-      </select>
+    <label>text
+      <input type="text" id="text" value="sewon park." style="width: 200px" />
     </label>
+    <button class="ghost" id="addLabel">+ save as label</button>
+    <button class="ghost" id="removeLabel">− remove label</button>
+
+    <span class="spacer"></span>
 
     <label>font
       <select id="font">
-        <option value="Geist Pixel Circle">Geist Pixel Circle</option>
-        <option value="Geist Pixel Square">Geist Pixel Square</option>
-        <option value="Geist Pixel Grid">Geist Pixel Grid</option>
-        <option value="Geist Pixel Line">Geist Pixel Line</option>
-        <option value="Geist">Geist (sans, current)</option>
+        <optgroup label="Geist Pixel (single-weight, bold = stroke fake)">
+          <option value="Geist Pixel Circle">Geist Pixel Circle</option>
+          <option value="Geist Pixel Square">Geist Pixel Square</option>
+          <option value="Geist Pixel Grid">Geist Pixel Grid</option>
+          <option value="Geist Pixel Line">Geist Pixel Line</option>
+        </optgroup>
+        <optgroup label="Geist (variable, weight axis works)">
+          <option value="Geist">Geist sans</option>
+          <option value="Geist Mono">Geist Mono</option>
+        </optgroup>
+        <optgroup label="System / web-safe">
+          <option value="system-ui">system-ui</option>
+          <option value="-apple-system">-apple-system</option>
+          <option value="Helvetica">Helvetica</option>
+          <option value="Helvetica Neue">Helvetica Neue</option>
+          <option value="Arial">Arial</option>
+          <option value="Arial Black">Arial Black</option>
+          <option value="Times New Roman">Times New Roman</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Courier New">Courier New</option>
+          <option value="Menlo">Menlo</option>
+          <option value="Monaco">Monaco</option>
+          <option value="Verdana">Verdana</option>
+          <option value="Trebuchet MS">Trebuchet MS</option>
+          <option value="Impact">Impact</option>
+          <option value="Comic Sans MS">Comic Sans MS</option>
+        </optgroup>
       </select>
     </label>
 
-    <label>font size
-      <input type="number" id="fontSize" value="200" min="40" max="320" step="4" />
+    <label class="dropzone" id="fontDrop">
+      ⤓ drop font (.woff2 / .ttf / .otf)
+      <input type="file" id="fontFile" accept=".woff2,.woff,.ttf,.otf,font/*" hidden />
     </label>
 
+    <label>weight
+      <input type="number" id="weight" value="500" min="100" max="900" step="100" style="width: 60px" />
+    </label>
+
+    <label>font size
+      <input type="number" id="fontSize" value="200" min="40" max="640" step="4" />
+    </label>
+  </div>
+
+  <div class="toolbar">
     <label>grid
       <input type="number" id="step" value="8" min="2" max="64" step="0.5" />
     </label>
@@ -198,6 +300,19 @@
 
     <button class="ghost" id="matchSize">⌀ = grid</button>
 
+    <span class="spacer"></span>
+
+    <label>ink
+      <input type="color" id="inkColor" value="#0a0e14" />
+    </label>
+
+    <label>accent
+      <input type="color" id="accentColor" value="#3b6ef5" />
+    </label>
+
+  </div>
+
+  <div class="toolbar">
     <label>tool
       <select id="tool">
         <option value="dot">dot (left)</option>
@@ -210,7 +325,7 @@
 
     <button class="ghost" id="vectorize">Vectorize from font</button>
     <button class="ghost" id="autofill">Autofill (grid)</button>
-    <button class="ghost" id="clear">Clear</button>
+    <button class="ghost" id="clear">Clear current</button>
     <button id="export">Export all → JSON</button>
   </div>
 
@@ -262,28 +377,54 @@
     setupHiDPI(gridCanvas, gridCtx);
     setupHiDPI(dotsCanvas, dotsCtx);
 
-    /* State: per-label dot map keyed by absolute (x,y) string in
-       canvas coordinates. Storing absolute (not grid-relative) means
-       changing the grid step / offset never moves dots that have
-       already been placed — the grid is purely a visual snap helper. */
-    const labels = ['sewon park.', 'engineering', 'strategy'];
-    /** @type {Record<string, Map<string, 'dot' | 'accent'>>} */
-    const data = Object.fromEntries(labels.map((l) => [l, new Map()]));
-    /** @type {Record<string, Array<Map<string, 'dot' | 'accent'>>>} */
-    const undoStacks = Object.fromEntries(labels.map((l) => [l, []]));
+    /* State: dynamic list of labels + per-label absolute-coord dot
+       map. Storing absolute (not grid-relative) means changing grid
+       step / offset never moves placed dots. The label set itself is
+       editable — type any text in the input, save it as a label,
+       remove labels you no longer want. */
+    const initialLabels = ['sewon park.', 'engineering', 'strategy'];
+    /** @type {string[]} */
+    let labels = [...initialLabels];
+    let currentLabel = labels[0];
+    /** @type {Map<string, Map<string, 'dot' | 'accent'>>} */
+    const data = new Map(labels.map((l) => [l, new Map()]));
+    /** @type {Map<string, Array<Map<string, 'dot' | 'accent'>>>} */
+    const undoStacks = new Map(labels.map((l) => [l, []]));
 
-    const labelEl = document.getElementById('label');
+    function ensureLabel(label) {
+      if (!data.has(label)) {
+        data.set(label, new Map());
+        undoStacks.set(label, []);
+      }
+      if (!labels.includes(label)) labels.push(label);
+    }
+
+    const textEl = document.getElementById('text');
+    const pillsEl = document.getElementById('pills');
     const fontEl = document.getElementById('font');
+    const fontDropEl = document.getElementById('fontDrop');
+    const fontFileEl = document.getElementById('fontFile');
+    const weightEl = document.getElementById('weight');
     const fontSizeEl = document.getElementById('fontSize');
     const stepEl = document.getElementById('step');
     const offsetXEl = document.getElementById('offsetX');
     const offsetYEl = document.getElementById('offsetY');
     const diameterEl = document.getElementById('diameter');
+    const inkColorEl = document.getElementById('inkColor');
+    const accentColorEl = document.getElementById('accentColor');
     const toolEl = document.getElementById('tool');
     const countEl = document.getElementById('count');
     const countAccentEl = document.getElementById('countAccent');
     const stepLabelEl = document.getElementById('stepLabel');
     const outputEl = document.getElementById('output');
+
+    /* Compatibility shim — the rest of the file still references
+       `labelEl.value` for "what's the active text". Forward to the
+       text input but keep the data lookup keyed on currentLabel so
+       free-typed text doesn't accidentally create empty maps. */
+    const labelEl = {
+      get value() { return currentLabel; },
+    };
 
     // ─── grid helpers ──────────────────────────────────────────────────
     function gridParams() {
@@ -314,28 +455,52 @@
     }
 
     // ─── rendering ─────────────────────────────────────────────────────
-    async function ensureFontLoaded() {
+    function fontShorthand() {
       const font = fontEl.value;
       const size = parseInt(fontSizeEl.value, 10);
-      const spec = `500 ${size}px '${font}'`;
+      const weight = parseInt(weightEl.value, 10) || 500;
+      return `${weight} ${size}px '${font}', 'Geist Mono', monospace`;
+    }
+
+    async function ensureFontLoaded() {
       try {
-        await document.fonts.load(spec, labelEl.value);
+        await document.fonts.load(fontShorthand(), labelEl.value || ' ');
       } catch (_) {
         // ignore — will fall back to system mono
+      }
+    }
+
+    /**
+     * Draw text with the active font, color, and weight. For variable
+     * fonts the weight axis does the work; for static fonts (Geist
+     * Pixel et al.) we fake-bold by adding a stroke whose width grows
+     * with the requested weight. weight 500 = no stroke; 900 ≈ ~1 %
+     * of font-size stroke per 100 weight units past 500.
+     */
+    function drawTextStyled(ctx, text, color) {
+      const size = parseInt(fontSizeEl.value, 10);
+      const weight = parseInt(weightEl.value, 10) || 500;
+      ctx.font = fontShorthand();
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = color;
+      ctx.fillText(text, W / 2, H / 2);
+      if (weight > 500) {
+        const stroke = ((weight - 500) / 100) * (size * 0.012);
+        if (stroke > 0.05) {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = stroke;
+          ctx.lineJoin = 'round';
+          ctx.miterLimit = 2;
+          ctx.strokeText(text, W / 2, H / 2);
+        }
       }
     }
 
     async function drawBackground() {
       await ensureFontLoaded();
       bgCtx.clearRect(0, 0, W, H);
-      const text = labelEl.value;
-      const font = fontEl.value;
-      const size = parseInt(fontSizeEl.value, 10);
-      bgCtx.fillStyle = '#0a0e14';
-      bgCtx.font = `500 ${size}px '${font}', 'Geist Mono', monospace`;
-      bgCtx.textBaseline = 'middle';
-      bgCtx.textAlign = 'center';
-      bgCtx.fillText(text, W / 2, H / 2);
+      drawTextStyled(bgCtx, labelEl.value, inkColorEl.value);
     }
 
     function drawGrid() {
@@ -362,14 +527,14 @@
 
     function drawDots() {
       dotsCtx.clearRect(0, 0, W, H);
-      const map = data[labelEl.value];
+      const map = data.get(currentLabel);
       const radius = (parseFloat(diameterEl.value) || 0) / 2;
       let dotCount = 0;
       let accentCount = 0;
       for (const [key, kind] of map) {
         const [x, y] = key.split(',').map(Number);
         dotsCtx.beginPath();
-        dotsCtx.fillStyle = kind === 'accent' ? '#3b6ef5' : '#0a0e14';
+        dotsCtx.fillStyle = kind === 'accent' ? accentColorEl.value : inkColorEl.value;
         dotsCtx.arc(x, y, radius, 0, Math.PI * 2);
         dotsCtx.fill();
         if (kind === 'accent') accentCount += 1;
@@ -387,9 +552,9 @@
 
     // ─── interactions ──────────────────────────────────────────────────
     function pushUndo() {
-      const map = data[labelEl.value];
-      undoStacks[labelEl.value].push(new Map(map));
-      if (undoStacks[labelEl.value].length > 50) undoStacks[labelEl.value].shift();
+      const map = data.get(currentLabel);
+      undoStacks.get(currentLabel).push(new Map(map));
+      if (undoStacks.get(currentLabel).length > 50) undoStacks.get(currentLabel).shift();
     }
 
     function pointFromEvent(e) {
@@ -402,7 +567,7 @@
     }
 
     function applyAt(x, y, kind) {
-      const map = data[labelEl.value];
+      const map = data.get(currentLabel);
       const key = keyFor(x, y);
       if (kind === 'erase') map.delete(key);
       else map.set(key, kind);
@@ -447,10 +612,10 @@
 
     window.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
-        const stack = undoStacks[labelEl.value];
-        const prev = stack.pop();
+        const stack = undoStacks.get(currentLabel);
+        const prev = stack && stack.pop();
         if (prev) {
-          data[labelEl.value] = prev;
+          data.set(currentLabel, prev);
           drawDots();
         }
         e.preventDefault();
@@ -461,7 +626,7 @@
     async function autofillFromFont() {
       await ensureFontLoaded();
       pushUndo();
-      const map = data[labelEl.value];
+      const map = data.get(currentLabel);
       map.clear();
 
       // Sampler canvas — backing store kept at logical 1400 × 360
@@ -471,11 +636,7 @@
       sampler.width = W;
       sampler.height = H;
       const ctx = sampler.getContext('2d');
-      ctx.fillStyle = '#000';
-      ctx.font = `500 ${fontSizeEl.value}px '${fontEl.value}', 'Geist Mono', monospace`;
-      ctx.textBaseline = 'middle';
-      ctx.textAlign = 'center';
-      ctx.fillText(labelEl.value, W / 2, H / 2);
+      drawTextStyled(ctx, labelEl.value, '#000');
 
       const img = ctx.getImageData(0, 0, W, H).data;
       const { step, offX, offY } = gridParams();
@@ -522,11 +683,7 @@
       sampler.height = sh;
       const ctx = sampler.getContext('2d');
       ctx.scale(SCALE, SCALE);
-      ctx.fillStyle = '#000';
-      ctx.font = `500 ${fontSizeEl.value}px '${fontEl.value}', 'Geist Mono', monospace`;
-      ctx.textBaseline = 'middle';
-      ctx.textAlign = 'center';
-      ctx.fillText(labelEl.value, W / 2, H / 2);
+      drawTextStyled(ctx, labelEl.value, '#000');
 
       const img = ctx.getImageData(0, 0, sw, sh).data;
       const dark = new Uint8Array(sw * sh);
@@ -629,7 +786,7 @@
       }
 
       pushUndo();
-      const map = data[labelEl.value];
+      const map = data.get(currentLabel);
       map.clear();
       for (const p of kept) {
         map.set(keyFor(p.x / SCALE, p.y / SCALE), 'dot');
@@ -643,9 +800,13 @@
       const diameter = parseFloat(diameterEl.value);
       const font = fontEl.value;
       const fontSize = parseInt(fontSizeEl.value, 10);
+      const weight = parseInt(weightEl.value, 10) || 500;
+      const inkColor = inkColorEl.value;
+      const accentColor = accentColorEl.value;
       const out = {};
       for (const label of labels) {
-        const map = data[label];
+        const map = data.get(label);
+        if (!map) continue;
         const dots = [];
         const accents = [];
         for (const [key, kind] of map) {
@@ -662,6 +823,9 @@
           diameter,
           font,
           fontSize,
+          weight,
+          inkColor,
+          accentColor,
           dots,
           accents,
         };
@@ -679,11 +843,126 @@
       URL.revokeObjectURL(url);
     }
 
+    // ─── pills (saved labels) ──────────────────────────────────────────
+    function renderPills() {
+      pillsEl.innerHTML = '';
+      labels.forEach((label) => {
+        const pill = document.createElement('span');
+        pill.className = 'pill' + (label === currentLabel ? ' active' : '');
+        pill.title = `Switch to "${label}"`;
+        const txt = document.createElement('span');
+        txt.textContent = label || '(empty)';
+        txt.addEventListener('click', () => setCurrentLabel(label));
+        pill.appendChild(txt);
+        const x = document.createElement('span');
+        x.className = 'x';
+        x.textContent = '×';
+        x.title = `Remove "${label}"`;
+        x.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeLabel(label);
+        });
+        pill.appendChild(x);
+        pillsEl.appendChild(pill);
+      });
+    }
+
+    function setCurrentLabel(label) {
+      ensureLabel(label);
+      currentLabel = label;
+      textEl.value = label;
+      renderPills();
+      redraw();
+    }
+
+    function removeLabel(label) {
+      labels = labels.filter((l) => l !== label);
+      data.delete(label);
+      undoStacks.delete(label);
+      if (currentLabel === label) {
+        currentLabel = labels[0] || '';
+        if (!currentLabel) {
+          currentLabel = textEl.value || 'untitled';
+          ensureLabel(currentLabel);
+        }
+        textEl.value = currentLabel;
+      }
+      renderPills();
+      redraw();
+    }
+
+    // ─── custom font drop ──────────────────────────────────────────────
+    let customFontIndex = 0;
+    async function loadCustomFont(file) {
+      try {
+        const buf = await file.arrayBuffer();
+        const family = `Custom ${customFontIndex += 1}`;
+        /* Claim full weight + stretch range so canvas font matching at
+           any weight hits this face. Variable fonts will use their
+           actual axes; static fonts get fake-bolded by the stroke
+           pass in drawTextStyled(). */
+        const face = new FontFace(family, buf, {
+          display: 'block',
+          weight: '100 900',
+          stretch: '50% 200%',
+          style: 'normal',
+        });
+        await face.load();
+        document.fonts.add(face);
+        const opt = document.createElement('option');
+        opt.value = family;
+        opt.textContent = `${family} — ${file.name}`;
+        fontEl.appendChild(opt);
+        fontEl.value = family;
+        await ensureFontLoaded();
+        redraw();
+      } catch (err) {
+        alert(`Failed to load font: ${err && err.message ? err.message : err}`);
+      }
+    }
+
+    fontFileEl.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) loadCustomFont(file);
+    });
+    fontDropEl.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      fontDropEl.classList.add('over');
+    });
+    fontDropEl.addEventListener('dragleave', () => {
+      fontDropEl.classList.remove('over');
+    });
+    fontDropEl.addEventListener('drop', (e) => {
+      e.preventDefault();
+      fontDropEl.classList.remove('over');
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) loadCustomFont(file);
+    });
+
+    // ─── label text input ──────────────────────────────────────────────
+    textEl.addEventListener('input', () => {
+      currentLabel = textEl.value;
+      ensureLabel(currentLabel);
+      renderPills();
+      redraw();
+    });
+    document.getElementById('addLabel').addEventListener('click', () => {
+      const label = textEl.value.trim();
+      if (!label) return;
+      ensureLabel(label);
+      currentLabel = label;
+      renderPills();
+      redraw();
+    });
+    document.getElementById('removeLabel').addEventListener('click', () => {
+      removeLabel(currentLabel);
+    });
+
     // ─── wire-up ───────────────────────────────────────────────────────
     /* Grid step / offset only changes the visual snap helper — dots
        in `data` stay at their already-recorded absolute coordinates,
        so reshaping the grid never moves what the user has placed. */
-    [labelEl, fontEl, fontSizeEl, stepEl, offsetXEl, offsetYEl, diameterEl].forEach((el) => {
+    [fontEl, weightEl, fontSizeEl, stepEl, offsetXEl, offsetYEl, diameterEl, inkColorEl, accentColorEl].forEach((el) => {
       el.addEventListener('input', redraw);
       el.addEventListener('change', redraw);
     });
@@ -696,12 +975,13 @@
     document.getElementById('autofill').addEventListener('click', autofillFromFont);
     document.getElementById('clear').addEventListener('click', () => {
       pushUndo();
-      data[labelEl.value].clear();
+      data.get(currentLabel).clear();
       drawDots();
     });
     document.getElementById('export').addEventListener('click', exportAll);
 
-    // wait for fonts then first draw
+    // initial paint
+    renderPills();
     document.fonts?.ready?.then(redraw).catch(() => redraw());
     redraw();
   </script>
