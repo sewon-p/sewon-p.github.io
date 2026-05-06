@@ -657,54 +657,44 @@ function CaseModal({ project, onClose }: CaseModalProps): ReactElement {
   }, [legacyHtml]);
 
   /*
-   * Spline lazy-load (legacy parity). Each <div class="spline-placeholder"
-   * data-spline-url="..."> stays empty until it scrolls into view inside
-   * the modal, then a <spline-viewer> is created and inserted. Loading
-   * the viewer DOM only when visible avoids both 3D scenes hammering
-   * GPU at the same time when the modal first opens.
-   * - getAttribute (not dataset) avoids the past url="undefined" bug.
-   * - pixel-ratio="1.5" downsamples the render on retina displays
-   *   (~4× GPU work otherwise); visual softness is negligible on the
-   *   small preview boxes.
+   * Spline upgrade — eager. As soon as the modal mounts and the
+   * <spline-viewer> custom element is registered, replace every
+   * `<div class="spline-placeholder" data-spline-url="…">` with a
+   * real <spline-viewer>. The IntersectionObserver-based lazy path
+   * we used previously had two failure modes (StrictMode dev double-
+   * mount stranding the upgrade flag, and modals where the user
+   * never scrolled past the fold) and silent failure beats clever:
+   * eager guarantees the scenes always render. The viewer carries
+   * loading="lazy" so Spline still defers its own WebGL init until
+   * the canvas itself becomes visible.
    */
   useEffect(() => {
     const shell = shellRef.current;
     if (!shell) return;
 
     let cancelled = false;
-    const placeholders = shell.querySelectorAll<HTMLElement>('.spline-placeholder[data-spline-url]');
-    if (placeholders.length === 0) return;
-
-    const upgrade = (el: HTMLElement): void => {
-      if (cancelled || el.dataset.splineUpgraded === '1') return;
-      const url = el.getAttribute('data-spline-url');
-      if (!url) return;
-      el.dataset.splineUpgraded = '1';
-      void customElements.whenDefined('spline-viewer').then(() => {
-        if (cancelled) return;
+    void customElements.whenDefined('spline-viewer').then(() => {
+      if (cancelled) return;
+      const placeholders = shell.querySelectorAll<HTMLElement>(
+        '.spline-placeholder[data-spline-url]:not([data-spline-upgraded])',
+      );
+      placeholders.forEach((el) => {
+        const url = el.getAttribute('data-spline-url');
+        if (!url) return;
         const viewer = document.createElement('spline-viewer');
         viewer.setAttribute('url', url);
         viewer.setAttribute('loading-anim-type', 'spinner-small-dark');
+        viewer.setAttribute('loading', 'lazy');
         viewer.setAttribute('pixel-ratio', '1.5');
         viewer.style.width = '100%';
         viewer.style.height = '100%';
         el.replaceChildren(viewer);
+        el.dataset.splineUpgraded = '1';
       });
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        upgrade(entry.target as HTMLElement);
-        observer.unobserve(entry.target);
-      }
-    }, { root: shell, threshold: 0.1 });
-
-    placeholders.forEach((el) => observer.observe(el));
+    });
 
     return () => {
       cancelled = true;
-      observer.disconnect();
     };
   }, [legacyHtml]);
   return (
