@@ -117,7 +117,7 @@ export const engineering: ProjectCard[] = [
  */
 export const strategy: ProjectCard[] = [
   {
-    number: '04',
+    number: '01',
     kicker: 'strategy consulting',
     title: '¥1t m&a strategy for automaker’s infrastructure pivot',
     year: '2026.01',
@@ -131,7 +131,7 @@ export const strategy: ProjectCard[] = [
     tags: ['consulting', 'm&a', 'automotive', 'mobility'],
   },
   {
-    number: '05',
+    number: '02',
     kicker: 'cross-border strategy',
     title: 'cross-border commerce & fintech ecosystem',
     year: '2025.01',
@@ -145,7 +145,7 @@ export const strategy: ProjectCard[] = [
     tags: ['product', 'fintech', 'cross-border'],
   },
   {
-    number: '06',
+    number: '03',
     kicker: 'logistics concept',
     title: 'hyper-local p2p delivery',
     year: '2024.11',
@@ -159,7 +159,7 @@ export const strategy: ProjectCard[] = [
     tags: ['product', 'or-tools', 'logistics'],
   },
   {
-    number: '07',
+    number: '04',
     kicker: 'mobility business model',
     title: 'drive-to-earn reward platform',
     year: '2021.08',
@@ -173,7 +173,7 @@ export const strategy: ProjectCard[] = [
     tags: ['product', 'mobility', 'fintech'],
   },
   {
-    number: '08',
+    number: '05',
     kicker: 'internship / ux',
     title: 'digital asset trading & ux strategy',
     year: '2021.05',

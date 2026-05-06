@@ -254,6 +254,17 @@ export function HomeSequence(): ReactElement {
 
   useEffect(() => {
     if (!isMobileViewport) return;
+    /*
+     * Mobile profile lift is computed against the actual frame height
+     * (not the desktop hero-height proxy). The profile layer is now
+     * centered vertically via flex on the mobile media query, so the
+     * dot needs to climb to roughly the upper-third (≈ 20 % from top)
+     * to leave clear air above the "works in code…" statement.
+     */
+    const frameHeight = frameRef.current?.getBoundingClientRect().height
+      ?? (typeof window !== 'undefined' ? window.innerHeight : 0);
+    const mobileProfileLiftY = -frameHeight * 0.3;
+
     let scaleTarget: number;
     let xTarget: number;
     let yTarget: number;
@@ -266,7 +277,7 @@ export function HomeSequence(): ReactElement {
       case 1:
         scaleTarget = PROFILE_SCALE;
         xTarget = 0;
-        yTarget = PROFILE_LIFT_Y;
+        yTarget = mobileProfileLiftY;
         break;
       case 2:
       case 3:
@@ -290,7 +301,6 @@ export function HomeSequence(): ReactElement {
     isMobileViewport,
     HERO_DOT_SCALE,
     PROFILE_SCALE,
-    PROFILE_LIFT_Y,
     chapterDotScale,
     chapterDotTarget.x,
     chapterDotTarget.y,
@@ -1150,8 +1160,9 @@ function CaseContent({
 /* Density only governs typography + spacing. The dot canvas has its own
    fit-to-viewport scales (heroFitScale, chapterFitScale) so we don't
    need to crush type in order to fit the artwork on small screens.
-   Mobile lands at 0.85 — type still legible, spacing tightened. */
-const MOBILE_DENSITY = 0.85;
+   Mobile lands at 0.92 — close to desktop, just a small spacing
+   tightening. Earlier we ran 0.85 which read as cramped on phones. */
+const MOBILE_DENSITY = 0.92;
 const DESKTOP_COMPACT_DENSITY = 0.9;
 const DENSITY_MAX = 1;
 const MOBILE_MAX_WIDTH = 480;

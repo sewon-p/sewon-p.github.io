@@ -805,22 +805,21 @@
   .stage { height: 100svh; }
   .frame {
     height: 100svh;
-    /* Pull the entire chapter card up so the dot artwork sits closer
-       to the screen top and the case content fits on one screen. */
-    --logo-bottom: calc(var(--md) + var(--xl) / 2 + 100px * var(--chapter-scale));
+    /* Use the desktop --logo-bottom on mobile too. Pulling it higher
+       crammed the chapter card against the top edge; keep the same
+       breathing room as desktop and let the slider area fill the
+       rest of the screen naturally. */
   }
   .heroTagline {
     grid-template-columns: 1fr;
     gap: var(--sm);
     left: var(--md);
     right: var(--md);
-    bottom: var(--lg);
+    /* Lifted up to clear the scroll cue that lives at bottom: var(--md).
+       Two rows of tagline + a swipe-prompt below need separation. */
+    bottom: var(--xl);
   }
   .taglineRight { text-align: left; }
-  /* Drop the scroll cue on mobile — the snap behaviour and the dot
-     migration are the affordance, the "scroll" word just collides
-     with the tagline above it on narrow viewports. */
-  .scrollCue { display: none; }
   .accentTrack { display: none; }
   .modalProgressTrack { display: none; }
   .modalCard { padding: var(--md); }
@@ -860,52 +859,28 @@
     width: 100%;
   }
   .caseSlider::-webkit-scrollbar { display: none; }
+  /* Slide is a flex column that fills the available track height.
+     Content sits at the top with its natural sizes (driven by the
+     0.85 density scale, no extra mobile-specific shrinking). When
+     the content is shorter than the slide we let the bottom breathe;
+     when it is taller we cap with overflow hidden so the layout
+     never spills into the rail / next snap. */
   .caseSlide {
     flex: 0 0 100%;
     scroll-snap-align: start;
     padding: 0 var(--md);
-    /* No vertical scroll: the slide is sized to its row track and
-       renders entirely on one screen. */
     overflow: hidden;
     display: flex;
     flex-direction: column;
-  }
-  /* Inside-slide spacing tightened: caseDisplay row gap shrinks so
-     all blocks fit inside ~100svh – logoBottom – sliderHeader. */
-  .caseSlide .caseDisplay {
-    gap: var(--sm);
-  }
-  /* Compress chapter case typography so the whole card fits one screen */
-  .caseSlide .caseTitle {
-    font-size: var(--text-h3);
-    line-height: var(--lh-h3);
-    letter-spacing: var(--tracking-h3);
-  }
-  .caseSlide .caseBlurb {
-    font-size: var(--text-small);
-    line-height: var(--lh-small);
-  }
-  /* casePoints carries detail nice-to-have content; on mobile we
-     surface it but in the small-text register, with reduced gap so
-     it does not push the actions off-screen. */
-  .caseSlide .casePoints {
-    gap: var(--xs);
-    margin-top: 0;
-  }
-  .caseSlide .casePoints li {
-    font-size: var(--text-small);
-    line-height: var(--lh-small);
-    grid-template-columns: var(--sm) 1fr;
-    column-gap: var(--xs);
   }
   /* Action buttons sit horizontally — Open Case / GitHub side by side
      instead of stacked. Each takes equal width. */
   .caseActions {
     flex-direction: row;
     align-items: stretch;
-    gap: var(--xs);
+    gap: var(--sm);
     flex-wrap: nowrap;
-    margin-top: var(--xs);
+    margin-top: var(--sm);
   }
   .caseActions > * {
     flex: 1 1 0;
@@ -930,9 +905,19 @@
   }
   .caseSide { display: none; }
 
-  /* Profile section pulled higher so the long credential list (5 rows
-     stacked) lands fully inside 100svh without bottom clipping. */
-  .profileLayer { padding: 0 var(--md); top: 38%; gap: var(--md); }
+  /* Profile section uses flex justify-content: center on a full-height
+     box (top:0, bottom:0) so the content midline sits at the viewport
+     midline. We avoid `transform: translateY(-50%)` because motion's
+     `y` prop on the wrapping motion.div drives the same property and
+     would override the centering. The dot cloud lifts to ~30 % of the
+     frame above center so the credentials list reads cleanly below. */
+  .profileLayer {
+    padding: 0 var(--md);
+    top: 0;
+    bottom: 0;
+    justify-content: center;
+    gap: var(--md);
+  }
   .profileStatement { font-size: var(--text-h3); line-height: var(--lh-h3); }
   /* mobile rows stack: label uppercase mono on top, value below. */
   .profileRow {
