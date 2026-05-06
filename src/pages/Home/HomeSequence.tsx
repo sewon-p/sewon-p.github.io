@@ -98,12 +98,16 @@ const DEFAULT_FIELD_TUNING = {
    phone; splitting at the gap lets each line bind to ~560 px and
    roughly doubles the visible glyph size.
 
-   PARK_X_THRESHOLD : the mid-gap where we slice sewon ↔ park.
-   PARK_DX          : park.x shifted left to align with sewon.x = 76.
-   SEWON_DY / PARK_DY: vertical offsets to stack the two lines
-                       symmetrically around the canvas centre. */
+   Both sub-clouds are individually re-centred on the canvas centre
+   (CANVAS_CX = 700) so the two stacked lines sit horizontally
+   centred — without this the combined cloud drifts way off to the
+   left of the canvas and disappears outside the visible frame. */
+const CANVAS_CX = 700;
 const PARK_X_THRESHOLD = 700;
-const PARK_DX = -680;
+const SEWON_X_CENTER = (76 + 636) / 2;     // 356, from preset bounds
+const PARK_X_CENTER  = (756 + 1276) / 2;   // 1016, from preset bounds
+const SEWON_DX = CANVAS_CX - SEWON_X_CENTER;  // +344 → recentre sewon
+const PARK_DX  = CANVAS_CX - PARK_X_CENTER;   // −316 → recentre park
 const SEWON_DY = -80;
 const PARK_DY = 80;
 const MOBILE_HERO_LINE_WIDTH = 560;
@@ -112,7 +116,7 @@ function dotsForMobileTwoLine(presetDots: { x: number; y: number }[]): { x: numb
   return presetDots.map((p) =>
     p.x >= PARK_X_THRESHOLD
       ? { x: p.x + PARK_DX, y: p.y + PARK_DY }
-      : { x: p.x, y: p.y + SEWON_DY },
+      : { x: p.x + SEWON_DX, y: p.y + SEWON_DY },
   );
 }
 

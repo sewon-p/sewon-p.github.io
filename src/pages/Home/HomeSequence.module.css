@@ -840,16 +840,15 @@
   .heroTagline {
     grid-template-columns: 1fr;
     gap: var(--sm);
-    /* Container hugs the right edge at 8 px ≈ 2 mm (iPhone 15 Pro)
-       and shrinks to content width — `left: auto` gives up the
-       elastic span so the textbox itself slides right. Text inside
-       stays left-aligned per the brand voice; the right column
-       still uses its desktop right-alignment. */
-    left: auto;
-    right: 8px;
+    /* Anchored to the LEFT edge at 6 px ≈ 1.5 mm (iPhone 15 Pro).
+       Container shrinks to content width so the textbox itself sits
+       on the left rather than stretching across the screen.
+       Text alignment stays left per the brand voice. */
+    left: 6px;
+    right: auto;
     bottom: calc(max(var(--xs), env(safe-area-inset-bottom)) + var(--xxl));
   }
-  .taglineRight { text-align: right; }
+  .taglineRight { text-align: left; }
   /* Position indicator — desktop right-edge rail, slim variant on
      mobile. Replaces the absent vertical scroll bar so the user can
      see which of the 4 sections they are on. */
