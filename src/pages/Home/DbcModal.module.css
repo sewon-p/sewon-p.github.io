@@ -11,19 +11,19 @@
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--xl) var(--md);
+  padding: var(--md);
   background: color-mix(in srgb, var(--ink) 32%, transparent);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(calc(var(--xs) / 4));
+  -webkit-backdrop-filter: blur(calc(var(--xs) / 4));
 }
 
 .cardWrap {
   width: min(960px, 100%);
-  max-height: calc(100vh - var(--xxl));
+  max-height: calc(100svh - var(--md) * 2);
   display: flex;
 }
 
@@ -66,7 +66,12 @@
 
 .close {
   margin-left: auto;
+  min-width: 44px;
+  min-height: 44px;
   padding: var(--xs) var(--sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);

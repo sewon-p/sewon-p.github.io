@@ -1,5 +1,5 @@
 import {
-  useEffect,
+  useId,
   useRef,
   useState,
   type ChangeEvent,
@@ -9,6 +9,7 @@ import {
 import { motion } from 'motion/react';
 import { Card } from '../../primitives/Card/Card';
 import { Button } from '../../primitives/Button/Button';
+import { useModalA11y } from './useModalA11y';
 import styles from './DbcModal.module.css';
 
 /*
@@ -38,21 +39,10 @@ export function DbcModal({ onClose }: DbcModalProps): ReactElement {
   const [statusText, setStatusText] = useState('Waiting for image…');
   const [copied, setCopied] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
-  // close on Escape, lock body scroll
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose();
-    };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [onClose]);
+  useModalA11y(shellRef, onClose);
 
   const handleFile = (file: File | undefined): void => {
     if (!file) return;
@@ -98,9 +88,6 @@ export function DbcModal({ onClose }: DbcModalProps): ReactElement {
   return (
     <motion.div
       className={styles.overlay}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Make Your Card"
       onClick={onClose}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -108,6 +95,11 @@ export function DbcModal({ onClose }: DbcModalProps): ReactElement {
       transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
     >
       <motion.div
+        ref={shellRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className={styles.cardWrap}
         onClick={(e) => e.stopPropagation()}
         initial={{ opacity: 0, y: 8 }}
@@ -117,7 +109,7 @@ export function DbcModal({ onClose }: DbcModalProps): ReactElement {
       >
         <Card variant="l2" className={styles.card}>
           <Card.Head>
-            <span className={styles.title}>Make Your Card</span>
+            <span id={titleId} className={styles.title}>Make Your Card</span>
             <span className={styles.privacy}>runs locally · your image never leaves your device</span>
             <button
               type="button"
@@ -164,7 +156,6 @@ export function DbcModal({ onClose }: DbcModalProps): ReactElement {
             >
               <input
                 id="dbcFileInput"
-                ref={fileInputRef}
                 type="file"
                 accept="image/png,image/jpeg"
                 onChange={onInputChange}

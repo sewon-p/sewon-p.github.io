@@ -14,7 +14,7 @@
   --ink: #0A0E14;
   --paper: #F1F2F4;        /* darker than v1 to give Surface visible separation */
   --surface: #FFFFFF;
-  --mute: #6B7280;
+  --mute: #5B616B;        /* AA on paper (5.50:1); was #6B7280 (4.32:1) */
   --hairline: #E5E7EB;
   --tint: #3B6EF5;
   --tint-hover: #2952D9;
@@ -89,6 +89,12 @@
   --dur-base: 300ms;    /* modal, card, toggle */
   --dur-sig: 480ms;     /* signature motion (line → surface → line) */
   --dur-large: 600ms;   /* page transitions */
+
+  /* ── z-index scale ───────────────────────────────────────── */
+  --z-rail: 10;            /* right-edge accent rail / chapter selector */
+  --z-modal-progress: 20;  /* modal progress bar inside modal */
+  --z-modal: 50;           /* full-screen modal overlay */
+  --z-modal-close: 55;     /* close affordance inside modal */
 
   /* ── shadow-as-border (Vercel pattern, tuned for our cool ink) ─ */
   /* lower alpha than Vercel's 0.08 — our ink #0A0E14 has blue undertone

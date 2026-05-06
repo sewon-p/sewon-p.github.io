@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useId,
   useRef,
   useState,
   type ReactElement,
@@ -17,6 +18,7 @@ import { DotMorph } from '../../composition/DotMorph/DotMorph';
 import { Card } from '../../primitives/Card/Card';
 import { Button } from '../../primitives/Button/Button';
 import { DbcModal } from './DbcModal';
+import { useModalA11y } from './useModalA11y';
 import { getLegacyCaseHtml } from './legacy-cases';
 import './legacy-cases/legacy-modal.css';
 import {
@@ -111,20 +113,6 @@ export function HomeSequence(): ReactElement {
   // 'modal' with url matching the key.
   const [openBuiltinModal, setOpenBuiltinModal] = useState<'dbc' | null>(null);
 
-  // close on Escape, lock body scroll while open
-  useEffect(() => {
-    if (!openCase) return;
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpenCase(null);
-    };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [openCase]);
   // chapter heading text — engineering for index 2, strategy for index 3
   const chapterLabel = activeIndex === 3 ? SECTIONS[3].label : SECTIONS[2].label;
 
@@ -329,9 +317,9 @@ export function HomeSequence(): ReactElement {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.56, ease: CASE_EASE, delay: 0.08 }}
               />
-              <p className={styles.caseLayerLabel}>
+              <h2 className={styles.caseLayerLabel}>
                 engineering · {engineering.length} projects
-              </p>
+              </h2>
               <ChapterCases
                 projects={engineering}
                 onOpenBuiltin={setOpenBuiltinModal}
@@ -354,9 +342,9 @@ export function HomeSequence(): ReactElement {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.56, ease: CASE_EASE, delay: 0.08 }}
               />
-              <p className={styles.caseLayerLabel}>
+              <h2 className={styles.caseLayerLabel}>
                 strategy · {strategy.length} cases
-              </p>
+              </h2>
               <ChapterCases
                 projects={strategy}
                 onOpenCase={setOpenCase}
@@ -417,8 +405,11 @@ interface CaseModalProps {
 function CaseModal({ project, onClose }: CaseModalProps): ReactElement {
   const legacyHtml = getLegacyCaseHtml(project.number);
   const shellRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
   const [progress, setProgress] = useState(0);
 
+  useModalA11y(wrapRef, onClose);
   ensureUxBulletinHandler();
 
   // Track scroll progress inside the modal shell so the right-edge
@@ -482,9 +473,6 @@ function CaseModal({ project, onClose }: CaseModalProps): ReactElement {
   return (
     <motion.div
       className={styles.modalOverlay}
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Case study — ${project.title}`}
       onClick={onClose}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -492,6 +480,11 @@ function CaseModal({ project, onClose }: CaseModalProps): ReactElement {
       transition={{ duration: 0.18 }}
     >
       <motion.div
+        ref={wrapRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className={styles.modalCardWrap}
         onClick={(e) => e.stopPropagation()}
         initial={{ opacity: 0, y: 8 }}
@@ -510,13 +503,14 @@ function CaseModal({ project, onClose }: CaseModalProps): ReactElement {
         </div>
 
         <div ref={shellRef} className={styles.modalShell}>
+          <span id={titleId} className="srOnly">{project.title}</span>
           <button
             type="button"
             className={styles.modalCloseFloat}
             onClick={onClose}
-            aria-label="Close case"
+            aria-label="Close case study"
           >
-            ×
+            <span aria-hidden="true">×</span>
           </button>
 
           {legacyHtml ? (
@@ -663,9 +657,9 @@ function CaseStudy({
               <span className={styles.caseYear}>{project.year}</span>
             </motion.div>
 
-            <motion.h2 className={styles.caseTitle} variants={caseItemVariants}>
+            <motion.h3 className={styles.caseTitle} variants={caseItemVariants}>
               {project.title}
-            </motion.h2>
+            </motion.h3>
 
             <motion.p className={styles.caseBlurb} variants={caseItemVariants}>
               {project.blurb}
@@ -686,25 +680,33 @@ function CaseStudy({
             </motion.div>
 
             <motion.div className={styles.caseActions} variants={caseItemVariants}>
-              {project.primaryAction ? (
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    const a = project.primaryAction!;
-                    if (a.kind === 'modal') {
-                      onOpenBuiltin?.(a.url);
-                    } else {
-                      window.open(a.url, '_blank', 'noopener,noreferrer');
-                    }
-                  }}
-                >
-                  {project.primaryAction.label}
-                </Button>
-              ) : onOpenCase ? (
-                <Button variant="primary" onClick={() => onOpenCase(project)}>
-                  Open Case
-                </Button>
-              ) : null}
+              {(() => {
+                const action = project.primaryAction;
+                if (action) {
+                  return (
+                    <Button
+                      variant="primary"
+                      onClick={() => {
+                        if (action.kind === 'modal') {
+                          onOpenBuiltin?.(action.url);
+                        } else {
+                          window.open(action.url, '_blank', 'noopener,noreferrer');
+                        }
+                      }}
+                    >
+                      {action.label}
+                    </Button>
+                  );
+                }
+                if (onOpenCase) {
+                  return (
+                    <Button variant="primary" onClick={() => onOpenCase(project)}>
+                      Open Case
+                    </Button>
+                  );
+                }
+                return null;
+              })()}
               {project.githubUrl ? (
                 <Button
                   variant="ghost"

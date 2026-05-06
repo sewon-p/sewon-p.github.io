@@ -78,6 +78,7 @@ export function DotMorph({
   const accentIdsRef = useRef<Set<number>>(new Set());
   const nextIdRef = useRef(0);
   const rafRef = useRef<number | null>(null);
+  const rafStartRef = useRef<(() => void) | null>(null);
   const [ready, setReady] = useState(false);
 
   // sample new target whenever text changes
@@ -186,6 +187,7 @@ export function DotMorph({
     }
 
     dotsRef.current = next;
+    rafStartRef.current?.();
   }, [targetDots, ready, accentCount, inkColor, tintColor]);
 
   // animation loop — spring toward targets
@@ -205,10 +207,17 @@ export function DotMorph({
 
     const velocity = new Map<number, { vx: number; vy: number }>();
 
-    const tick = () => {
+    // settle thresholds — below these, the dot is "at rest" and the
+    // loop can stop until something kicks it (target change / restart).
+    const POS_EPS = 0.05;
+    const VEL_EPS = 0.02;
+    const ALPHA_EPS = 0.005;
+
+    const tick = (): void => {
       ctx.clearRect(0, 0, width, height);
       const dots = dotsRef.current;
       const stillToRemove: number[] = [];
+      let moving = false;
 
       for (let i = 0; i < dots.length; i += 1) {
         const d = dots[i];
@@ -228,7 +237,18 @@ export function DotMorph({
         d.alpha += (d.targetAlpha - d.alpha) * 0.12;
         if (d.targetAlpha === 0 && d.alpha < 0.02) {
           stillToRemove.push(i);
+          moving = true;
           continue;
+        }
+
+        if (
+          Math.abs(d.targetX - d.x) > POS_EPS ||
+          Math.abs(d.targetY - d.y) > POS_EPS ||
+          Math.abs(v.vx) > VEL_EPS ||
+          Math.abs(v.vy) > VEL_EPS ||
+          Math.abs(d.targetAlpha - d.alpha) > ALPHA_EPS
+        ) {
+          moving = true;
         }
 
         ctx.globalAlpha = d.alpha;
@@ -248,12 +268,27 @@ export function DotMorph({
         dots.splice(idx, 1);
       }
 
-      rafRef.current = requestAnimationFrame(tick);
+      if (moving) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        rafRef.current = null;
+      }
     };
 
-    rafRef.current = requestAnimationFrame(tick);
+    const start = (): void => {
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    start();
+    // expose start so the target-change effect can re-arm us
+    rafStartRef.current = start;
+
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      rafStartRef.current = null;
     };
   }, [width, height, dotRadius]);
 

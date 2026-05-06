@@ -53,6 +53,7 @@ export function Card({
 interface SlotProps {
   children: ReactNode;
   className?: string;
+  id?: string;
 }
 
 /** mono uppercase label — small kicker above a title */
@@ -61,8 +62,8 @@ Card.Kicker = function CardKicker({ children, className = '' }: SlotProps) {
 };
 
 /** primary heading inside a card */
-Card.Title = function CardTitle({ children, className = '' }: SlotProps) {
-  return <h3 className={`${styles.title} ${className}`.trim()}>{children}</h3>;
+Card.Title = function CardTitle({ children, className = '', id }: SlotProps) {
+  return <h3 id={id} className={`${styles.title} ${className}`.trim()}>{children}</h3>;
 };
 
 /** body paragraph */
