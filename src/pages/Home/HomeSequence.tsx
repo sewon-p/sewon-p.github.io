@@ -657,16 +657,27 @@ function CaseModal({ project, onClose }: CaseModalProps): ReactElement {
   }, [legacyHtml]);
 
   /*
-   * No JS upgrade — the legacy case HTML embeds <spline-viewer>
-   * tags directly per Spline's official docs. The viewer module
-   * loaded from index.html registers the custom element before the
-   * modal mounts, so the browser instantiates each viewer the
-   * moment React inserts the HTML via dangerouslySetInnerHTML.
-   * Earlier attempts at JS placeholder upgrade (IntersectionObserver
-   * lazy + eager passes) introduced more failure modes than they
-   * solved; direct embed is the simplest path and matches what was
-   * working in the pre-rebrand site exactly.
+   * No JS upgrade on enter — the legacy case HTML embeds
+   * <spline-viewer> tags directly per Spline's official docs and
+   * the browser instantiates them as soon as React inserts the
+   * markup via dangerouslySetInnerHTML.
+   *
+   * On EXIT we still need a manual cleanup pass: Spline's viewer
+   * does not release its WebGL context cleanly on
+   * disconnectedCallback, so closing the modal would leave the GPU
+   * pipeline running in the background. The pre-rebrand site
+   * worked around this by `contentContainer.innerHTML = ''` 400 ms
+   * after the close transition. We do the equivalent — explicitly
+   * .remove() every <spline-viewer> in the unmount cleanup, which
+   * forces a proper teardown before React detaches the parent.
    */
+  useEffect(() => {
+    return () => {
+      const shell = shellRef.current;
+      if (!shell) return;
+      shell.querySelectorAll('spline-viewer').forEach((v) => v.remove());
+    };
+  }, []);
   return (
     <motion.div
       className={styles.modalOverlay}
