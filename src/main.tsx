@@ -5,11 +5,10 @@ import App from './App';
 
 /*
  * --vw-px / --vh-px — JS-measured viewport units in px.
- * Safari computes native `vw` differently than Chrome on macOS in
- * some configurations (particularly with sidebars / multi-monitor),
- * which made fluid clamp(...vw...) sizes drift across browsers and
- * screens. This sets a stable, browser-agnostic value that CSS can
- * use via `calc(var(--vw-px) * 1.6)` in place of `1.6vw`.
+ * Safari and Chrome can report native viewport units differently on
+ * macOS when toolbars, sidebars, or display scaling are involved.
+ * The app uses these measured values for full-height stages and any
+ * future viewport-sensitive layout that must stay browser-stable.
  */
 function syncViewportUnits(): void {
   const root = document.documentElement;

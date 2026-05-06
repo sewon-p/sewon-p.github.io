@@ -72,16 +72,12 @@ const SECTIONS = [
 const HERO_DOT_WIDTH = 1400;
 const HERO_DOT_HEIGHT = 360;
 const DOT_FONT = "500 200px 'Geist', system-ui, sans-serif";
-const HERO_SCALE_REFERENCE_WIDTH = 1920;
-const HERO_SCALE_REFERENCE_HEIGHT = 980;
-const HERO_SCALE_MIN = 0.78;
-const HERO_SCALE_MAX = 1.10;
+const HERO_SCALE_REFERENCE_WIDTH = 1440;
+const HERO_SCALE_MIN = 0.86;
+const HERO_SCALE_MAX = 1;
 const CHAPTER_DOT_SCALE_MAX = 0.38;
 const CHAPTER_DOT_SCALE_MIN = 0.16;
-// scale = clamp(MIN, frameWidth / DIVISOR, MAX). 5000 was tuned so a
-// 1900px frame lands exactly at MAX (0.38) and a 720px frame at 0.144,
-// which clamps to MIN (0.16). Linear in between.
-const CHAPTER_SCALE_DIVISOR = 5000;
+const MOBILE_BREAKPOINT = 720;
 const CHAPTER_DOT_FALLBACK = { x: -HERO_DOT_WIDTH * 0.26, y: -HERO_DOT_HEIGHT * 1.05 };
 const PROFILE_TEXT_START = 0.20;
 const ENGINEERING_TEXT_START = 0.40;
@@ -136,10 +132,7 @@ export function HomeSequence(): ReactElement {
 
       const frameRect = frame.getBoundingClientRect();
       const boxRect = box.getBoundingClientRect();
-      const viewportScale = Math.min(
-        frameRect.width / HERO_SCALE_REFERENCE_WIDTH,
-        frameRect.height / HERO_SCALE_REFERENCE_HEIGHT,
-      );
+      const viewportScale = frameRect.width / HERO_SCALE_REFERENCE_WIDTH;
       const nextHeroScale = Math.max(
         HERO_SCALE_MIN,
         Math.min(HERO_SCALE_MAX, viewportScale),
@@ -149,10 +142,9 @@ export function HomeSequence(): ReactElement {
       const boxCenterY = boxRect.top + boxRect.height / 2;
       const textWidth = measureDotTextWidth(chapterLabel, DOT_FONT);
 
-      const nextScale = Math.max(
-        CHAPTER_DOT_SCALE_MIN,
-        Math.min(CHAPTER_DOT_SCALE_MAX, frameRect.width / CHAPTER_SCALE_DIVISOR),
-      );
+      const nextScale = frameRect.width <= MOBILE_BREAKPOINT
+        ? CHAPTER_DOT_SCALE_MIN
+        : CHAPTER_DOT_SCALE_MAX;
 
       setHeroScale((prev) => (Math.abs(prev - nextHeroScale) < 0.002 ? prev : nextHeroScale));
       setChapterScale((prev) => (Math.abs(prev - nextScale) < 0.002 ? prev : nextScale));

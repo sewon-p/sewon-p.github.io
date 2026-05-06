@@ -59,20 +59,19 @@
   --font-pixel-grid:   'Geist Pixel Grid',   'Geist Mono', monospace;
   --font-pixel-line:   'Geist Pixel Line',   'Geist Mono', monospace;
 
-  /* fluid typography — anchor at 1440px wide. uses JS-measured
-     --vw-px (set in main.tsx) instead of native `vw` so Safari
-     and Chrome render identically. Fallback to 14.4px (= 1440px / 100)
-     until JS runs. */
+  /* measured viewport unit, set in main.tsx. Used for viewport height
+     normalization; type itself stays fixed so Safari / Chrome do not
+     rescale the entire brand system differently. */
   --vw-px: 14.4px;
-  --text-display: clamp(40px, calc(var(--vw-px) * 3.2), 56px);
-  --lh-display:   clamp(48px, calc(var(--vw-px) * 3.8), 64px);
+  --text-display: 48px;
+  --lh-display:   56px;
   --tracking-display: -2.40px;
-  --text-h1: clamp(28px, calc(var(--vw-px) * 2.2), 40px);  --lh-h1: clamp(36px, calc(var(--vw-px) * 2.6), 48px);  --tracking-h1: -1.28px;
-  --text-h2: clamp(20px, calc(var(--vw-px) * 1.6), 28px);  --lh-h2: clamp(28px, calc(var(--vw-px) * 2), 36px);    --tracking-h2: -0.96px;
-  --text-h3: clamp(18px, calc(var(--vw-px) * 1.3), 22px);  --lh-h3: clamp(26px, calc(var(--vw-px) * 1.9), 32px);  --tracking-h3: -0.48px;
-  --text-body: clamp(14px, calc(var(--vw-px) * 1), 17px);  --lh-body: clamp(22px, calc(var(--vw-px) * 1.5), 26px); --tracking-body: 0;
-  --text-small: clamp(12px, calc(var(--vw-px) * 0.9), 14px); --lh-small: clamp(18px, calc(var(--vw-px) * 1.3), 20px); --tracking-small: 0;
-  --text-mono: clamp(12px, calc(var(--vw-px) * 0.9), 14px); --lh-mono: clamp(18px, calc(var(--vw-px) * 1.3), 20px); --tracking-mono: 0;
+  --text-h1: 32px;  --lh-h1: 40px;  --tracking-h1: -1.28px;
+  --text-h2: 24px;  --lh-h2: 32px;  --tracking-h2: -0.96px;
+  --text-h3: 20px;  --lh-h3: 28px;  --tracking-h3: -0.48px;
+  --text-body: 16px;  --lh-body: 24px; --tracking-body: 0;
+  --text-small: 14px; --lh-small: 20px; --tracking-small: 0;
+  --text-mono: 14px; --lh-mono: 20px; --tracking-mono: 0;
   --tracking-tight: -0.32px;
 
   /* ── weights (3-tier strict policy) ───────────────────────── */
