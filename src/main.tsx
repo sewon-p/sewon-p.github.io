@@ -13,11 +13,15 @@ import App from './App';
  */
 function syncViewportUnits(): void {
   const root = document.documentElement;
-  root.style.setProperty('--vw-px', `${window.innerWidth / 100}px`);
-  root.style.setProperty('--vh-px', `${window.innerHeight / 100}px`);
+  const viewport = window.visualViewport;
+  const width = viewport?.width ?? window.innerWidth;
+  const height = viewport?.height ?? window.innerHeight;
+  root.style.setProperty('--vw-px', `${width / 100}px`);
+  root.style.setProperty('--vh-px', `${height / 100}px`);
 }
 syncViewportUnits();
 window.addEventListener('resize', syncViewportUnits, { passive: true });
+window.visualViewport?.addEventListener('resize', syncViewportUnits, { passive: true });
 
 const root = document.getElementById('root');
 if (!root) throw new Error('root element not found');

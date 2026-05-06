@@ -59,7 +59,7 @@ html { scrollbar-width: none; }
 body { -ms-overflow-style: none; }
 body::-webkit-scrollbar { width: 0; height: 0; }
 
-#root { min-height: 100vh; }
+#root { min-height: calc(var(--vh-px) * 100); }
 
 /* selection */
 ::selection { background: var(--ink); color: var(--paper); }

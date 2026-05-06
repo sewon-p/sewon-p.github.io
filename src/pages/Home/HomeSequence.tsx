@@ -72,6 +72,10 @@ const SECTIONS = [
 const HERO_DOT_WIDTH = 1400;
 const HERO_DOT_HEIGHT = 360;
 const DOT_FONT = "500 200px 'Geist', system-ui, sans-serif";
+const HERO_SCALE_REFERENCE_WIDTH = 1920;
+const HERO_SCALE_REFERENCE_HEIGHT = 980;
+const HERO_SCALE_MIN = 0.78;
+const HERO_SCALE_MAX = 1.10;
 const CHAPTER_DOT_SCALE_MAX = 0.38;
 const CHAPTER_DOT_SCALE_MIN = 0.16;
 // scale = clamp(MIN, frameWidth / DIVISOR, MAX). 5000 was tuned so a
@@ -94,6 +98,7 @@ export function HomeSequence(): ReactElement {
   const chapterDotBoxRef = useRef<HTMLSpanElement>(null);
   const [chapterDotTarget, setChapterDotTarget] = useState(CHAPTER_DOT_FALLBACK);
   const [chapterScale, setChapterScale] = useState(CHAPTER_DOT_SCALE_MAX);
+  const [heroScale, setHeroScale] = useState(1);
   const { scrollYProgress } = useScroll({
     target: zoneRef,
     offset: ['start start', 'end end'],
@@ -131,6 +136,14 @@ export function HomeSequence(): ReactElement {
 
       const frameRect = frame.getBoundingClientRect();
       const boxRect = box.getBoundingClientRect();
+      const viewportScale = Math.min(
+        frameRect.width / HERO_SCALE_REFERENCE_WIDTH,
+        frameRect.height / HERO_SCALE_REFERENCE_HEIGHT,
+      );
+      const nextHeroScale = Math.max(
+        HERO_SCALE_MIN,
+        Math.min(HERO_SCALE_MAX, viewportScale),
+      );
       const frameCenterX = frameRect.left + frameRect.width / 2;
       const frameCenterY = frameRect.top + frameRect.height / 2;
       const boxCenterY = boxRect.top + boxRect.height / 2;
@@ -141,6 +154,7 @@ export function HomeSequence(): ReactElement {
         Math.min(CHAPTER_DOT_SCALE_MAX, frameRect.width / CHAPTER_SCALE_DIVISOR),
       );
 
+      setHeroScale((prev) => (Math.abs(prev - nextHeroScale) < 0.002 ? prev : nextHeroScale));
       setChapterScale((prev) => (Math.abs(prev - nextScale) < 0.002 ? prev : nextScale));
       setChapterDotTarget({
         x: boxRect.left - frameCenterX + (textWidth * nextScale) / 2,
@@ -166,13 +180,13 @@ export function HomeSequence(): ReactElement {
   //   0.00 (hero)    : centered, scale 1
   //   0.20 (profile) : lifted up, slight shrink to make room for credentials
   //   0.40 (chapter) : top-left chapter heading position (measured live)
-  const PROFILE_LIFT_Y = -HERO_DOT_HEIGHT * 0.55;
-  const PROFILE_SCALE = 0.66;
+  const PROFILE_LIFT_Y = -HERO_DOT_HEIGHT * 0.55 * heroScale;
+  const PROFILE_SCALE = 0.66 * heroScale;
 
   const dotScaleRaw = useTransform(
     scrollYProgress,
     [0, 0.12, PROFILE_TEXT_START, 0.32, ENGINEERING_TEXT_START],
-    [1, 1, PROFILE_SCALE, PROFILE_SCALE, chapterScale],
+    [heroScale, heroScale, PROFILE_SCALE, PROFILE_SCALE, chapterScale],
   );
   const dotXRaw = useTransform(
     scrollYProgress,
