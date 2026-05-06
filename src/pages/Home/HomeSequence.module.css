@@ -934,6 +934,11 @@
   .caseSlide .caseDisplay { gap: var(--sm); }
   .caseSlide .casePoints { gap: var(--sm); margin-top: 0; }
   .caseSlide .caseTags { margin-top: 0; }
+  /* Drop the case head row (number · kicker · year). On mobile the
+     slider counter (01/03 above) and the case title together carry
+     the same information; the head row is redundant chrome and was
+     pushing the longer cases (02, 03) off the bottom of the slide. */
+  .caseSlide .caseHead { display: none; }
   /* Action buttons sit horizontally — Open Case / GitHub side by side
      instead of stacked. Each takes equal width. */
   .caseActions {
@@ -970,13 +975,12 @@
   }
   .caseSide { display: none; }
 
-  /* Profile section anchored below the lifted dot artwork. Content
-     centers within the available band rather than spreading edge-to-
-     edge — statement and credentials read as one composed block,
-     not three loosely-floating units. */
+  /* Profile section anchored below the lifted dot artwork. top: 38%
+     drops the band ~1.5 cm lower than 28% on a 393-pt phone, which
+     reads as more deliberate breathing under the dot artwork. */
   .profileLayer {
     padding: 0 var(--sm);
-    top: 28%;
+    top: 38%;
     bottom: max(var(--md), env(safe-area-inset-bottom));
     justify-content: center;
     gap: var(--md);

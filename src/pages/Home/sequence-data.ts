@@ -70,7 +70,7 @@ export const engineering: ProjectCard[] = [
     number: '02',
     kicker: 'full-stack llm service',
     title: 'synthetic driving scenario generation',
-    year: '2025',
+    year: '2026',
     blurb:
       'converts natural-language traffic descriptions into runnable sumo simulations through a fine-tuned parameter extractor and role-separated llm orchestration.',
     points: [
@@ -90,7 +90,7 @@ export const engineering: ProjectCard[] = [
     number: '03',
     kicker: 'data & ml pipeline',
     title: 'probedensity — end-to-end traffic density estimation',
-    year: '2025',
+    year: '2026',
     blurb:
       'turns smartphone probe trajectories into deployable road-link density estimates through an end-to-end pipeline covering simulation, training, inference, storage, and live inspection.',
     points: [
