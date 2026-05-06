@@ -657,46 +657,16 @@ function CaseModal({ project, onClose }: CaseModalProps): ReactElement {
   }, [legacyHtml]);
 
   /*
-   * Spline upgrade — eager. As soon as the modal mounts and the
-   * <spline-viewer> custom element is registered, replace every
-   * `<div class="spline-placeholder" data-spline-url="…">` with a
-   * real <spline-viewer>. The IntersectionObserver-based lazy path
-   * we used previously had two failure modes (StrictMode dev double-
-   * mount stranding the upgrade flag, and modals where the user
-   * never scrolled past the fold) and silent failure beats clever:
-   * eager guarantees the scenes always render. The viewer carries
-   * loading="lazy" so Spline still defers its own WebGL init until
-   * the canvas itself becomes visible.
+   * No JS upgrade — the legacy case HTML embeds <spline-viewer>
+   * tags directly per Spline's official docs. The viewer module
+   * loaded from index.html registers the custom element before the
+   * modal mounts, so the browser instantiates each viewer the
+   * moment React inserts the HTML via dangerouslySetInnerHTML.
+   * Earlier attempts at JS placeholder upgrade (IntersectionObserver
+   * lazy + eager passes) introduced more failure modes than they
+   * solved; direct embed is the simplest path and matches what was
+   * working in the pre-rebrand site exactly.
    */
-  useEffect(() => {
-    const shell = shellRef.current;
-    if (!shell) return;
-
-    let cancelled = false;
-    void customElements.whenDefined('spline-viewer').then(() => {
-      if (cancelled) return;
-      const placeholders = shell.querySelectorAll<HTMLElement>(
-        '.spline-placeholder[data-spline-url]:not([data-spline-upgraded])',
-      );
-      placeholders.forEach((el) => {
-        const url = el.getAttribute('data-spline-url');
-        if (!url) return;
-        const viewer = document.createElement('spline-viewer');
-        viewer.setAttribute('url', url);
-        viewer.setAttribute('loading-anim-type', 'spinner-small-dark');
-        viewer.setAttribute('loading', 'lazy');
-        viewer.setAttribute('pixel-ratio', '1.5');
-        viewer.style.width = '100%';
-        viewer.style.height = '100%';
-        el.replaceChildren(viewer);
-        el.dataset.splineUpgraded = '1';
-      });
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [legacyHtml]);
   return (
     <motion.div
       className={styles.modalOverlay}
