@@ -72,9 +72,11 @@ const SECTIONS = [
 const HERO_DOT_WIDTH = 1400;
 const HERO_DOT_HEIGHT = 360;
 const DOT_FONT = "500 200px 'Geist', system-ui, sans-serif";
-const HERO_SCALE_REFERENCE_WIDTH = 1440;
+const UI_SCALE_REFERENCE_WIDTH = 1440;
+const UI_SCALE_MIN = 0.88;
+const UI_SCALE_MAX = 1.06;
 const HERO_SCALE_MIN = 0.86;
-const HERO_SCALE_MAX = 1;
+const HERO_SCALE_MAX = UI_SCALE_MAX;
 const CHAPTER_DOT_SCALE_MAX = 0.38;
 const CHAPTER_DOT_SCALE_MIN = 0.16;
 const MOBILE_BREAKPOINT = 720;
@@ -132,10 +134,13 @@ export function HomeSequence(): ReactElement {
 
       const frameRect = frame.getBoundingClientRect();
       const boxRect = box.getBoundingClientRect();
-      const viewportScale = frameRect.width / HERO_SCALE_REFERENCE_WIDTH;
+      const viewportScale = frameRect.width / UI_SCALE_REFERENCE_WIDTH;
+      const nextUiScale = frameRect.width <= MOBILE_BREAKPOINT
+        ? 1
+        : Math.max(UI_SCALE_MIN, Math.min(UI_SCALE_MAX, viewportScale));
       const nextHeroScale = Math.max(
         HERO_SCALE_MIN,
-        Math.min(HERO_SCALE_MAX, viewportScale),
+        Math.min(HERO_SCALE_MAX, nextUiScale),
       );
       const frameCenterX = frameRect.left + frameRect.width / 2;
       const frameCenterY = frameRect.top + frameRect.height / 2;
@@ -144,7 +149,10 @@ export function HomeSequence(): ReactElement {
 
       const nextScale = frameRect.width <= MOBILE_BREAKPOINT
         ? CHAPTER_DOT_SCALE_MIN
-        : CHAPTER_DOT_SCALE_MAX;
+        : Math.max(
+            CHAPTER_DOT_SCALE_MIN,
+            Math.min(CHAPTER_DOT_SCALE_MAX * UI_SCALE_MAX, CHAPTER_DOT_SCALE_MAX * nextUiScale),
+          );
 
       setHeroScale((prev) => (Math.abs(prev - nextHeroScale) < 0.002 ? prev : nextHeroScale));
       setChapterScale((prev) => (Math.abs(prev - nextScale) < 0.002 ? prev : nextScale));

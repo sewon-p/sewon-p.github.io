@@ -15,8 +15,11 @@ function syncViewportUnits(): void {
   const viewport = window.visualViewport;
   const width = viewport?.width ?? window.innerWidth;
   const height = viewport?.height ?? window.innerHeight;
+  const desktopScale = Math.max(0.88, Math.min(1.06, width / 1440));
+  const uiScale = width <= 720 ? 1 : desktopScale;
   root.style.setProperty('--vw-px', `${width / 100}px`);
   root.style.setProperty('--vh-px', `${height / 100}px`);
+  root.style.setProperty('--ui-scale', `${uiScale}`);
 }
 syncViewportUnits();
 window.addEventListener('resize', syncViewportUnits, { passive: true });
