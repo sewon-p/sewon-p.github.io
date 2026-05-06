@@ -11,7 +11,7 @@
 .zone {
   /* total scroll length: 4 sections × ~150vh each */
   position: relative;
-  height: calc(var(--vh-px) * 600);
+  height: 600vh;
   background: var(--paper);
   scroll-snap-type: y mandatory;
   scroll-snap-stop: always;
@@ -20,7 +20,7 @@
 .stage {
   position: sticky;
   top: 0;
-  height: calc(var(--vh-px) * 100);
+  height: 100vh;
   width: 100%;
   display: flex;
   align-items: stretch;
@@ -30,10 +30,10 @@
 .frame {
   position: relative;
   width: 100%;
-  height: calc(var(--vh-px) * 100);
+  height: 100vh;
   background: var(--paper);
   overflow: hidden;
-  /* --chapter-scale set inline by HomeSequence.tsx; fallback for SSR/initial */
+  /* chapter scale is fixed; browser zoom remains browser-owned. */
   --chapter-scale: 0.38;
   /* visible dot text bottom = chapterDotBox center (lg + xl/2 = 96)
      plus half the scaled glyph (200px font * scale / 2 = 100px * scale) */
@@ -561,14 +561,14 @@
     calc(var(--xxxl) + var(--xxxl) + var(--xxxl) + var(--xxxl) + var(--xxxl) + var(--xxxl)),
     100%
   );
-  max-height: calc(var(--vh-px) * 100 - var(--md) * 2);
+  max-height: calc(100svh - var(--md) * 2);
   display: flex;
 }
 
 .modalShell {
   position: relative;
   width: 100%;
-  max-height: calc(var(--vh-px) * 100 - var(--md) * 2);
+  max-height: calc(100svh - var(--md) * 2);
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -682,8 +682,8 @@
 
 
 @media (max-width: 720px) {
-  .stage { height: calc(var(--vh-px) * 100); }
-  .frame { height: calc(var(--vh-px) * 100); }
+  .stage { height: 100svh; }
+  .frame { height: 100svh; }
   .heroTagline {
     grid-template-columns: 1fr;
     gap: var(--sm);

@@ -3,7 +3,6 @@ import {
   useId,
   useRef,
   useState,
-  type CSSProperties,
   type ReactElement,
   type RefObject,
 } from 'react';
@@ -72,14 +71,7 @@ const SECTIONS = [
 const HERO_DOT_WIDTH = 1400;
 const HERO_DOT_HEIGHT = 360;
 const DOT_FONT = "500 200px 'Geist', system-ui, sans-serif";
-const UI_SCALE_REFERENCE_WIDTH = 1440;
-const UI_SCALE_MIN = 0.88;
-const UI_SCALE_MAX = 1.06;
-const HERO_SCALE_MIN = 0.86;
-const HERO_SCALE_MAX = UI_SCALE_MAX;
-const CHAPTER_DOT_SCALE_MAX = 0.38;
-const CHAPTER_DOT_SCALE_MIN = 0.16;
-const MOBILE_BREAKPOINT = 720;
+const CHAPTER_DOT_SCALE = 0.38;
 const CHAPTER_DOT_FALLBACK = { x: -HERO_DOT_WIDTH * 0.26, y: -HERO_DOT_HEIGHT * 1.05 };
 const PROFILE_TEXT_START = 0.20;
 const ENGINEERING_TEXT_START = 0.40;
@@ -95,8 +87,6 @@ export function HomeSequence(): ReactElement {
   const frameRef = useRef<HTMLDivElement>(null);
   const chapterDotBoxRef = useRef<HTMLSpanElement>(null);
   const [chapterDotTarget, setChapterDotTarget] = useState(CHAPTER_DOT_FALLBACK);
-  const [chapterScale, setChapterScale] = useState(CHAPTER_DOT_SCALE_MAX);
-  const [heroScale, setHeroScale] = useState(1);
   const { scrollYProgress } = useScroll({
     target: zoneRef,
     offset: ['start start', 'end end'],
@@ -134,30 +124,13 @@ export function HomeSequence(): ReactElement {
 
       const frameRect = frame.getBoundingClientRect();
       const boxRect = box.getBoundingClientRect();
-      const viewportScale = frameRect.width / UI_SCALE_REFERENCE_WIDTH;
-      const nextUiScale = frameRect.width <= MOBILE_BREAKPOINT
-        ? 1
-        : Math.max(UI_SCALE_MIN, Math.min(UI_SCALE_MAX, viewportScale));
-      const nextHeroScale = Math.max(
-        HERO_SCALE_MIN,
-        Math.min(HERO_SCALE_MAX, nextUiScale),
-      );
       const frameCenterX = frameRect.left + frameRect.width / 2;
       const frameCenterY = frameRect.top + frameRect.height / 2;
       const boxCenterY = boxRect.top + boxRect.height / 2;
       const textWidth = measureDotTextWidth(chapterLabel, DOT_FONT);
 
-      const nextScale = frameRect.width <= MOBILE_BREAKPOINT
-        ? CHAPTER_DOT_SCALE_MIN
-        : Math.max(
-            CHAPTER_DOT_SCALE_MIN,
-            Math.min(CHAPTER_DOT_SCALE_MAX * UI_SCALE_MAX, CHAPTER_DOT_SCALE_MAX * nextUiScale),
-          );
-
-      setHeroScale((prev) => (Math.abs(prev - nextHeroScale) < 0.002 ? prev : nextHeroScale));
-      setChapterScale((prev) => (Math.abs(prev - nextScale) < 0.002 ? prev : nextScale));
       setChapterDotTarget({
-        x: boxRect.left - frameCenterX + (textWidth * nextScale) / 2,
+        x: boxRect.left - frameCenterX + (textWidth * CHAPTER_DOT_SCALE) / 2,
         y: boxCenterY - frameCenterY,
       });
     };
@@ -180,13 +153,13 @@ export function HomeSequence(): ReactElement {
   //   0.00 (hero)    : centered, scale 1
   //   0.20 (profile) : lifted up, slight shrink to make room for credentials
   //   0.40 (chapter) : top-left chapter heading position (measured live)
-  const PROFILE_LIFT_Y = -HERO_DOT_HEIGHT * 0.55 * heroScale;
-  const PROFILE_SCALE = 0.66 * heroScale;
+  const PROFILE_LIFT_Y = -HERO_DOT_HEIGHT * 0.55;
+  const PROFILE_SCALE = 0.66;
 
   const dotScaleRaw = useTransform(
     scrollYProgress,
     [0, 0.12, PROFILE_TEXT_START, 0.32, ENGINEERING_TEXT_START],
-    [heroScale, heroScale, PROFILE_SCALE, PROFILE_SCALE, chapterScale],
+    [1, 1, PROFILE_SCALE, PROFILE_SCALE, CHAPTER_DOT_SCALE],
   );
   const dotXRaw = useTransform(
     scrollYProgress,
@@ -231,7 +204,6 @@ export function HomeSequence(): ReactElement {
         <div
           ref={frameRef}
           className={styles.frame}
-          style={{ '--chapter-scale': chapterScale } as CSSProperties}
         >
           {/* chrome */}
           <div className={styles.guides} aria-hidden="true">

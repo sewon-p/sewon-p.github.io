@@ -23,7 +23,7 @@
 
 .cardWrap {
   width: min(960px, 100%);
-  max-height: calc(var(--vh-px) * 100 - var(--md) * 2);
+  max-height: calc(100svh - var(--md) * 2);
   display: flex;
 }
 

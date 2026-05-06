@@ -25,24 +25,23 @@
   --success: #059669;
 
   /* ── spacing (8px base) ──────────────────────────────────── */
-  --ui-scale: 1;
-  --xs: calc(8px * var(--ui-scale));
-  --sm: calc(16px * var(--ui-scale));
-  --md: calc(24px * var(--ui-scale));
-  --lg: calc(48px * var(--ui-scale));
-  --xl: calc(96px * var(--ui-scale));
-  --xxl: calc(144px * var(--ui-scale));
-  --xxxl: calc(192px * var(--ui-scale));
+  --xs: 8px;
+  --sm: 16px;
+  --md: 24px;
+  --lg: 48px;
+  --xl: 96px;
+  --xxl: 144px;
+  --xxxl: 192px;
 
   /* ── layout ──────────────────────────────────────────────── */
-  --container: calc(720px * var(--ui-scale));
+  --container: 720px;
   --col-count: 8;
-  --col-gutter: calc(16px * var(--ui-scale));
+  --col-gutter: 16px;
 
   /* ── corner radius (3-step scale + pill) ─────────────────── */
-  --radius-sm: calc(6px * var(--ui-scale));     /* button, input, chip, small interactive */
-  --radius-md: calc(12px * var(--ui-scale));    /* card, tile, section container */
-  --radius-lg: calc(24px * var(--ui-scale));    /* modal, large surface, lifted overlay */
+  --radius-sm: 6px;     /* button, input, chip, small interactive */
+  --radius-md: 12px;    /* card, tile, section container */
+  --radius-lg: 24px;    /* modal, large surface, lifted overlay */
   --radius-pill: 999px; /* pill / capsule (explicit only) */
   /* legacy alias — points at -md so old code does not break */
   --radius: var(--radius-md);
@@ -60,20 +59,16 @@
   --font-pixel-grid:   'Geist Pixel Grid',   'Geist Mono', monospace;
   --font-pixel-line:   'Geist Pixel Line',   'Geist Mono', monospace;
 
-  /* measured viewport unit + artboard scale, set in main.tsx. The
-     brand system is authored at a 1440px desktop artboard and nudges
-     as one unit on smaller / wider desktop viewports. */
-  --vw-px: 14.4px;
-  --text-display: calc(48px * var(--ui-scale));
-  --lh-display:   calc(56px * var(--ui-scale));
-  --tracking-display: calc(-2.40px * var(--ui-scale));
-  --text-h1: calc(32px * var(--ui-scale));  --lh-h1: calc(40px * var(--ui-scale));  --tracking-h1: calc(-1.28px * var(--ui-scale));
-  --text-h2: calc(24px * var(--ui-scale));  --lh-h2: calc(32px * var(--ui-scale));  --tracking-h2: calc(-0.96px * var(--ui-scale));
-  --text-h3: calc(20px * var(--ui-scale));  --lh-h3: calc(28px * var(--ui-scale));  --tracking-h3: calc(-0.48px * var(--ui-scale));
-  --text-body: calc(16px * var(--ui-scale));  --lh-body: calc(24px * var(--ui-scale)); --tracking-body: 0;
-  --text-small: calc(14px * var(--ui-scale)); --lh-small: calc(20px * var(--ui-scale)); --tracking-small: 0;
-  --text-mono: calc(14px * var(--ui-scale)); --lh-mono: calc(20px * var(--ui-scale)); --tracking-mono: 0;
-  --tracking-tight: calc(-0.32px * var(--ui-scale));
+  --text-display: 48px;
+  --lh-display:   56px;
+  --tracking-display: -2.40px;
+  --text-h1: 32px;  --lh-h1: 40px;  --tracking-h1: -1.28px;
+  --text-h2: 24px;  --lh-h2: 32px;  --tracking-h2: -0.96px;
+  --text-h3: 20px;  --lh-h3: 28px;  --tracking-h3: -0.48px;
+  --text-body: 16px;  --lh-body: 24px; --tracking-body: 0;
+  --text-small: 14px; --lh-small: 20px; --tracking-small: 0;
+  --text-mono: 14px; --lh-mono: 20px; --tracking-mono: 0;
+  --tracking-tight: -0.32px;
 
   /* ── weights (3-tier strict policy) ───────────────────────── */
   --weight-body: 400;
