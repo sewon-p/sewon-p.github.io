@@ -297,7 +297,7 @@
   align-self: start;
   display: flex;
   flex-direction: column;
-  width: clamp(420px, 42vw, 620px);
+  width: clamp(420px, calc(var(--vw-px) * 42), 620px);
   max-width: 100%;
 }
 
@@ -339,12 +339,12 @@
   line-height: var(--lh-h2);
   letter-spacing: var(--tracking-h2);
   color: var(--ink);
-  max-width: clamp(260px, 22vw, 360px);
+  max-width: clamp(260px, calc(var(--vw-px) * 22), 360px);
 }
 
 .caseBlurb {
   margin: 0;
-  max-width: clamp(380px, 38vw, 560px);
+  max-width: clamp(380px, calc(var(--vw-px) * 38), 560px);
   font-family: var(--font-sans);
   font-weight: var(--weight-body);
   font-size: var(--text-body);
@@ -364,7 +364,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--md);
-  max-width: clamp(440px, 44vw, 640px);
+  max-width: clamp(440px, calc(var(--vw-px) * 44), 640px);
   counter-reset: casepoint;
 }
 .casePoints li {
