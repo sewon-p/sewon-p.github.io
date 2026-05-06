@@ -12,11 +12,11 @@
     <link rel="preconnect" href="https://unpkg.com" crossorigin />
     <link rel="preconnect" href="https://prod.spline.design" crossorigin />
     <!-- Spline viewer custom element. Loaded eagerly here (matches the
-         pre-rebrand site) so customElements.whenDefined('spline-viewer')
-         resolves before any case modal mounts; dynamic injection from
-         CaseModal had race-condition windows where the upgrade ran
-         before the script registered the element. -->
-    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
+         pre-rebrand site exactly) so the <spline-viewer> elements
+         baked directly into the legacy case HTML upgrade as soon as
+         the modal mounts. Version pinned to 1.12.92 to match the
+         pre-rebrand site that rendered correctly. -->
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.92/build/spline-viewer.js"></script>
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://sewon-p.github.io/" />
     <meta property="og:title" content="sewon park." />

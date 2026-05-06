@@ -535,23 +535,6 @@ export function HomeSequence(): ReactElement {
   );
 }
 
-const SPLINE_VIEWER_SRC =
-  'https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js';
-
-function ensureSplineViewerScript(): void {
-  if (typeof document === 'undefined') return;
-  /* index.html already loads the viewer module eagerly. If the custom
-     element is registered we are done; the dynamic fallback below
-     remains for older entries / preview environments that strip the
-     index.html script. */
-  if (window.customElements?.get('spline-viewer')) return;
-  if (document.querySelector(`script[data-spline-viewer]`)) return;
-  const script = document.createElement('script');
-  script.type = 'module';
-  script.src = SPLINE_VIEWER_SRC;
-  script.dataset.splineViewer = '1';
-  document.head.appendChild(script);
-}
 
 // Global handler for the legacy `<div onclick="window.toggleUxBulletin(this)">`
 // markup inside p3.html (UX transformation demo). Using a window-scoped
@@ -601,46 +584,12 @@ function CaseModal({ project, onClose }: CaseModalProps): ReactElement {
     return () => shell.removeEventListener('scroll', onScroll);
   }, [legacyHtml]);
 
-  // Spline 3D scene loader. Each `.spline-placeholder[data-url]` inside
-  // the legacy HTML gets upgraded to a real <spline-viewer> as soon as
-  // the custom element is registered. Earlier this used an
-  // IntersectionObserver and dataset.url; the IO had a StrictMode-dev
-  // race that left dataset.loaded=1 with no viewer attached, and reading
-  // via dataset.url silently dropped the value when the attribute name
-  // was kebab-cased through ?raw + innerHTML on Safari mobile. We now
-  // read via getAttribute, log a clear warning on misses, and upgrade
-  // all placeholders eagerly when the modal mounts.
-  useEffect(() => {
-    const shell = shellRef.current;
-    if (!shell) return;
-
-    let cancelled = false;
-    ensureSplineViewerScript();
-
-    void customElements.whenDefined('spline-viewer').then(() => {
-      if (cancelled) return;
-      const placeholders = shell.querySelectorAll<HTMLElement>('.spline-placeholder');
-      placeholders.forEach((el) => {
-        if (el.dataset.splineUpgraded === '1') return;
-        const url = el.getAttribute('data-url');
-        if (!url || url === 'undefined') {
-          return;
-        }
-        el.dataset.splineUpgraded = '1';
-        const viewer = document.createElement('spline-viewer');
-        viewer.setAttribute('url', url);
-        viewer.setAttribute('loading-anim-type', 'none');
-        viewer.style.width = '100%';
-        viewer.style.height = '100%';
-        el.replaceChildren(viewer);
-      });
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [legacyHtml]);
-
+  /* No JS upgrade dance any more — the legacy case HTML embeds
+     <spline-viewer url="..."> tags directly, exactly as the Spline
+     docs recommend. The viewer module loaded from index.html
+     registers the custom element before the modal mounts, so the
+     browser instantiates each viewer the moment React inserts the
+     HTML via dangerouslySetInnerHTML. */
   return (
     <motion.div
       className={styles.modalOverlay}
