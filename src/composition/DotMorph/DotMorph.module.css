@@ -9,5 +9,6 @@
 .canvas {
   position: relative;
   display: inline-block;
+  max-width: none;
   /* sized by the consumer via inline width/height */
 }
