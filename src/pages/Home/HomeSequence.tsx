@@ -352,6 +352,13 @@ export function HomeSequence(): ReactElement {
 
   return (
     <div ref={zoneRef} className={styles.zone}>
+      {/* Snap anchors — invisible scroll-snap targets at each section
+          threshold so the page parks on hero / profile / engineering /
+          strategy and never between two sections. */}
+      <span className={`${styles.snapAnchor} ${styles.snapAnchorHero}`} aria-hidden="true" />
+      <span className={`${styles.snapAnchor} ${styles.snapAnchorProfile}`} aria-hidden="true" />
+      <span className={`${styles.snapAnchor} ${styles.snapAnchorEngineering}`} aria-hidden="true" />
+      <span className={`${styles.snapAnchor} ${styles.snapAnchorStrategy}`} aria-hidden="true" />
       <div className={styles.stage}>
         <div
           ref={frameRef}

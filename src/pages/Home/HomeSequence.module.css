@@ -13,9 +13,30 @@
   position: relative;
   height: 600vh;
   background: var(--paper);
-  scroll-snap-type: y mandatory;
+  /* scroll-snap-type lives on html (the actual scroll container).
+     This element only hosts the snap anchor children below. */
+}
+
+/*
+ * Snap anchors — invisible 1-pixel-wide siblings of .stage placed at
+ * the same scroll progress thresholds the dot canvas uses (0 / 0.20 /
+ * 0.40 / 0.70). Each carries scroll-snap-align: start so a scroll
+ * gesture parks the page on a real section instead of half-way
+ * between two sections.
+ */
+.snapAnchor {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 100vh;
+  pointer-events: none;
+  scroll-snap-align: start;
   scroll-snap-stop: always;
 }
+.snapAnchorHero       { top: 0; }
+.snapAnchorProfile    { top: 120vh; }   /* PROFILE_TEXT_START × 600vh */
+.snapAnchorEngineering{ top: 240vh; }   /* ENGINEERING_TEXT_START × 600vh */
+.snapAnchorStrategy   { top: 420vh; }   /* STRATEGY_TEXT_START × 600vh */
 
 .stage {
   position: sticky;
@@ -824,7 +845,25 @@
     bottom: calc(max(var(--xs), env(safe-area-inset-bottom)) + var(--xxl));
   }
   .taglineRight { text-align: left; }
-  .accentTrack { display: none; }
+  /* Position indicator — desktop right-edge rail, slim variant on
+     mobile. Replaces the absent vertical scroll bar so the user can
+     see which of the 4 sections they are on. */
+  .accentTrack {
+    display: block;
+    width: var(--md);
+    /* Pinned away from the home-indicator and the notch. */
+    top: max(var(--xs), env(safe-area-inset-top));
+    bottom: max(var(--xs), env(safe-area-inset-bottom));
+  }
+  .accentRail { right: calc(var(--md) / 2); }
+  .accentStop {
+    right: calc(var(--md) / 2 - var(--xs) / 4);
+    width: calc(var(--xs) * 0.75);
+  }
+  .accentBar {
+    width: calc(var(--md) - var(--xs) / 2);
+    height: calc(var(--xs) * 0.75);
+  }
   .modalProgressTrack { display: none; }
   .modalCard { padding: var(--md); }
   /* Pinned to the system safe area only — no decorative top padding.
@@ -919,17 +958,16 @@
   }
   .caseSide { display: none; }
 
-  /* Profile section uses flex justify-content: center on a full-height
-     box (top:0, bottom:0) so the content midline sits at the viewport
-     midline. We avoid `transform: translateY(-50%)` because motion's
-     `y` prop on the wrapping motion.div drives the same property and
-     would override the centering. The dot cloud lifts to ~30 % of the
-     frame above center so the credentials list reads cleanly below. */
+  /* Profile section anchored just below the lifted dot artwork.
+     justify-content: space-between against a fixed bottom edge spreads
+     statement → credentials block → contact across the available
+     vertical band, so the screen reads as a deliberate composition
+     instead of content floating at the top with empty wasteland. */
   .profileLayer {
     padding: 0 var(--sm);
-    top: 0;
-    bottom: 0;
-    justify-content: center;
+    top: 32%;
+    bottom: max(var(--md), env(safe-area-inset-bottom));
+    justify-content: space-between;
     gap: var(--md);
   }
   .profileStatement { font-size: var(--text-h3); line-height: var(--lh-h3); }
