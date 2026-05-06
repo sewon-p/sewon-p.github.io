@@ -882,10 +882,11 @@
     grid-template-areas:
       'header'
       'main';
-    /* Top: just below the chapter logo (logo-bottom).
-       Bottom: phone home-indicator only. No decorative buffer. */
+    /* Top: clear the dot AND the chapter label that sits at
+       (logo-bottom + xs). label is ~lh-mono tall, plus another xs
+       breath, so total clearance is ≈ logo-bottom + lg. */
     padding:
-      calc(var(--logo-bottom) + var(--xs))
+      calc(var(--logo-bottom) + var(--lg))
       0
       max(var(--xs), env(safe-area-inset-bottom));
     row-gap: var(--xs);
@@ -926,6 +927,13 @@
     display: flex;
     flex-direction: column;
   }
+  /* Compress the chapter card so head + title + blurb + 3 points +
+     tags + actions all sit inside the slide without clipping. The
+     content reads as a tight composed unit instead of breathy
+     desktop-style spacing on a narrow phone. */
+  .caseSlide .caseDisplay { gap: var(--sm); }
+  .caseSlide .casePoints { gap: var(--sm); margin-top: 0; }
+  .caseSlide .caseTags { margin-top: 0; }
   /* Action buttons sit horizontally — Open Case / GitHub side by side
      instead of stacked. Each takes equal width. */
   .caseActions {
@@ -933,7 +941,7 @@
     align-items: stretch;
     gap: var(--sm);
     flex-wrap: nowrap;
-    margin-top: var(--sm);
+    margin-top: var(--xs);
   }
   .caseActions > * {
     flex: 1 1 0;
@@ -953,23 +961,28 @@
     flex: 0 0 auto;
   }
   .caseLayerLabel {
-    top: calc(var(--logo-bottom) - var(--xs));
+    /* + xs (NOT - xs) so label sits BELOW the dot text bottom.
+       The mobile --logo-bottom already represents the visible dot
+       text bottom; subtracting xs would push the label up into the
+       glyphs. */
+    top: calc(var(--logo-bottom) + var(--xs));
     left: var(--md);
   }
   .caseSide { display: none; }
 
-  /* Profile section anchored just below the lifted dot artwork.
-     justify-content: space-between against a fixed bottom edge spreads
-     statement → credentials block → contact across the available
-     vertical band, so the screen reads as a deliberate composition
-     instead of content floating at the top with empty wasteland. */
+  /* Profile section anchored below the lifted dot artwork. Content
+     centers within the available band rather than spreading edge-to-
+     edge — statement and credentials read as one composed block,
+     not three loosely-floating units. */
   .profileLayer {
     padding: 0 var(--sm);
-    top: 32%;
+    top: 28%;
     bottom: max(var(--md), env(safe-area-inset-bottom));
-    justify-content: space-between;
+    justify-content: center;
     gap: var(--md);
   }
+  /* Tighten credential rows so the 5-row stack lands compact. */
+  .profileCredentials { gap: 0; }
   .profileStatement { font-size: var(--text-h3); line-height: var(--lh-h3); }
   /* mobile rows stack: label uppercase mono on top, value below. */
   .profileRow {
