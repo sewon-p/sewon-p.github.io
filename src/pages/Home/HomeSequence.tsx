@@ -82,6 +82,12 @@ const CASE_TRANSITION = {
   duration: 0.28,
   ease: CASE_EASE,
 } as const;
+const DEFAULT_FIELD_TUNING = {
+  x: -656,
+  y: 28,
+  size: 596,
+  opacity: 2,
+} as const;
 
 export function HomeSequence(): ReactElement {
   const zoneRef = useRef<HTMLDivElement>(null);
@@ -90,7 +96,13 @@ export function HomeSequence(): ReactElement {
   const [chapterDotTarget, setChapterDotTarget] = useState(CHAPTER_DOT_FALLBACK);
   const densityScale = useHomeDensity();
   const chapterDotScale = CHAPTER_DOT_SCALE * densityScale;
-  const frameStyle = { '--home-density': densityScale } as CSSProperties;
+  const frameStyle = {
+    '--home-density': densityScale,
+    '--field-x': `${DEFAULT_FIELD_TUNING.x}px`,
+    '--field-y': `${DEFAULT_FIELD_TUNING.y}px`,
+    '--field-size': `${DEFAULT_FIELD_TUNING.size}px`,
+    '--field-opacity': `${DEFAULT_FIELD_TUNING.opacity}%`,
+  } as CSSProperties;
   const { scrollYProgress } = useScroll({
     target: zoneRef,
     offset: ['start start', 'end end'],

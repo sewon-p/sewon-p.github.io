@@ -90,12 +90,12 @@
 
 .tonalField {
   position: absolute;
-  top: calc(var(--logo-bottom) + var(--lg));
-  left: calc(50% - var(--xxxl) - var(--xxl) - var(--md));
-  width: calc(var(--xxxl) + var(--xxxl) + var(--xxl));
+  top: calc(var(--logo-bottom) + var(--field-y));
+  left: calc(50% + var(--field-x));
+  width: var(--field-size);
   aspect-ratio: 1;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--ink) 3%, transparent);
+  background: color-mix(in srgb, var(--ink) var(--field-opacity), transparent);
   pointer-events: none;
 }
 
