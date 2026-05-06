@@ -274,12 +274,49 @@
 
 /* ── narrow viewport — collapse columns ─────────────────── */
 
-@media (max-width: 560px) {
+/* Breakpoint matched to HomeSequence (720) so a single device line
+   governs both. The card outer padding was --xl (96 px) which left
+   ~168 px for content on a 360-px phone; pulled to --md so steps and
+   ledes get the full readable width. Step vertical padding follows. */
+@media (max-width: 720px) {
+  .overlay { padding: var(--sm); }
+  .card { padding: var(--md); }
   .step {
     grid-template-columns: 1fr;
     row-gap: var(--xs);
+    padding: var(--md) 0;
   }
   .stepNum {
     font-size: 20px;
+  }
+  .stepLede {
+    font-size: 18px;
+    line-height: 24px;
+  }
+  .title {
+    font-size: var(--text-h3);
+    line-height: var(--lh-h3);
+    letter-spacing: var(--tracking-h3);
+  }
+  /* Allow the head row to wrap so the long privacy line drops below
+     the title + close pair instead of jamming all three onto one row.
+     Without flex-wrap on the parent, flex-basis: 100% on .privacy
+     cannot actually break to a new line. */
+  .head {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  /* mobile-only: privacy line is long ("runs locally · your image…");
+     drop to its own row below the title + close pair. */
+  .privacy {
+    margin-left: 0;
+    flex-basis: 100%;
+    order: 3;
+  }
+  .close {
+    flex-shrink: 0;
+    /* close stays on row 1 with title; margin-left: auto keeps it
+       hard-right against the wrapping container edge. */
+    margin-left: auto;
   }
 }

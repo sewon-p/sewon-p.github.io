@@ -461,6 +461,82 @@
   flex-wrap: wrap;
 }
 
+.caseDesktopNotice {
+  margin: var(--sm) 0 0;
+  padding: var(--sm) var(--md);
+  background: var(--surface);
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  line-height: var(--lh-mono);
+  letter-spacing: var(--tracking-mono);
+  color: var(--mute);
+  text-transform: lowercase;
+  text-align: center;
+}
+
+/*
+ * Mobile case slider — single-axis snap track + a horizontal twin of
+ * the desktop accent rail. Counter (01 / 03) on the left, rail (line +
+ * stops + tint bar) fills the remaining width. The bar follows the
+ * scroll position pixel-for-pixel during a swipe, then settles at the
+ * next stop when the snap completes. Same visual vocabulary as the
+ * right-edge desktop indicator, rotated 90 degrees.
+ */
+.caseSlider, .caseSliderHeader { display: none; }
+.caseSliderCurrent,
+.caseSliderTotal {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-ui);
+  font-size: var(--text-mono);
+  letter-spacing: var(--tracking-mono);
+  font-variant-numeric: tabular-nums;
+}
+.caseSliderCurrent { color: var(--ink); }
+.caseSliderTotal { color: var(--mute); }
+.caseSliderDivider {
+  font-family: var(--font-mono);
+  color: var(--mute);
+  margin: 0 var(--xs);
+}
+.caseSliderRail {
+  position: relative;
+  flex: 1;
+  height: var(--lg);
+  display: flex;
+  align-items: center;
+}
+/* Horizontal hair line — mirrors .accentRail vertical thickness */
+.caseSliderRailLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(var(--xs) / 8);
+  background: color-mix(in srgb, var(--hairline) 76%, transparent);
+}
+/* Stop notch — mirrors .accentStop. Width = --xs / 4, height = --xs */
+.caseSliderStop {
+  position: absolute;
+  width: calc(var(--xs) / 4);
+  height: var(--xs);
+  background: var(--hairline);
+  transform: translateX(-50%);
+}
+/* Tint bar — mirrors .accentBar. Tracks scrollLeft 1:1 during a swipe
+   so the indicator moves with the thumb, not after it. The settle
+   curve takes over only when the snap engine pulls the slider home,
+   where it inherits scroll-snap's own motion. No CSS transition here:
+   adding one would lag the bar behind the finger. */
+.caseSliderBar {
+  position: absolute;
+  width: var(--xs);
+  height: calc(var(--lg) - var(--sm));
+  background: var(--tint);
+  transform: translateX(-50%);
+}
+
 .caseButton {
   display: inline-flex;
   align-items: center;
@@ -746,27 +822,83 @@
   }
   .caseLayer {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
     grid-template-areas:
-      'main'
-      'side';
-    padding: var(--xl) var(--md) var(--md);
-    row-gap: var(--lg);
+      'header'
+      'main';
+    padding: calc(var(--logo-bottom) + var(--md)) 0 var(--md);
+    row-gap: var(--xs);
     column-gap: 0;
   }
+  /* On mobile the entire case area is replaced by the horizontal
+     slider. caseMain (which holds the desktop AnimatePresence flow)
+     is hidden because CaseStudy short-circuits to <CaseSlider/> when
+     useIsMobile() is true; this is a defensive style guard so the
+     desktop branch never bleeds through on unusual viewport changes. */
+  .caseMain { display: none; }
+  /* Slider track — scroll-snap on x, free vertical scroll inside slide */
+  .caseSlider {
+    grid-area: main;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-snap-stop: always;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    /* room above the track for the counter */
+    padding-top: var(--xs);
+  }
+  .caseSlider::-webkit-scrollbar { display: none; }
+  .caseSlide {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    padding: 0 var(--md);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: calc(100svh - var(--logo-bottom) - var(--xxl));
+  }
+  .caseSlide::-webkit-scrollbar { display: none; }
+  /* Counter + rail header — counter on the left, rail fills the rest.
+     The rail visually mirrors the desktop right-edge accent rail. */
+  .caseSliderHeader {
+    grid-area: header;
+    display: flex;
+    align-items: center;
+    gap: var(--md);
+    padding: 0 var(--md);
+  }
+  .caseSliderCounter {
+    display: inline-flex;
+    align-items: baseline;
+    flex: 0 0 auto;
+  }
   .caseLayerLabel {
-    top: calc(var(--xl) + var(--md));
+    top: calc(var(--logo-bottom) - var(--xs));
     left: var(--md);
   }
   .caseMain { max-width: none; }
-  .caseSide {
-    align-self: start;
-    padding-left: 0;
-  }
-  .caseSideTitle { white-space: normal; overflow: visible; }
+  /* Hide the desktop side-index entirely on mobile; the nav block
+     below replaces it. Keeping it as ul in the DOM but visually
+     removed avoids touching the desktop layout. */
+  .caseSide { display: none; }
   .caseActions { flex-direction: column; align-items: stretch; }
-  .profileLayer { padding: 0 var(--md); top: 60%; }
+  .profileLayer { padding: 0 var(--md); top: 50%; }
   .profileStatement { font-size: var(--text-h3); line-height: var(--lh-h3); }
-  .profileRow { grid-template-columns: var(--lg) 1fr; gap: var(--sm); }
+  /* mobile rows stack: label uppercase mono on top, value below.
+     Avoids the "PREVIOUS / strategy consulting intern…" overlap that
+     happens when long mono labels collide with content in the same row. */
+  .profileRow {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: var(--sm) 0;
+  }
+  .profileLabel {
+    font-size: 11px;
+    line-height: 1;
+  }
   .profileLinks a {
     display: inline-block;
     padding: var(--xs) 0;

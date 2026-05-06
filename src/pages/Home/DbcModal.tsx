@@ -108,7 +108,7 @@ export function DbcModal({ onClose }: DbcModalProps): ReactElement {
         transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
       >
         <Card variant="l2" className={styles.card}>
-          <Card.Head>
+          <Card.Head className={styles.head}>
             <span id={titleId} className={styles.title}>Make Your Card</span>
             <span className={styles.privacy}>runs locally · your image never leaves your device</span>
             <button

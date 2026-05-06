@@ -94,8 +94,10 @@ export function HomeSequence(): ReactElement {
   const frameRef = useRef<HTMLDivElement>(null);
   const chapterDotBoxRef = useRef<HTMLSpanElement>(null);
   const [chapterDotTarget, setChapterDotTarget] = useState(CHAPTER_DOT_FALLBACK);
+  const [heroFitScale, setHeroFitScale] = useState(1);
+  const [chapterFitScale, setChapterFitScale] = useState(CHAPTER_DOT_SCALE);
   const densityScale = useHomeDensity();
-  const chapterDotScale = CHAPTER_DOT_SCALE * densityScale;
+  const chapterDotScale = chapterFitScale;
   const frameStyle = {
     '--home-density': densityScale,
     '--field-x': `${DEFAULT_FIELD_TUNING.x}px`,
@@ -129,6 +131,34 @@ export function HomeSequence(): ReactElement {
   // 'modal' with url matching the key.
   const [openBuiltinModal, setOpenBuiltinModal] = useState<'dbc' | null>(null);
 
+  /*
+   * Deep-link support: visiting "/#make-yours" opens the DBC modal
+   * automatically. Carried over from the pre-rebrand site so that any
+   * external links pointing at the old hash anchor still work. Cleared
+   * on close so refreshing does not silently re-open the modal.
+   */
+  useEffect(() => {
+    const checkHash = (): void => {
+      if (window.location.hash === '#make-yours') {
+        setOpenBuiltinModal('dbc');
+      }
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, []);
+
+  const closeBuiltinModal = (): void => {
+    setOpenBuiltinModal(null);
+    if (window.location.hash === '#make-yours') {
+      window.history.replaceState(
+        null,
+        '',
+        window.location.pathname + window.location.search,
+      );
+    }
+  };
+
   // chapter heading text — engineering for index 2, strategy for index 3
   const chapterLabel = activeIndex === 3 ? SECTIONS[3].label : SECTIONS[2].label;
 
@@ -145,8 +175,25 @@ export function HomeSequence(): ReactElement {
       const boxCenterY = boxRect.top + boxRect.height / 2;
       const textWidth = measureDotTextWidth(chapterLabel, DOT_FONT);
 
+      // Hero + chapter fit: the 200-px-font dot artworks measure roughly
+      // 1100 px ("sewon park.") and 1300 px ("engineering"). Density
+      // alone does not guarantee they sit inside narrow viewports, so
+      // each scale is clamped against the live frame width with a small
+      // safety pad. The result drives both the dot transform and the
+      // chapterDotTarget anchor math (which depends on the same scale).
+      const heroTextWidth = measureDotTextWidth('sewon park.', DOT_FONT);
+      const heroSafetyPad = 24;
+      const heroFit = (frameRect.width - heroSafetyPad * 2) / heroTextWidth;
+      const nextHeroFit = Math.max(0.16, Math.min(densityScale, heroFit));
+
+      const chapterMaxFit = (frameRect.width - heroSafetyPad * 2) / textWidth;
+      const chapterTarget = CHAPTER_DOT_SCALE * densityScale;
+      const nextChapterFit = Math.max(0.12, Math.min(chapterTarget, chapterMaxFit));
+
+      setHeroFitScale((prev) => (Math.abs(prev - nextHeroFit) < 0.002 ? prev : nextHeroFit));
+      setChapterFitScale((prev) => (Math.abs(prev - nextChapterFit) < 0.002 ? prev : nextChapterFit));
       setChapterDotTarget({
-        x: boxRect.left - frameCenterX + (textWidth * chapterDotScale) / 2,
+        x: boxRect.left - frameCenterX + (textWidth * nextChapterFit) / 2,
         y: boxCenterY - frameCenterY,
       });
     };
@@ -163,15 +210,15 @@ export function HomeSequence(): ReactElement {
       observer.disconnect();
       window.removeEventListener('resize', measureChapterBox);
     };
-  }, [chapterDotScale, chapterLabel]);
+  }, [chapterDotScale, chapterLabel, densityScale]);
 
   // Dot canvas transforms — three keyframes:
   //   0.00 (hero)    : centered, scale 1
   //   0.20 (profile) : lifted up, slight shrink to make room for credentials
   //   0.40 (chapter) : top-left chapter heading position (measured live)
-  const HERO_DOT_SCALE = densityScale;
-  const PROFILE_LIFT_Y = -HERO_DOT_HEIGHT * 0.55 * densityScale;
-  const PROFILE_SCALE = 0.66 * densityScale;
+  const HERO_DOT_SCALE = heroFitScale;
+  const PROFILE_LIFT_Y = -HERO_DOT_HEIGHT * 0.55 * heroFitScale;
+  const PROFILE_SCALE = 0.66 * heroFitScale;
 
   const dotScaleRaw = useTransform(
     scrollYProgress,
@@ -397,7 +444,7 @@ export function HomeSequence(): ReactElement {
           <CaseModal project={openCase} onClose={() => setOpenCase(null)} />
         ) : null}
         {openBuiltinModal === 'dbc' ? (
-          <DbcModal onClose={() => setOpenBuiltinModal(null)} />
+          <DbcModal onClose={closeBuiltinModal} />
         ) : null}
       </AnimatePresence>
     </div>
@@ -635,6 +682,19 @@ function CaseStudy({
   onOpenBuiltin,
 }: CaseStudyProps): ReactElement {
   const shouldReduceMotion = useReducedMotion();
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <CaseSlider
+        allProjects={allProjects}
+        activeNumber={activeNumber}
+        onSelect={onSelect}
+        onOpenCase={onOpenCase}
+        onOpenBuiltin={onOpenBuiltin}
+      />
+    );
+  }
   const caseShellVariants: Variants = shouldReduceMotion
     ? {
         hidden: { opacity: 1 },
@@ -736,6 +796,17 @@ function CaseStudy({
                   );
                 }
                 if (onOpenCase) {
+                  if (isMobile) {
+                    /* legacy strategy modals are dense, multi-column case
+                       studies that do not collapse cleanly into a phone
+                       column. Surface the headline and bullets inline
+                       above; nudge full-detail readers to desktop. */
+                    return (
+                      <p className={styles.caseDesktopNotice}>
+                        full case study available on desktop
+                      </p>
+                    );
+                  }
                   return (
                     <Button variant="primary" onClick={() => onOpenCase(project)}>
                       Open Case
@@ -793,19 +864,232 @@ function CaseStudy({
           );
         })}
       </ul>
+
+    </div>
+  );
+}
+
+interface CaseSliderProps {
+  allProjects: ProjectCard[];
+  activeNumber: string;
+  onSelect: (n: string) => void;
+  onOpenCase?: (project: ProjectCard) => void;
+  onOpenBuiltin?: (key: 'dbc') => void;
+}
+
+/*
+ * Mobile case slider — a single-axis scroll-snap track. The chapter
+ * lays out one case per slide; the user moves between them with a
+ * thumb swipe (or drag on desktop devtools), and the small numerical
+ * counter at the top updates as the snap settles. No nav buttons:
+ * the gesture itself is the control, in the spirit of Rams' "less,
+ * but better" — let the obvious affordance do the work.
+ */
+function CaseSlider({
+  allProjects,
+  activeNumber,
+  onSelect,
+  onOpenCase,
+  onOpenBuiltin,
+}: CaseSliderProps): ReactElement {
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const total = allProjects.length;
+  const activeIndex = Math.max(
+    0,
+    allProjects.findIndex((p) => p.number === activeNumber),
+  );
+
+  /* Sync the slider scroll position when activeNumber comes from
+     somewhere other than a swipe (e.g. desktop side-index → resize
+     to mobile). Uses scrollTo with auto behavior to avoid an init jump. */
+  useEffect(() => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const targetLeft = activeIndex * el.clientWidth;
+    if (Math.abs(el.scrollLeft - targetLeft) > 1) {
+      el.scrollTo({ left: targetLeft, behavior: 'auto' });
+    }
+  }, [activeIndex]);
+
+  /* Pull activeNumber from the snap position so other consumers
+     (chapter heading, etc.) stay in sync with the visible slide.
+     Also drive the rail bar position so the tint indicator slides
+     smoothly with the swipe — same behaviour as the desktop accent
+     bar, just rotated 90 degrees. */
+  const onScroll = (): void => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    const progress = max > 0 ? el.scrollLeft / max : 0;
+    setScrollProgress(progress);
+    const idx = Math.round(el.scrollLeft / el.clientWidth);
+    const target = allProjects[idx];
+    if (target && target.number !== activeNumber) {
+      onSelect(target.number);
+    }
+  };
+
+  const current = allProjects[activeIndex];
+  const totalLabel = String(total).padStart(2, '0');
+
+  return (
+    <div className={styles.case}>
+      <div className={styles.caseSliderHeader}>
+        <span className={styles.caseSliderCounter} aria-live="polite">
+          <span className={styles.caseSliderCurrent}>
+            {current?.number ?? '01'}
+          </span>
+          <span className={styles.caseSliderDivider}>/</span>
+          <span className={styles.caseSliderTotal}>{totalLabel}</span>
+        </span>
+        <div className={styles.caseSliderRail} aria-hidden="true">
+          <span className={styles.caseSliderRailLine} />
+          {allProjects.map((p, i) => (
+            <span
+              key={p.number}
+              className={styles.caseSliderStop}
+              style={{
+                left: total > 1 ? `${(i / (total - 1)) * 100}%` : '50%',
+              }}
+            />
+          ))}
+          <span
+            className={styles.caseSliderBar}
+            style={{ left: `${scrollProgress * 100}%` }}
+          />
+        </div>
+      </div>
+      <div
+        ref={sliderRef}
+        className={styles.caseSlider}
+        onScroll={onScroll}
+        role="region"
+        aria-label="Case studies, swipe to browse"
+      >
+        {allProjects.map((p) => (
+          <article key={p.number} className={styles.caseSlide}>
+            <CaseContent
+              project={p}
+              onOpenCase={onOpenCase}
+              onOpenBuiltin={onOpenBuiltin}
+              isMobile
+            />
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface CaseContentProps {
+  project: ProjectCard;
+  onOpenCase?: (project: ProjectCard) => void;
+  onOpenBuiltin?: (key: 'dbc') => void;
+  isMobile: boolean;
+}
+
+function CaseContent({
+  project,
+  onOpenCase,
+  onOpenBuiltin,
+  isMobile,
+}: CaseContentProps): ReactElement {
+  const action = project.primaryAction;
+
+  const renderPrimary = (): ReactElement | null => {
+    if (action) {
+      return (
+        <Button
+          variant="primary"
+          onClick={() => {
+            if (action.kind === 'modal') {
+              onOpenBuiltin?.(action.url);
+            } else {
+              window.open(action.url, '_blank', 'noopener,noreferrer');
+            }
+          }}
+        >
+          {action.label}
+        </Button>
+      );
+    }
+    if (onOpenCase) {
+      if (isMobile) {
+        return (
+          <p className={styles.caseDesktopNotice}>
+            full case study available on desktop
+          </p>
+        );
+      }
+      return (
+        <Button variant="primary" onClick={() => onOpenCase(project)}>
+          Open Case
+        </Button>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className={styles.caseDisplay}>
+      <div className={styles.caseHead}>
+        <span className={styles.caseNumber}>{project.number}</span>
+        {project.kicker ? (
+          <span className={styles.caseKicker}>{project.kicker}</span>
+        ) : null}
+        <span className={styles.caseYear}>{project.year}</span>
+      </div>
+      <h3 className={styles.caseTitle}>{project.title}</h3>
+      <p className={styles.caseBlurb}>{project.blurb}</p>
+      {project.points && project.points.length > 0 ? (
+        <ul className={styles.casePoints}>
+          {project.points.map((point) => (
+            <li key={point}>{point}</li>
+          ))}
+        </ul>
+      ) : null}
+      <div className={styles.caseTags}>
+        {project.tags.map((t) => (
+          <span key={t}>{t}</span>
+        ))}
+      </div>
+      <div className={styles.caseActions}>
+        {renderPrimary()}
+        {project.githubUrl ? (
+          <Button
+            variant="ghost"
+            onClick={() =>
+              window.open(project.githubUrl, '_blank', 'noopener,noreferrer')
+            }
+          >
+            GitHub
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }
 
 /*
- * Home density is a fluid content scale, not a device table. The 15-inch
- * composition stays at 1 once the viewport is wide enough; smaller desktop
- * workspaces ease toward the compact density that tested well on 13-inch.
+ * Home density is a fluid content scale, not a device table. The composition
+ * eases between three anchor widths so spacing, type, and the dot canvas all
+ * shrink together instead of switching at device-specific breakpoints:
+ *   - phone (≤480 px) → MOBILE_DENSITY (~0.42) so the 1400-px dot artboard
+ *     fits inside a 360-px viewport
+ *   - 13" desktop (~1280 px)   → DESKTOP_COMPACT_DENSITY (0.9)
+ *   - 15"+ desktop (≥1680 px)  → DENSITY_MAX (1.0)
  */
-const DENSITY_MIN = 0.9;
+/* Density only governs typography + spacing. The dot canvas has its own
+   fit-to-viewport scales (heroFitScale, chapterFitScale) so we don't
+   need to crush type in order to fit the artwork on small screens.
+   Mobile lands at 0.85 — type still legible, spacing tightened. */
+const MOBILE_DENSITY = 0.85;
+const DESKTOP_COMPACT_DENSITY = 0.9;
 const DENSITY_MAX = 1;
-const DENSITY_MIN_WIDTH = 1500;
-const DENSITY_MAX_WIDTH = 1680;
+const MOBILE_MAX_WIDTH = 480;
+const DESKTOP_COMPACT_WIDTH = 1280;
+const DENSITY_FULL_WIDTH = 1680;
 
 function useHomeDensity(): number {
   const [density, setDensity] = useState(() => {
@@ -832,9 +1116,41 @@ function useHomeDensity(): number {
 }
 
 function getHomeDensity(width: number): number {
-  const progress = (width - DENSITY_MIN_WIDTH) / (DENSITY_MAX_WIDTH - DENSITY_MIN_WIDTH);
-  const clamped = Math.max(0, Math.min(1, progress));
-  return DENSITY_MIN + (DENSITY_MAX - DENSITY_MIN) * clamped;
+  if (width <= MOBILE_MAX_WIDTH) return MOBILE_DENSITY;
+  if (width >= DENSITY_FULL_WIDTH) return DENSITY_MAX;
+  if (width >= DESKTOP_COMPACT_WIDTH) {
+    const progress = (width - DESKTOP_COMPACT_WIDTH) / (DENSITY_FULL_WIDTH - DESKTOP_COMPACT_WIDTH);
+    return DESKTOP_COMPACT_DENSITY + (DENSITY_MAX - DESKTOP_COMPACT_DENSITY) * progress;
+  }
+  // mobile → desktop-compact ramp (480 → 1280)
+  const progress = (width - MOBILE_MAX_WIDTH) / (DESKTOP_COMPACT_WIDTH - MOBILE_MAX_WIDTH);
+  return MOBILE_DENSITY + (DESKTOP_COMPACT_DENSITY - MOBILE_DENSITY) * progress;
+}
+
+const MOBILE_BREAKPOINT_PX = 720;
+
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= MOBILE_BREAKPOINT_PX;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const update = (): void => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT_PX);
+
+    update();
+    window.addEventListener('resize', update);
+    window.visualViewport?.addEventListener('resize', update);
+
+    return () => {
+      window.removeEventListener('resize', update);
+      window.visualViewport?.removeEventListener('resize', update);
+    };
+  }, []);
+
+  return isMobile;
 }
 
 /*
