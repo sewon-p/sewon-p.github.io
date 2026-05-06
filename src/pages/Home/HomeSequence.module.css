@@ -554,7 +554,10 @@
   position: absolute;
   width: var(--xs);
   height: calc(var(--lg) - var(--sm));
-  background: var(--tint);
+  /* Mute (not tint) — the right-edge accent rail already carries the
+     blue page-position bar. Two blue indicators competed for attention.
+     The slider's bar uses ink to read as a quieter chapter-local detail. */
+  background: var(--ink);
   transform: translateX(-50%);
 }
 
@@ -930,9 +933,23 @@
   /* Compress the chapter card so head + title + blurb + 3 points +
      tags + actions all sit inside the slide without clipping. The
      content reads as a tight composed unit instead of breathy
-     desktop-style spacing on a narrow phone. */
+     desktop-style spacing on a narrow phone. Body / points typography
+     drops to text-small with a tighter line-height — keeps the full
+     prose intact (no truncation) but compresses vertical footprint by
+     ~15-20 %, enough for the 02 / 03 cases to fit one screen. */
   .caseSlide .caseDisplay { gap: var(--sm); }
-  .caseSlide .casePoints { gap: var(--sm); margin-top: 0; }
+  .caseSlide .caseBlurb {
+    font-size: var(--text-small);
+    line-height: var(--lh-small);
+  }
+  .caseSlide .casePoints {
+    gap: var(--sm);
+    margin-top: 0;
+  }
+  .caseSlide .casePoints li {
+    font-size: var(--text-small);
+    line-height: var(--lh-small);
+  }
   .caseSlide .caseTags { margin-top: 0; }
   /* Drop the case head row (number · kicker · year). On mobile the
      slider counter (01/03 above) and the case title together carry
