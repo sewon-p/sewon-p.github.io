@@ -52,6 +52,11 @@ interface DotMorphProps {
   /** Fired when the user taps within an accent dot. Used by the hero
    *  to wire the easter-egg "3 clicks → dot editor" interaction. */
   onAccentHit?: () => void;
+  /** When provided, used as the morph target instead of the preset
+   *  lookup or runtime sampling. Lets the caller transform the dot
+   *  layout (e.g. wrap "sewon park." onto two lines on mobile)
+   *  while keeping the same text identity for animation matching. */
+  staticDots?: DotPoint[];
   className?: string;
   style?: React.CSSProperties;
 }
@@ -75,6 +80,7 @@ export function DotMorph({
   inkColor = '#0A0E14',
   tintColor = '#3B6EF5',
   onAccentHit,
+  staticDots,
   className,
   style,
 }: DotMorphProps): ReactElement {
@@ -86,15 +92,15 @@ export function DotMorph({
   const rafStartRef = useRef<(() => void) | null>(null);
   const [ready, setReady] = useState(false);
 
-  // Resolve target dots — preset (manually placed against Geist Pixel
-  // Circle in /dot-editor.html) takes precedence; runtime sampling
-  // stays as the fallback for any string not in the preset map.
+  // Resolve target dots — explicit staticDots win, then preset,
+  // then runtime sampling as fallback.
   const targetDots: DotPoint[] = useMemo(() => {
     if (typeof document === 'undefined' || !ready) return [];
+    if (staticDots && staticDots.length > 0) return staticDots;
     const preset = lookupPreset(text);
     if (preset) return preset;
     return sampleTextDots({ text, font, width, height, step, threshold });
-  }, [ready, text, font, width, height, step, threshold]);
+  }, [ready, text, font, width, height, step, threshold, staticDots]);
 
   // Ensure the exact canvas font is loaded before sampling. Otherwise a cold
   // production visit can sample fallback glyphs while local HMR appears correct.

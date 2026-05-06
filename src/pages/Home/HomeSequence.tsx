@@ -1,6 +1,7 @@
 import {
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -18,6 +19,7 @@ import {
   type Variants,
 } from 'motion/react';
 import { DotMorph } from '../../composition/DotMorph/DotMorph';
+import { lookupPreset } from '../../composition/DotMorph/dot-presets';
 import { Card } from '../../primitives/Card/Card';
 import { Button } from '../../primitives/Button/Button';
 import { DbcModal } from './DbcModal';
@@ -91,6 +93,29 @@ const DEFAULT_FIELD_TUNING = {
   opacity: 2,
 } as const;
 
+/* Mobile two-line wrap of the "sewon park." preset. The single-line
+   render is ~1200 px wide which forces a tiny scale on a 360-px
+   phone; splitting at the gap lets each line bind to ~560 px and
+   roughly doubles the visible glyph size.
+
+   PARK_X_THRESHOLD : the mid-gap where we slice sewon ↔ park.
+   PARK_DX          : park.x shifted left to align with sewon.x = 76.
+   SEWON_DY / PARK_DY: vertical offsets to stack the two lines
+                       symmetrically around the canvas centre. */
+const PARK_X_THRESHOLD = 700;
+const PARK_DX = -680;
+const SEWON_DY = -80;
+const PARK_DY = 80;
+const MOBILE_HERO_LINE_WIDTH = 560;
+
+function dotsForMobileTwoLine(presetDots: { x: number; y: number }[]): { x: number; y: number }[] {
+  return presetDots.map((p) =>
+    p.x >= PARK_X_THRESHOLD
+      ? { x: p.x + PARK_DX, y: p.y + PARK_DY }
+      : { x: p.x, y: p.y + SEWON_DY },
+  );
+}
+
 export function HomeSequence(): ReactElement {
   const zoneRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -121,6 +146,9 @@ export function HomeSequence(): ReactElement {
   const [chapterDotTarget, setChapterDotTarget] = useState(CHAPTER_DOT_FALLBACK);
   const [heroFitScale, setHeroFitScale] = useState(1);
   const [chapterFitScale, setChapterFitScale] = useState(CHAPTER_DOT_SCALE);
+  /* Hoisted up here (above measureChapterBox) so the effect's deps
+     array can reference it without TDZ. */
+  const isMobileViewport = useIsMobile();
   const densityScale = useHomeDensity();
   const chapterDotScale = chapterFitScale;
   const frameStyle = {
@@ -206,9 +234,14 @@ export function HomeSequence(): ReactElement {
       // each scale is clamped against the live frame width with a small
       // safety pad. The result drives both the dot transform and the
       // chapterDotTarget anchor math (which depends on the same scale).
-      const heroTextWidth = measureDotTextWidth('sewon park.', DOT_FONT);
+      // On mobile the hero wraps onto two lines, so the binding width
+      // is the longer line ("sewon" ≈ 560 px) — gives ~2× scale.
+      const fullHeroTextWidth = measureDotTextWidth('sewon park.', DOT_FONT);
       const heroSafetyPad = 24;
-      const heroFit = (frameRect.width - heroSafetyPad * 2) / heroTextWidth;
+      const heroBindWidth = isMobileViewport
+        ? MOBILE_HERO_LINE_WIDTH
+        : fullHeroTextWidth;
+      const heroFit = (frameRect.width - heroSafetyPad * 2) / heroBindWidth;
       const nextHeroFit = Math.max(0.16, Math.min(densityScale, heroFit));
 
       const chapterMaxFit = (frameRect.width - heroSafetyPad * 2) / textWidth;
@@ -235,7 +268,7 @@ export function HomeSequence(): ReactElement {
       observer.disconnect();
       window.removeEventListener('resize', measureChapterBox);
     };
-  }, [chapterDotScale, chapterLabel, densityScale]);
+  }, [chapterDotScale, chapterLabel, densityScale, isMobileViewport]);
 
   // Dot canvas transforms — three keyframes:
   //   0.00 (hero)    : centered, scale 1
@@ -268,9 +301,7 @@ export function HomeSequence(): ReactElement {
    * under the finger and feels jerky. Instead we observe activeIndex
    * (which only flips after the snap settles on the next section) and
    * tween three motion values to the discrete target with our signature
-   * ease-settle curve. Desktop keeps the live scroll behaviour.
-   */
-  const isMobileViewport = useIsMobile();
+   * ease-settle curve. Desktop keeps the live scroll behaviour. */
   const dotScaleM = useMotionValue(heroFitScale);
   const dotXM = useMotionValue(0);
   const dotYM = useMotionValue(0);
@@ -335,6 +366,18 @@ export function HomeSequence(): ReactElement {
   const dotScale = isMobileViewport ? dotScaleM : dotScaleRaw;
   const dotX = isMobileViewport ? dotXM : dotXRaw;
   const dotY = isMobileViewport ? dotYM : dotYRaw;
+
+  /* Mobile two-line wrap of "sewon park.": fetch the preset, transform
+     park dots to the second line, hand the result to DotMorph as
+     staticDots. Other labels (engineering / strategy / nothing) use
+     the preset / sampling default. */
+  const heroStaticDots = useMemo(() => {
+    if (!isMobileViewport) return undefined;
+    if (activeLabel !== 'sewon park.') return undefined;
+    const preset = lookupPreset('sewon park.');
+    if (!preset) return undefined;
+    return dotsForMobileTwoLine(preset);
+  }, [isMobileViewport, activeLabel]);
 
   // hero tagline — visible only at section 0
   const heroTaglineOpacity = useTransform(
@@ -445,6 +488,7 @@ export function HomeSequence(): ReactElement {
                 accentCount={32}
                 font={DOT_FONT}
                 onAccentHit={onAccentHit}
+                staticDots={heroStaticDots}
               />
             </motion.div>
           </div>
