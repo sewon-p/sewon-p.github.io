@@ -10,5 +10,10 @@
   position: relative;
   display: inline-block;
   max-width: none;
+  /* Re-enable pointer events: dotAnchor / dotStage parents set
+     pointer-events: none so they don't trap scroll. The canvas
+     itself opts back in so the easter-egg accent-dot click handler
+     can receive taps. The handler is no-op without onAccentHit. */
+  pointer-events: auto;
   /* sized by the consumer via inline width/height */
 }

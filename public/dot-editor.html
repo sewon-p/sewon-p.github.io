@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dot editor — sewon park</title>
+  <title>Dot editor</title>
   <style>
     /* Geist Pixel are single-design fonts (not variable). Declaring
        font-weight: 100 900 just tells the browser this family is
@@ -180,6 +180,33 @@
       padding: 0 2px;
     }
     .pills .pill .x:hover { opacity: 1; }
+    /* Toggle button row — replaces dropdown selectors. Active state
+       inverts to ink fill so the user reads "this is what's on" at
+       a glance, no chevron / open-list indirection. */
+    .seg {
+      display: inline-flex;
+      gap: 0;
+      border: 1px solid #d4d7dc;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .seg button {
+      padding: 6px 10px;
+      border: 0;
+      border-left: 1px solid #d4d7dc;
+      background: #fff;
+      color: #0a0e14;
+      font-family: 'Geist Mono', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 0;
+    }
+    .seg button:first-child { border-left: 0; }
+    .seg button.active {
+      background: #0a0e14;
+      color: #fff;
+    }
     .dropzone {
       display: inline-flex;
       align-items: center;
@@ -222,13 +249,13 @@
   </style>
 </head>
 <body>
-  <h1>Dot editor — manually mark Geist Pixel dots</h1>
+  <h1>Dot editor</h1>
 
   <div class="pills" id="pills"></div>
 
   <div class="toolbar">
     <label>text
-      <input type="text" id="text" value="sewon park." style="width: 200px" />
+      <input type="text" id="text" value="" placeholder="type any string…" style="width: 200px" />
     </label>
     <button class="ghost" id="addLabel">+ save as label</button>
     <button class="ghost" id="removeLabel">− remove label</button>
@@ -237,19 +264,12 @@
 
     <label>font
       <select id="font">
-        <optgroup label="Geist Pixel (single-weight, bold = stroke fake)">
-          <option value="Geist Pixel Circle">Geist Pixel Circle</option>
-          <option value="Geist Pixel Square">Geist Pixel Square</option>
-          <option value="Geist Pixel Grid">Geist Pixel Grid</option>
-          <option value="Geist Pixel Line">Geist Pixel Line</option>
-        </optgroup>
-        <optgroup label="Geist (variable, weight axis works)">
-          <option value="Geist">Geist sans</option>
-          <option value="Geist Mono">Geist Mono</option>
-        </optgroup>
         <optgroup label="System / web-safe">
-          <option value="system-ui">system-ui</option>
+          <option value="system-ui" selected>system-ui</option>
           <option value="-apple-system">-apple-system</option>
+          <option value="sans-serif">sans-serif</option>
+          <option value="serif">serif</option>
+          <option value="monospace">monospace</option>
           <option value="Helvetica">Helvetica</option>
           <option value="Helvetica Neue">Helvetica Neue</option>
           <option value="Arial">Arial</option>
@@ -264,6 +284,16 @@
           <option value="Impact">Impact</option>
           <option value="Comic Sans MS">Comic Sans MS</option>
         </optgroup>
+        <optgroup label="Geist (variable)">
+          <option value="Geist">Geist sans</option>
+          <option value="Geist Mono">Geist Mono</option>
+        </optgroup>
+        <optgroup label="Geist Pixel (single-weight, bold = stroke fake)">
+          <option value="Geist Pixel Circle">Geist Pixel Circle</option>
+          <option value="Geist Pixel Square">Geist Pixel Square</option>
+          <option value="Geist Pixel Grid">Geist Pixel Grid</option>
+          <option value="Geist Pixel Line">Geist Pixel Line</option>
+        </optgroup>
       </select>
     </label>
 
@@ -272,8 +302,9 @@
       <input type="file" id="fontFile" accept=".woff2,.woff,.ttf,.otf,font/*" hidden />
     </label>
 
-    <label>weight
-      <input type="number" id="weight" value="500" min="100" max="900" step="100" style="width: 60px" />
+    <label style="gap: 4px">
+      <input type="checkbox" id="bold" />
+      bold
     </label>
 
     <label>font size
@@ -313,13 +344,19 @@
   </div>
 
   <div class="toolbar">
-    <label>tool
-      <select id="tool">
-        <option value="dot">dot (left)</option>
-        <option value="accent">accent (left)</option>
-        <option value="erase">erase (left)</option>
-      </select>
-    </label>
+    <label>tool</label>
+    <div class="seg" id="toolSeg">
+      <button data-tool="dot" class="active" title="left-click places ink dots">dot</button>
+      <button data-tool="accent" title="left-click places accent (also Shift+click)">accent</button>
+      <button data-tool="erase" title="left-click erases (also Alt+click)">erase</button>
+    </div>
+
+    <label>shape</label>
+    <div class="seg" id="shapeSeg">
+      <button data-shape="circle" class="active" title="round dots">●</button>
+      <button data-shape="square" title="hard pixel squares">■</button>
+      <button data-shape="rounded" title="rounded squares">▢</button>
+    </div>
 
     <span class="spacer"></span>
 
@@ -379,17 +416,16 @@
 
     /* State: dynamic list of labels + per-label absolute-coord dot
        map. Storing absolute (not grid-relative) means changing grid
-       step / offset never moves placed dots. The label set itself is
-       editable — type any text in the input, save it as a label,
-       remove labels you no longer want. */
-    const initialLabels = ['sewon park.', 'engineering', 'strategy'];
+       step / offset never moves placed dots. Starts empty — type
+       text in the input, save it as a label to start collecting
+       dots; add as many labels as you need. */
     /** @type {string[]} */
-    let labels = [...initialLabels];
-    let currentLabel = labels[0];
+    let labels = [];
+    let currentLabel = '';
     /** @type {Map<string, Map<string, 'dot' | 'accent'>>} */
-    const data = new Map(labels.map((l) => [l, new Map()]));
+    const data = new Map();
     /** @type {Map<string, Array<Map<string, 'dot' | 'accent'>>>} */
-    const undoStacks = new Map(labels.map((l) => [l, []]));
+    const undoStacks = new Map();
 
     function ensureLabel(label) {
       if (!data.has(label)) {
@@ -404,7 +440,14 @@
     const fontEl = document.getElementById('font');
     const fontDropEl = document.getElementById('fontDrop');
     const fontFileEl = document.getElementById('fontFile');
-    const weightEl = document.getElementById('weight');
+    const boldEl = document.getElementById('bold');
+    /* Bold checkbox compiles down to weight 700 (browser-standard
+       'bold'); unchecked stays at 400 ('normal'). Variable fonts
+       map this onto their wght axis directly; static fonts get
+       fake-bolded by the stroke pass below regardless of file. */
+    function currentWeight() {
+      return boldEl.checked ? 700 : 400;
+    }
     const fontSizeEl = document.getElementById('fontSize');
     const stepEl = document.getElementById('step');
     const offsetXEl = document.getElementById('offsetX');
@@ -412,7 +455,13 @@
     const diameterEl = document.getElementById('diameter');
     const inkColorEl = document.getElementById('inkColor');
     const accentColorEl = document.getElementById('accentColor');
-    const toolEl = document.getElementById('tool');
+    /* Tool + shape are segmented-button groups (no dropdowns). The
+       state lives in plain locals; segment clicks update them and
+       re-render the active class. */
+    let currentTool = 'dot';
+    let currentShape = 'circle';
+    const toolSegEl = document.getElementById('toolSeg');
+    const shapeSegEl = document.getElementById('shapeSeg');
     const countEl = document.getElementById('count');
     const countAccentEl = document.getElementById('countAccent');
     const stepLabelEl = document.getElementById('stepLabel');
@@ -458,7 +507,7 @@
     function fontShorthand() {
       const font = fontEl.value;
       const size = parseInt(fontSizeEl.value, 10);
-      const weight = parseInt(weightEl.value, 10) || 500;
+      const weight = currentWeight();
       return `${weight} ${size}px '${font}', 'Geist Mono', monospace`;
     }
 
@@ -479,7 +528,7 @@
      */
     function drawTextStyled(ctx, text, color) {
       const size = parseInt(fontSizeEl.value, 10);
-      const weight = parseInt(weightEl.value, 10) || 500;
+      const weight = currentWeight();
       ctx.font = fontShorthand();
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'center';
@@ -531,12 +580,44 @@
       const radius = (parseFloat(diameterEl.value) || 0) / 2;
       let dotCount = 0;
       let accentCount = 0;
+      if (!map) {
+        countEl.textContent = '0';
+        countAccentEl.textContent = '0';
+        return;
+      }
+      const cornerR = currentShape === 'rounded' ? Math.max(1, radius * 0.45) : 0;
       for (const [key, kind] of map) {
         const [x, y] = key.split(',').map(Number);
-        dotsCtx.beginPath();
         dotsCtx.fillStyle = kind === 'accent' ? accentColorEl.value : inkColorEl.value;
-        dotsCtx.arc(x, y, radius, 0, Math.PI * 2);
-        dotsCtx.fill();
+        if (currentShape === 'circle') {
+          dotsCtx.beginPath();
+          dotsCtx.arc(x, y, radius, 0, Math.PI * 2);
+          dotsCtx.fill();
+        } else if (currentShape === 'square') {
+          dotsCtx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+        } else {
+          // rounded square — roundRect available in modern canvas
+          dotsCtx.beginPath();
+          if (typeof dotsCtx.roundRect === 'function') {
+            dotsCtx.roundRect(x - radius, y - radius, radius * 2, radius * 2, cornerR);
+          } else {
+            // manual rounded-rect path for older browsers
+            const x0 = x - radius;
+            const y0 = y - radius;
+            const w = radius * 2;
+            const h = radius * 2;
+            dotsCtx.moveTo(x0 + cornerR, y0);
+            dotsCtx.lineTo(x0 + w - cornerR, y0);
+            dotsCtx.quadraticCurveTo(x0 + w, y0, x0 + w, y0 + cornerR);
+            dotsCtx.lineTo(x0 + w, y0 + h - cornerR);
+            dotsCtx.quadraticCurveTo(x0 + w, y0 + h, x0 + w - cornerR, y0 + h);
+            dotsCtx.lineTo(x0 + cornerR, y0 + h);
+            dotsCtx.quadraticCurveTo(x0, y0 + h, x0, y0 + h - cornerR);
+            dotsCtx.lineTo(x0, y0 + cornerR);
+            dotsCtx.quadraticCurveTo(x0, y0, x0 + cornerR, y0);
+          }
+          dotsCtx.fill();
+        }
         if (kind === 'accent') accentCount += 1;
         else dotCount += 1;
       }
@@ -551,7 +632,20 @@
     }
 
     // ─── interactions ──────────────────────────────────────────────────
+    function ensureCurrentLabel() {
+      /* If the user starts clicking before they've typed any text,
+         auto-create an "untitled" label so we never write into a
+         missing data slot. */
+      if (!currentLabel) {
+        currentLabel = 'untitled';
+        textEl.value = currentLabel;
+      }
+      ensureLabel(currentLabel);
+      renderPills();
+    }
+
     function pushUndo() {
+      ensureCurrentLabel();
       const map = data.get(currentLabel);
       undoStacks.get(currentLabel).push(new Map(map));
       if (undoStacks.get(currentLabel).length > 50) undoStacks.get(currentLabel).shift();
@@ -567,6 +661,7 @@
     }
 
     function applyAt(x, y, kind) {
+      ensureCurrentLabel();
       const map = data.get(currentLabel);
       const key = keyFor(x, y);
       if (kind === 'erase') map.delete(key);
@@ -580,7 +675,7 @@
     function resolveKind(e) {
       if (e.altKey) return 'erase';
       if (e.shiftKey) return 'accent';
-      return toolEl.value;
+      return currentTool;
     }
 
     dotsCanvas.addEventListener('mousedown', (e) => {
@@ -800,7 +895,7 @@
       const diameter = parseFloat(diameterEl.value);
       const font = fontEl.value;
       const fontSize = parseInt(fontSizeEl.value, 10);
-      const weight = parseInt(weightEl.value, 10) || 500;
+      const weight = currentWeight();
       const inkColor = inkColorEl.value;
       const accentColor = accentColorEl.value;
       const out = {};
@@ -821,6 +916,7 @@
           offsetX: offX,
           offsetY: offY,
           diameter,
+          shape: currentShape,
           font,
           fontSize,
           weight,
@@ -842,6 +938,23 @@
       a.click();
       URL.revokeObjectURL(url);
     }
+
+    // ─── segmented buttons (tool + shape) ─────────────────────────────
+    function bindSegment(rootEl, attr, getCurrent, setCurrent) {
+      rootEl.querySelectorAll('button').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const value = btn.dataset[attr];
+          if (!value) return;
+          setCurrent(value);
+          rootEl.querySelectorAll('button').forEach((b) => {
+            b.classList.toggle('active', b.dataset[attr] === getCurrent());
+          });
+          drawDots();
+        });
+      });
+    }
+    bindSegment(toolSegEl, 'tool', () => currentTool, (v) => { currentTool = v; });
+    bindSegment(shapeSegEl, 'shape', () => currentShape, (v) => { currentShape = v; });
 
     // ─── pills (saved labels) ──────────────────────────────────────────
     function renderPills() {
@@ -962,7 +1075,7 @@
     /* Grid step / offset only changes the visual snap helper — dots
        in `data` stay at their already-recorded absolute coordinates,
        so reshaping the grid never moves what the user has placed. */
-    [fontEl, weightEl, fontSizeEl, stepEl, offsetXEl, offsetYEl, diameterEl, inkColorEl, accentColorEl].forEach((el) => {
+    [fontEl, boldEl, fontSizeEl, stepEl, offsetXEl, offsetYEl, diameterEl, inkColorEl, accentColorEl].forEach((el) => {
       el.addEventListener('input', redraw);
       el.addEventListener('change', redraw);
     });

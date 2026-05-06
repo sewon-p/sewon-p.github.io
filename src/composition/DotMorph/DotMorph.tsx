@@ -49,6 +49,9 @@ interface DotMorphProps {
   tintColor?: string;
   /** ms duration of one morph tween (per-dot, base) */
   duration?: number;
+  /** Fired when the user taps within an accent dot. Used by the hero
+   *  to wire the easter-egg "3 clicks → dot editor" interaction. */
+  onAccentHit?: () => void;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -71,6 +74,7 @@ export function DotMorph({
   accentCount = 12,
   inkColor = '#0A0E14',
   tintColor = '#3B6EF5',
+  onAccentHit,
   className,
   style,
 }: DotMorphProps): ReactElement {
@@ -301,6 +305,69 @@ export function DotMorph({
     };
   }, [width, height, dotRadius]);
 
+  /*
+   * Accent-dot interactions — easter-egg layer.
+   *  - hover  : pointer cursor when the mouse sits over a visible
+   *             accent dot, default cursor otherwise.
+   *  - click  : the hit dot demotes from accent to ink (visible
+   *             "spent" feedback) and onAccentHit fires; the rAF
+   *             loop is re-armed in case the cloud had settled.
+   * Hit radius is 3× the rendered dot radius (min 12 px) so taps
+   * are forgiving on touch devices without making the cursor flicker
+   * across half the cloud.
+   */
+  const localFromEvent = (e: React.MouseEvent<HTMLCanvasElement>): { x: number; y: number } | null => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    return {
+      x: ((e.clientX - rect.left) / rect.width) * width,
+      y: ((e.clientY - rect.top) / rect.height) * height,
+    };
+  };
+
+  const findAccentNear = (lx: number, ly: number): ActiveDot | null => {
+    const accentIds = accentIdsRef.current;
+    const hitR = Math.max(dotRadius * 3, 12);
+    const hitR2 = hitR * hitR;
+    let best: { dot: ActiveDot; d2: number } | null = null;
+    for (const dot of dotsRef.current) {
+      if (!accentIds.has(dot.id)) continue;
+      if (dot.alpha < 0.5) continue;
+      const dx = dot.x - lx;
+      const dy = dot.y - ly;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < hitR2 && (!best || d2 < best.d2)) {
+        best = { dot, d2 };
+      }
+    }
+    return best ? best.dot : null;
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>): void => {
+    if (!onAccentHit) return;
+    const local = localFromEvent(e);
+    if (!local) return;
+    const hit = findAccentNear(local.x, local.y);
+    if (!hit) return;
+    // demote accent → ink so the user sees their click registered
+    hit.color = inkColor;
+    accentIdsRef.current.delete(hit.id);
+    rafStartRef.current?.();
+    onAccentHit();
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>): void => {
+    if (!onAccentHit) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const local = localFromEvent(e);
+    if (!local) return;
+    const over = findAccentNear(local.x, local.y);
+    canvas.style.cursor = over ? 'pointer' : '';
+  };
+
   return (
     <canvas
       ref={canvasRef}
@@ -308,6 +375,8 @@ export function DotMorph({
       style={style}
       aria-label={text}
       role="img"
+      onClick={onAccentHit ? handleClick : undefined}
+      onMouseMove={onAccentHit ? handleMouseMove : undefined}
     />
   );
 }

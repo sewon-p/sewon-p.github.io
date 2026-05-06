@@ -95,6 +95,29 @@ export function HomeSequence(): ReactElement {
   const zoneRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const chapterDotBoxRef = useRef<HTMLSpanElement>(null);
+  /*
+   * Easter egg — three taps on accent (blue) dots while sitting on
+   * the hero or profile section take you to /dot-editor.html. Counter
+   * resets if the user idles for 1.5s between taps so casual scroll
+   * fiddling doesn't accidentally trigger.
+   */
+  const accentHitsRef = useRef({ count: 0, last: 0, timer: 0 });
+  const onAccentHit = (): void => {
+    const now = Date.now();
+    const state = accentHitsRef.current;
+    if (now - state.last > 1500) state.count = 0;
+    state.count += 1;
+    state.last = now;
+    window.clearTimeout(state.timer);
+    if (state.count >= 3) {
+      state.count = 0;
+      window.location.href = '/dot-editor.html';
+      return;
+    }
+    state.timer = window.setTimeout(() => {
+      state.count = 0;
+    }, 1500);
+  };
   const [chapterDotTarget, setChapterDotTarget] = useState(CHAPTER_DOT_FALLBACK);
   const [heroFitScale, setHeroFitScale] = useState(1);
   const [chapterFitScale, setChapterFitScale] = useState(CHAPTER_DOT_SCALE);
@@ -421,6 +444,7 @@ export function HomeSequence(): ReactElement {
                 threshold={110}
                 accentCount={32}
                 font={DOT_FONT}
+                onAccentHit={onAccentHit}
               />
             </motion.div>
           </div>
