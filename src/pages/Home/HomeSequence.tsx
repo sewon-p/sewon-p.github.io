@@ -3,6 +3,7 @@ import {
   useId,
   useRef,
   useState,
+  type CSSProperties,
   type ReactElement,
   type RefObject,
 } from 'react';
@@ -72,8 +73,6 @@ const HERO_DOT_WIDTH = 1400;
 const HERO_DOT_HEIGHT = 360;
 const DOT_FONT = "500 200px 'Geist', system-ui, sans-serif";
 const CHAPTER_DOT_SCALE = 0.38;
-const COMPACT_DESKTOP_QUERY = '(min-width: 721px) and (max-width: 1800px)';
-const COMPACT_DENSITY_SCALE = 0.9;
 const CHAPTER_DOT_FALLBACK = { x: -HERO_DOT_WIDTH * 0.26, y: -HERO_DOT_HEIGHT * 1.05 };
 const PROFILE_TEXT_START = 0.20;
 const ENGINEERING_TEXT_START = 0.40;
@@ -89,8 +88,9 @@ export function HomeSequence(): ReactElement {
   const frameRef = useRef<HTMLDivElement>(null);
   const chapterDotBoxRef = useRef<HTMLSpanElement>(null);
   const [chapterDotTarget, setChapterDotTarget] = useState(CHAPTER_DOT_FALLBACK);
-  const densityScale = useMediaQuery(COMPACT_DESKTOP_QUERY) ? COMPACT_DENSITY_SCALE : 1;
+  const densityScale = useHomeDensity();
   const chapterDotScale = CHAPTER_DOT_SCALE * densityScale;
+  const frameStyle = { '--home-density': densityScale } as CSSProperties;
   const { scrollYProgress } = useScroll({
     target: zoneRef,
     offset: ['start start', 'end end'],
@@ -209,6 +209,7 @@ export function HomeSequence(): ReactElement {
         <div
           ref={frameRef}
           className={styles.frame}
+          style={frameStyle}
         >
           {/* chrome */}
           <div className={styles.guides} aria-hidden="true">
@@ -769,27 +770,43 @@ function CaseStudy({
 }
 
 /*
- * useMediaQuery — content breakpoints only. This is deliberately not
- * tied to devicePixelRatio, browser brand, or display hardware.
+ * Home density is a fluid content scale, not a device table. The 15-inch
+ * composition stays at 1 once the viewport is wide enough; smaller desktop
+ * workspaces ease toward the compact density that tested well on 13-inch.
  */
-function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia(query).matches;
+const DENSITY_MIN = 0.9;
+const DENSITY_MAX = 1;
+const DENSITY_MIN_WIDTH = 1500;
+const DENSITY_MAX_WIDTH = 1680;
+
+function useHomeDensity(): number {
+  const [density, setDensity] = useState(() => {
+    if (typeof window === 'undefined') return DENSITY_MAX;
+    return getHomeDensity(window.innerWidth);
   });
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
 
-    const media = window.matchMedia(query);
-    const update = (): void => setMatches(media.matches);
+    const update = (): void => setDensity(getHomeDensity(window.innerWidth));
 
     update();
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, [query]);
+    window.addEventListener('resize', update);
+    window.visualViewport?.addEventListener('resize', update);
 
-  return matches;
+    return () => {
+      window.removeEventListener('resize', update);
+      window.visualViewport?.removeEventListener('resize', update);
+    };
+  }, []);
+
+  return density;
+}
+
+function getHomeDensity(width: number): number {
+  const progress = (width - DENSITY_MIN_WIDTH) / (DENSITY_MAX_WIDTH - DENSITY_MIN_WIDTH);
+  const clamped = Math.max(0, Math.min(1, progress));
+  return DENSITY_MIN + (DENSITY_MAX - DENSITY_MIN) * clamped;
 }
 
 /*

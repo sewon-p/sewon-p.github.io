@@ -33,8 +33,42 @@
   height: 100vh;
   background: var(--paper);
   overflow: hidden;
-  /* chapter scale is fixed; browser zoom remains browser-owned. */
-  --chapter-scale: 0.38;
+  /* Home is an artboard-like composition. It uses one local density
+     value so spacing, type, and dot scale move together instead of
+     switching at device-specific breakpoints. */
+  --home-density: 1;
+  --xs: calc(8px * var(--home-density));
+  --sm: calc(16px * var(--home-density));
+  --md: calc(24px * var(--home-density));
+  --lg: calc(48px * var(--home-density));
+  --xl: calc(96px * var(--home-density));
+  --xxl: calc(144px * var(--home-density));
+  --xxxl: calc(192px * var(--home-density));
+  --container: calc(720px * var(--home-density));
+  --col-gutter: calc(16px * var(--home-density));
+  --radius-sm: calc(6px * var(--home-density));
+  --radius-md: calc(12px * var(--home-density));
+  --radius-lg: calc(24px * var(--home-density));
+  --text-display: calc(48px * var(--home-density));
+  --lh-display: calc(56px * var(--home-density));
+  --tracking-display: calc(-2.4px * var(--home-density));
+  --text-h1: calc(32px * var(--home-density));
+  --lh-h1: calc(40px * var(--home-density));
+  --tracking-h1: calc(-1.28px * var(--home-density));
+  --text-h2: calc(24px * var(--home-density));
+  --lh-h2: calc(32px * var(--home-density));
+  --tracking-h2: calc(-0.96px * var(--home-density));
+  --text-h3: calc(20px * var(--home-density));
+  --lh-h3: calc(28px * var(--home-density));
+  --tracking-h3: calc(-0.48px * var(--home-density));
+  --text-body: calc(16px * var(--home-density));
+  --lh-body: calc(24px * var(--home-density));
+  --text-small: calc(14px * var(--home-density));
+  --lh-small: calc(20px * var(--home-density));
+  --text-mono: calc(14px * var(--home-density));
+  --lh-mono: calc(20px * var(--home-density));
+  --tracking-tight: calc(-0.32px * var(--home-density));
+  --chapter-scale: calc(0.38 * var(--home-density));
   /* visible dot text bottom = chapterDotBox center (lg + xl/2 = 96)
      plus half the scaled glyph (200px font * scale / 2 = 100px * scale) */
   --logo-bottom: calc(var(--lg) + var(--xl) / 2 + 100px * var(--chapter-scale));
@@ -678,10 +712,6 @@
   font-size: var(--text-h2) !important;
   line-height: var(--lh-h2) !important;
   letter-spacing: var(--tracking-h2) !important;
-}
-
-@media (min-width: 721px) and (max-width: 1800px) {
-  .frame { --chapter-scale: 0.342; }
 }
 
 @media (max-width: 720px) {
