@@ -1641,7 +1641,9 @@
 .legacyCase .big-visual,
 .legacyCase .spline-placeholder {
   flex: 1;
-  min-height: calc(var(--xxxl) + var(--xl));
+  /* Taller scene box so the 3D content reads as a real preview, not
+     a thumbnail. Was xxxl+xl (288 px), now xxxl+xxxl (384 px). */
+  min-height: calc(var(--xxxl) + var(--xxxl));
   display: grid;
   place-items: stretch;
   padding: var(--sm);
@@ -1666,7 +1668,9 @@
   display: block;
   width: 100%;
   height: 100%;
-  min-height: calc(var(--xxxl) + var(--lg));
+  /* match the placeholder min-height so the canvas always fills the
+     full preview box rather than a smaller intrinsic size. */
+  min-height: calc(var(--xxxl) + var(--xl));
 }
 
 .legacyCase .big-caption {
