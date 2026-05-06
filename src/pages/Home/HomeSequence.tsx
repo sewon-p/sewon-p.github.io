@@ -540,6 +540,11 @@ const SPLINE_VIEWER_SRC =
 
 function ensureSplineViewerScript(): void {
   if (typeof document === 'undefined') return;
+  /* index.html already loads the viewer module eagerly. If the custom
+     element is registered we are done; the dynamic fallback below
+     remains for older entries / preview environments that strip the
+     index.html script. */
+  if (window.customElements?.get('spline-viewer')) return;
   if (document.querySelector(`script[data-spline-viewer]`)) return;
   const script = document.createElement('script');
   script.type = 'module';
@@ -596,23 +601,32 @@ function CaseModal({ project, onClose }: CaseModalProps): ReactElement {
     return () => shell.removeEventListener('scroll', onScroll);
   }, [legacyHtml]);
 
-  // Spline 3D scene loader. Lazily upgrades any `.spline-placeholder[data-url]`
-  // inside the legacy HTML to a real `<spline-viewer>` once it scrolls into view.
+  // Spline 3D scene loader. Each `.spline-placeholder[data-url]` inside
+  // the legacy HTML gets upgraded to a real <spline-viewer> as soon as
+  // the custom element is registered. Earlier this used an
+  // IntersectionObserver and dataset.url; the IO had a StrictMode-dev
+  // race that left dataset.loaded=1 with no viewer attached, and reading
+  // via dataset.url silently dropped the value when the attribute name
+  // was kebab-cased through ?raw + innerHTML on Safari mobile. We now
+  // read via getAttribute, log a clear warning on misses, and upgrade
+  // all placeholders eagerly when the modal mounts.
   useEffect(() => {
     const shell = shellRef.current;
     if (!shell) return;
-    const placeholders = shell.querySelectorAll<HTMLElement>('.spline-placeholder[data-url]');
-    if (placeholders.length === 0) return;
 
     let cancelled = false;
     ensureSplineViewerScript();
 
-    const upgrade = (el: HTMLElement): void => {
-      const url = el.dataset.url;
-      if (!url || el.dataset.loaded === '1' || cancelled) return;
-      el.dataset.loaded = '1';
-      void customElements.whenDefined('spline-viewer').then(() => {
-        if (cancelled) return;
+    void customElements.whenDefined('spline-viewer').then(() => {
+      if (cancelled) return;
+      const placeholders = shell.querySelectorAll<HTMLElement>('.spline-placeholder');
+      placeholders.forEach((el) => {
+        if (el.dataset.splineUpgraded === '1') return;
+        const url = el.getAttribute('data-url');
+        if (!url || url === 'undefined') {
+          return;
+        }
+        el.dataset.splineUpgraded = '1';
         const viewer = document.createElement('spline-viewer');
         viewer.setAttribute('url', url);
         viewer.setAttribute('loading-anim-type', 'none');
@@ -620,21 +634,10 @@ function CaseModal({ project, onClose }: CaseModalProps): ReactElement {
         viewer.style.height = '100%';
         el.replaceChildren(viewer);
       });
-    };
+    });
 
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        const el = entry.target as HTMLElement;
-        upgrade(el);
-        observer.unobserve(el);
-      }
-    }, { root: shell, rootMargin: '400px', threshold: 0 });
-
-    for (const el of placeholders) observer.observe(el);
     return () => {
       cancelled = true;
-      observer.disconnect();
     };
   }, [legacyHtml]);
 
@@ -1156,29 +1159,28 @@ function CaseContent({
 }
 
 /*
- * Home density is a fluid content scale, not a device table. The composition
- * eases between three anchor widths so spacing, type, and the dot canvas all
- * shrink together instead of switching at device-specific breakpoints:
- *   - phone (≤480 px) → MOBILE_DENSITY (~0.42) so the 1400-px dot artboard
- *     fits inside a 360-px viewport
- *   - 13" desktop (~1280 px)   → DESKTOP_COMPACT_DENSITY (0.9)
- *   - 15"+ desktop (≥1680 px)  → DENSITY_MAX (1.0)
+ * Home density is a fluid content scale, not a device table. The
+ * composition keeps growing past 15" (1680 px) — capping there made
+ * 27" QHD / ultrawide displays feel sparse, with the artwork floating
+ * in a sea of unused viewport. Three anchor widths drive the ramp:
+ *   - phone   (≤480 px)              → MOBILE_DENSITY  (~0.92, mobile-tight)
+ *   - 13" desktop (~1280 px)         → DESKTOP_COMPACT_DENSITY (0.9)
+ *   - 15" desktop (~1680 px)         → DENSITY_REFERENCE (1.0)
+ *   - beyond 1680                    → keeps the same 1280→1680 slope
+ *                                      (linear), capped only by an
+ *                                      absolute ceiling for safety.
  */
-/* Density only governs typography + spacing. The dot canvas has its own
-   fit-to-viewport scales (heroFitScale, chapterFitScale) so we don't
-   need to crush type in order to fit the artwork on small screens.
-   Mobile lands at 0.92 — close to desktop, just a small spacing
-   tightening. Earlier we ran 0.85 which read as cramped on phones. */
 const MOBILE_DENSITY = 0.92;
 const DESKTOP_COMPACT_DENSITY = 0.9;
-const DENSITY_MAX = 1;
+const DENSITY_REFERENCE = 1;
+const DENSITY_CEILING = 1.5;
 const MOBILE_MAX_WIDTH = 480;
 const DESKTOP_COMPACT_WIDTH = 1280;
 const DENSITY_FULL_WIDTH = 1680;
 
 function useHomeDensity(): number {
   const [density, setDensity] = useState(() => {
-    if (typeof window === 'undefined') return DENSITY_MAX;
+    if (typeof window === 'undefined') return DENSITY_REFERENCE;
     return getHomeDensity(window.innerWidth);
   });
 
@@ -1202,14 +1204,19 @@ function useHomeDensity(): number {
 
 function getHomeDensity(width: number): number {
   if (width <= MOBILE_MAX_WIDTH) return MOBILE_DENSITY;
-  if (width >= DENSITY_FULL_WIDTH) return DENSITY_MAX;
-  if (width >= DESKTOP_COMPACT_WIDTH) {
-    const progress = (width - DESKTOP_COMPACT_WIDTH) / (DENSITY_FULL_WIDTH - DESKTOP_COMPACT_WIDTH);
-    return DESKTOP_COMPACT_DENSITY + (DENSITY_MAX - DESKTOP_COMPACT_DENSITY) * progress;
+  if (width <= DESKTOP_COMPACT_WIDTH) {
+    // mobile → desktop-compact ramp (480 → 1280)
+    const t = (width - MOBILE_MAX_WIDTH) / (DESKTOP_COMPACT_WIDTH - MOBILE_MAX_WIDTH);
+    return MOBILE_DENSITY + (DESKTOP_COMPACT_DENSITY - MOBILE_DENSITY) * t;
   }
-  // mobile → desktop-compact ramp (480 → 1280)
-  const progress = (width - MOBILE_MAX_WIDTH) / (DESKTOP_COMPACT_WIDTH - MOBILE_MAX_WIDTH);
-  return MOBILE_DENSITY + (DESKTOP_COMPACT_DENSITY - MOBILE_DENSITY) * progress;
+  /* Past the 13" anchor we extend the desktop slope linearly so 27"
+     QHD / ultrawide monitors keep gaining UI presence instead of
+     hitting a hard cap at 1680. The slope is the (compact → reference)
+     run; capped at DENSITY_CEILING so 4K+ displays stay reasonable. */
+  const slope = (DENSITY_REFERENCE - DESKTOP_COMPACT_DENSITY)
+    / (DENSITY_FULL_WIDTH - DESKTOP_COMPACT_WIDTH);
+  const linear = DESKTOP_COMPACT_DENSITY + (width - DESKTOP_COMPACT_WIDTH) * slope;
+  return Math.min(DENSITY_CEILING, linear);
 }
 
 const MOBILE_BREAKPOINT_PX = 720;
