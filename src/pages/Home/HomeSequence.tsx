@@ -584,12 +584,57 @@ function CaseModal({ project, onClose }: CaseModalProps): ReactElement {
     return () => shell.removeEventListener('scroll', onScroll);
   }, [legacyHtml]);
 
-  /* No JS upgrade dance any more — the legacy case HTML embeds
-     <spline-viewer url="..."> tags directly, exactly as the Spline
-     docs recommend. The viewer module loaded from index.html
-     registers the custom element before the modal mounts, so the
-     browser instantiates each viewer the moment React inserts the
-     HTML via dangerouslySetInnerHTML. */
+  /*
+   * Spline lazy-load (legacy parity). Each <div class="spline-placeholder"
+   * data-spline-url="..."> stays empty until it scrolls into view inside
+   * the modal, then a <spline-viewer> is created and inserted. Loading
+   * the viewer DOM only when visible avoids both 3D scenes hammering
+   * GPU at the same time when the modal first opens.
+   * - getAttribute (not dataset) avoids the past url="undefined" bug.
+   * - pixel-ratio="1.5" downsamples the render on retina displays
+   *   (~4× GPU work otherwise); visual softness is negligible on the
+   *   small preview boxes.
+   */
+  useEffect(() => {
+    const shell = shellRef.current;
+    if (!shell) return;
+
+    let cancelled = false;
+    const placeholders = shell.querySelectorAll<HTMLElement>('.spline-placeholder[data-spline-url]');
+    if (placeholders.length === 0) return;
+
+    const upgrade = (el: HTMLElement): void => {
+      if (cancelled || el.dataset.splineUpgraded === '1') return;
+      const url = el.getAttribute('data-spline-url');
+      if (!url) return;
+      el.dataset.splineUpgraded = '1';
+      void customElements.whenDefined('spline-viewer').then(() => {
+        if (cancelled) return;
+        const viewer = document.createElement('spline-viewer');
+        viewer.setAttribute('url', url);
+        viewer.setAttribute('loading-anim-type', 'spinner-small-dark');
+        viewer.setAttribute('pixel-ratio', '1.5');
+        viewer.style.width = '100%';
+        viewer.style.height = '100%';
+        el.replaceChildren(viewer);
+      });
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        upgrade(entry.target as HTMLElement);
+        observer.unobserve(entry.target);
+      }
+    }, { root: shell, threshold: 0.1 });
+
+    placeholders.forEach((el) => observer.observe(el));
+
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [legacyHtml]);
   return (
     <motion.div
       className={styles.modalOverlay}
