@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07111f" />
+    <meta name="description" content="공용 저폴리 인간 키트 브라우저 통합 검수실" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M16 50V22l16-12 16 12v28Z' fill='%23f4ead5'/%3E%3Cpath d='M20 27h24v10H20Z' fill='%2348d7ff'/%3E%3Cpath d='M27 50V36h10v14Z' fill='%23ff5a36'/%3E%3C/svg%3E" />
+    <title>투 더 스페이스! · CHARACTER LAB</title>
+    <script type="module" crossorigin src="/openai-game-2026/assets/characterLab-9o_4qlPJ.js"></script>
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/modulepreload-polyfill-P2Xu9kJm.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/three.module-C-VzJbZN.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/GLTFLoader-D9lHYhvV.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/OrbitControls-DVCLn1O-.js">
+    <link rel="stylesheet" crossorigin href="/openai-game-2026/assets/characterLab-BqTEccL6.css">
+  </head>
+  <body>
+    <main id="character-lab" aria-label="공용 인간 키트 3D 검수실">
+      <section class="character-stage" data-stage aria-label="3D 캐릭터 관찰 영역">
+        <canvas id="character-canvas" aria-label="회전 가능한 공용 인간 키트 3D 모델"></canvas>
+
+        <header class="lab-header">
+          <p class="lab-kicker">HUMAN PROPULSION PERSONNEL · P0</p>
+          <h1>CHARACTER LAB</h1>
+          <p class="lab-subtitle">공용 시험체 / 관제 연구원</p>
+        </header>
+
+        <aside class="lab-readout" aria-live="polite">
+          <span class="status-light" data-status-light></span>
+          <div>
+            <strong data-status>GLB 연결 중</strong>
+            <span data-readout>MANIFEST 대기</span>
+          </div>
+        </aside>
+
+        <div class="lab-stats" aria-label="에셋 성능 정보">
+          <span><b data-triangles>—</b> TRI</span>
+          <span><b data-materials>—</b> MAT</span>
+          <span><b data-clips>—</b> CLIP</span>
+          <span><b data-sockets>—</b> SOCKET</span>
+        </div>
+
+        <p class="lab-hint">드래그 회전 · 휠 확대 · 터치 회전</p>
+      </section>
+
+      <nav class="control-dock" aria-label="캐릭터 검수 조작">
+        <section class="control-group" aria-labelledby="variant-label">
+          <p id="variant-label" class="group-label">VARIANT</p>
+          <div class="button-row button-row--two">
+            <button type="button" data-variant="protagonist" aria-pressed="true" disabled>주인공</button>
+            <button type="button" data-variant="doctor" aria-pressed="false" disabled>박사</button>
+          </div>
+        </section>
+
+        <section class="control-group" aria-labelledby="animation-label">
+          <p id="animation-label" class="group-label">MOTION CLIP</p>
+          <div class="button-row button-row--launch">
+            <button type="button" data-clip="prelaunch" aria-pressed="false" disabled>준비</button>
+            <button type="button" data-clip="takeoff" aria-pressed="false" disabled>도약</button>
+            <button type="button" data-clip="ascent" aria-pressed="false" disabled>상승</button>
+            <button type="button" data-clip="apex" aria-pressed="false" disabled>정점</button>
+            <button type="button" data-clip="recoil" aria-pressed="false" disabled>반동</button>
+          </div>
+        </section>
+
+        <section class="control-group" aria-labelledby="view-label">
+          <p id="view-label" class="group-label">INSPECTION</p>
+          <div class="button-row button-row--three">
+            <button type="button" data-action="rotate" aria-pressed="true" disabled>자동 회전</button>
+            <button type="button" data-action="pause" aria-pressed="false" disabled>일시정지</button>
+            <button type="button" data-action="sockets" aria-pressed="false" disabled>소켓 표시</button>
+          </div>
+        </section>
+      </nav>
+    </main>
+  </body>
+</html>

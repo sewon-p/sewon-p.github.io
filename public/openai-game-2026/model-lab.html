@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07111f" />
+    <meta name="description" content="투 더 스페이스! 저폴리 GLB 에셋 검수실" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M10 35 34 10l20 20-24 24Z' fill='%2348d7ff'/%3E%3Cpath d='M30 27h19v10H30Z' fill='%23ff5a36'/%3E%3C/svg%3E" />
+    <title>투 더 스페이스! · MODEL LAB</title>
+    <script type="module" crossorigin src="/openai-game-2026/assets/modelLab-BolkIZCU.js"></script>
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/modulepreload-polyfill-P2Xu9kJm.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/itemFamilyCatalog-Bg6oLdVG.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/items-7y8u6p4z.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/three.module-C-VzJbZN.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/vfx-C1SiosuE.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/GLTFLoader-D9lHYhvV.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/assets-Drf9EDGe.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/OrbitControls-DVCLn1O-.js">
+    <link rel="stylesheet" crossorigin href="/openai-game-2026/assets/modelLab-Z7uoYXWi.css">
+  </head>
+  <body>
+    <main id="model-lab" aria-label="저폴리 3D 모델 검수실">
+      <canvas id="model-canvas" aria-label="회전 가능한 아이템 3D 모델"></canvas>
+      <header class="lab-header">
+        <p class="lab-kicker">NATIONAL AEROSPACE HOUSEHOLD PROPULSION TEST</p>
+        <h1>MODEL LAB · <span data-model-index>000</span></h1>
+        <p><span data-model-name>ITEM ASSET</span> / FLAT POLYGON PROOF</p>
+      </header>
+      <aside class="lab-spec" aria-live="polite">
+        <p class="spec-status" data-model-status>GLB 불러오는 중</p>
+        <label class="lab-picker">
+          <span>검수 모델</span>
+          <select data-model-select aria-label="검수할 아이템 모델"></select>
+        </label>
+        <div class="lab-card-preview" data-model-card-wrap hidden>
+          <img data-model-card alt="" width="128" height="128" />
+          <span>128 PX CARD</span>
+        </div>
+        <dl>
+          <div><dt>ASSET</dt><dd data-model-asset>—</dd></div>
+          <div><dt>FORMAT</dt><dd>GLB 2.0</dd></div>
+          <div><dt>STYLE</dt><dd>1993 FLAT SHADE</dd></div>
+          <div><dt>TRIANGLES</dt><dd data-model-triangles>—</dd></div>
+          <div><dt>MATERIALS</dt><dd data-model-materials>—</dd></div>
+          <div><dt>SOCKETS</dt><dd data-model-sockets>—</dd></div>
+        </dl>
+      </aside>
+      <nav class="lab-controls" aria-label="모델 조작">
+        <button type="button" data-action="rotate" aria-pressed="true">자동 회전 ON</button>
+        <button type="button" data-action="wireframe" aria-pressed="false">삼각면 보기 OFF</button>
+        <button type="button" data-action="vfx" aria-pressed="false">발동 VFX OFF</button>
+        <button type="button" data-action="reset">카메라 리셋</button>
+      </nav>
+      <p class="lab-hint">드래그 회전 · 휠 확대 · W 삼각면</p>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07111f" />
+    <meta name="description" content="투 더 스페이스! 전체 항로 배경 및 18개 랜드마크 검수실" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='22' fill='%2348d7ff'/%3E%3Cpath d='M8 34h48' stroke='%23ffc547' stroke-width='5'/%3E%3C/svg%3E" />
+    <title>투 더 스페이스! · WORLD LAB</title>
+    <script type="module" crossorigin src="/openai-game-2026/assets/worldLab-BUvEw9ix.js"></script>
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/modulepreload-polyfill-P2Xu9kJm.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/three.module-C-VzJbZN.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/GLTFLoader-D9lHYhvV.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/planetProfiles-BERfprPr.js">
+    <link rel="stylesheet" crossorigin href="/openai-game-2026/assets/worldLab-DWEAKy5o.css">
+  </head>
+  <body>
+    <main id="world-lab" aria-label="전체 항로 배경 및 18개 랜드마크 검수실">
+      <canvas id="world-canvas" aria-label="선택한 항로의 행성 배경과 랜드마크 미리보기"></canvas>
+      <header class="world-header">
+        <p>VERTICAL ESCAPE ROUTE / 18 ENVIRONMENT CHECKS</p>
+        <h1>WORLD LAB · <span data-world-index>01</span></h1>
+        <strong data-world-label>지구·대기권</strong>
+        <span data-world-kicker>승인 안 된 유인 생활용품 발사 시험</span>
+      </header>
+      <aside class="world-landmark">
+        <span>LANDMARK</span>
+        <strong data-world-landmark>연구실 발사 샤프트</strong>
+        <small data-world-asset role="status" aria-live="polite">earth-vertical-slice-v1 · 로드 중</small>
+      </aside>
+      <nav class="ufo-presets" data-ufo-presets aria-label="UFO 손상 프리셋" hidden>
+        <button type="button" data-ufo-preset="Normal" aria-pressed="true">정상</button>
+        <button type="button" data-ufo-preset="Scorched" aria-pressed="false">그을림</button>
+        <button type="button" data-ufo-preset="Dented" aria-pressed="false">찌그러짐</button>
+        <button type="button" data-ufo-preset="HalfDestroyed" aria-pressed="false">반파</button>
+        <button type="button" data-ufo-preset="Debris" aria-pressed="false">잔해</button>
+      </nav>
+      <nav class="world-controls" aria-label="항로 환경 선택">
+        <button type="button" data-action="previous" aria-label="이전 환경">←</button>
+        <select data-world-select aria-label="항로 환경 선택"></select>
+        <button type="button" data-action="ring" aria-pressed="false">RING</button>
+        <button type="button" data-action="next" aria-label="다음 환경">→</button>
+      </nav>
+    </main>
+  </body>
+</html>

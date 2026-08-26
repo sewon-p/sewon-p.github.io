@@ -1,0 +1,194 @@
+{
+  "schema": "browser-game-environment-manifest-v1",
+  "assetId": "inner-route-landmarks-v1",
+  "displayName": "수성·태양·화성 항로 랜드마크 오버레이 키트",
+  "file": "inner-route-landmarks-v1.glb",
+  "format": "GLB 2.0",
+  "source": {
+    "type": "deterministic procedural geometry",
+    "generator": "scripts/modeling/generate-route-landmark-kits-v1.mjs",
+    "generatorVersion": 1,
+    "dependencies": [
+      "three@0.180.0"
+    ],
+    "thirdPartyGeometry": false,
+    "officialAgencyEmblems": false,
+    "optimization": "exporter-level geometry batching and material reuse; no runtime decoder dependency"
+  },
+  "runtimeContract": {
+    "units": "meters",
+    "upAxis": "+Y",
+    "frontAxis": "+Z",
+    "root": "InnerRouteLandmarks_Root",
+    "rootPivot": "identity pack origin; clone route child only",
+    "displayScale": 1,
+    "selectionPolicy": "clone exact named route group; never attach the whole overlapping pack scene",
+    "compositionPolicy": "overlay GLB props on procedural planet, ring, particle, and corridor layers",
+    "externalUfoAssetId": null,
+    "routeGroups": [
+      {
+        "routeId": "mercury",
+        "group": "InnerRoute_Landmark_mercury",
+        "spinPivot": "InnerRoute_SpinPivot_mercury",
+        "landmarkMount": "Anchor_mercury_LandmarkMount",
+        "cameraFocus": "Anchor_mercury_CameraFocus",
+        "vfxPrimary": "Socket_mercury_VfxPrimary",
+        "vfxSecondary": "Socket_mercury_VfxSecondary",
+        "pivotType": "ground",
+        "recommendedTransform": {
+          "position": [
+            0.42,
+            -1.48,
+            1.1
+          ],
+          "rotation": [
+            0,
+            0,
+            -0.18
+          ],
+          "scale": 1
+        },
+        "authoredBoundsMeters": {
+          "min": [
+            -1.4171,
+            0,
+            -0.9
+          ],
+          "max": [
+            1.4315,
+            2.32,
+            0.9
+          ],
+          "size": [
+            2.8486,
+            2.32,
+            1.8
+          ],
+          "center": [
+            0.0072,
+            1.16,
+            0
+          ]
+        },
+        "triangleCount": 224,
+        "drawCallCount": 6
+      },
+      {
+        "routeId": "sun",
+        "group": "InnerRoute_Landmark_sun",
+        "spinPivot": "InnerRoute_SpinPivot_sun",
+        "landmarkMount": "Anchor_sun_LandmarkMount",
+        "cameraFocus": "Anchor_sun_CameraFocus",
+        "vfxPrimary": "Socket_sun_VfxPrimary",
+        "vfxSecondary": "Socket_sun_VfxSecondary",
+        "pivotType": "center",
+        "recommendedTransform": {
+          "position": [
+            -3.2,
+            2.1,
+            1.5
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "scale": 1
+        },
+        "authoredBoundsMeters": {
+          "min": [
+            -1.61,
+            -1.61,
+            -0.95
+          ],
+          "max": [
+            1.61,
+            1.61,
+            0.78
+          ],
+          "size": [
+            3.22,
+            3.22,
+            1.73
+          ],
+          "center": [
+            0,
+            0,
+            -0.085
+          ]
+        },
+        "triangleCount": 454,
+        "drawCallCount": 6
+      },
+      {
+        "routeId": "mars",
+        "group": "InnerRoute_Landmark_mars",
+        "spinPivot": "InnerRoute_SpinPivot_mars",
+        "landmarkMount": "Anchor_mars_LandmarkMount",
+        "cameraFocus": "Anchor_mars_CameraFocus",
+        "vfxPrimary": "Socket_mars_VfxPrimary",
+        "vfxSecondary": "Socket_mars_VfxSecondary",
+        "pivotType": "ground",
+        "recommendedTransform": {
+          "position": [
+            -0.45,
+            1.65,
+            1.1
+          ],
+          "rotation": [
+            0,
+            0,
+            0.2
+          ],
+          "scale": 1
+        },
+        "authoredBoundsMeters": {
+          "min": [
+            -2.1782,
+            -0.06,
+            -0.7017
+          ],
+          "max": [
+            1.8667,
+            2.343,
+            0.5204
+          ],
+          "size": [
+            4.0449,
+            2.403,
+            1.222
+          ],
+          "center": [
+            -0.1557,
+            1.1415,
+            -0.0906
+          ]
+        },
+        "triangleCount": 236,
+        "drawCallCount": 6
+      }
+    ],
+    "collision": "none; visual landmark overlays and authored sockets only"
+  },
+  "budgets": {
+    "trianglesMax": 2500,
+    "activeTrianglesMax": 900,
+    "activeDrawCallsMax": 6,
+    "materialsMax": 6,
+    "texturesMax": 0,
+    "fileBytesMax": 350000,
+    "longestAxisMetersMax": 14
+  },
+  "materials": [
+    "MAT_InnerRoute_StructureInk",
+    "MAT_InnerRoute_PublicIvory",
+    "MAT_InnerRoute_HazardAmber",
+    "MAT_InnerRoute_SignalCyan",
+    "MAT_InnerRoute_HeatCopper",
+    "MAT_InnerRoute_MarsDustRed"
+  ],
+  "deterministic": {
+    "expectedSha256": "dcddbea13dab046ebb2251e7b0170cca5640095c69f1462e66c9d572e3862c0b",
+    "randomInputs": false
+  }
+}

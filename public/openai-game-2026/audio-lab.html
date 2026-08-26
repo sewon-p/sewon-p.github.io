@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07111f" />
+    <meta name="description" content="투 더 스페이스! 핵심 사운드 이벤트 검수실" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 25h13L38 10v44L21 39H8Z' fill='%23ffc547'/%3E%3Cpath d='M45 22q12 10 0 20' fill='none' stroke='%2348d7ff' stroke-width='6'/%3E%3C/svg%3E" />
+    <title>투 더 스페이스! · AUDIO LAB</title>
+    <script type="module" crossorigin src="/openai-game-2026/assets/audioLab-C_7RN3M1.js"></script>
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/modulepreload-polyfill-P2Xu9kJm.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/itemFamilyCatalog-Bg6oLdVG.js">
+    <link rel="modulepreload" crossorigin href="/openai-game-2026/assets/AudioDirector-B5fNFRUS.js">
+    <link rel="stylesheet" crossorigin href="/openai-game-2026/assets/audioLab-CoT7KZWG.css">
+  </head>
+  <body>
+    <main id="audio-lab" aria-label="핵심 사운드 이벤트 검수실">
+      <header class="audio-header">
+        <p>NATIONAL HOUSEHOLD PROPULSION AUDIO DESK</p>
+        <h1>AUDIO LAB · P0</h1>
+        <span>ATTACK / LOOP / TAIL / PAIR / MATCH / RING</span>
+      </header>
+
+      <section class="audio-console" aria-label="사운드 이벤트 버튼">
+        <div class="console-row console-row--items">
+          <button type="button" data-sound="firework"><span>01</span>폭죽 격발</button>
+          <button type="button" data-sound="soda"><span>02</span>탄산 분사</button>
+          <button type="button" data-sound="dryer"><span>03</span>드라이어 송풍</button>
+        </div>
+        <div class="console-row">
+          <button type="button" data-sound="launch">기본 점프</button>
+          <button type="button" data-sound="pair">PAIR</button>
+          <button type="button" data-sound="match">MATCH 폭발</button>
+          <button type="button" data-sound="ring">링 통과</button>
+          <button type="button" data-sound="refill">보급 재구축</button>
+        </div>
+        <button class="combo-button" type="button" data-sound="combo">폭죽 → 탄산 → 드라이어 → MATCH</button>
+      </section>
+
+      <section class="audio-meter" aria-live="polite">
+        <div class="meter-lamp" data-audio-lamp></div>
+        <div>
+          <p data-audio-status>첫 입력으로 오디오를 해제하세요</p>
+          <span>실제 게임 AudioDirector 이벤트를 그대로 재생합니다.</span>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
