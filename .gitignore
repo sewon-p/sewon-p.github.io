@@ -5,6 +5,10 @@ node_modules/
 dist/
 dist-ssr/
 *.local
+.env
+.env.*
+!.env.example
+supabase/.temp/
 logs/
 *.log
 legacy/
@@ -12,6 +16,7 @@ legacy/
 *.pdf
 !public/SewonPark_CV.pdf
 *.md
+!.impeccable.md
 backups/
 workflow-builder.html
 images/STEP*.PNG

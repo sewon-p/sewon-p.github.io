@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>일본어 신문 Study | 日本語新聞</title>
+    <meta
+      name="description"
+      content="일본어 신문 기사를 읽고 단어와 한자를 복습하는 개인 학습 도구. 日本語新聞の読解と単語・漢字復習。"
+    />
+    <meta name="theme-color" content="#0A0E14" />
+    <meta name="color-scheme" content="light" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="일본어 Study" />
+    <link rel="canonical" href="https://sewon-p.github.io/study/" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="manifest" href="/study/manifest.webmanifest" />
+    <style>
+      :root {
+        color: #0a0e14;
+        background: #f1f2f4;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+
+      .studyShellFallback {
+        display: grid;
+        min-height: 100vh;
+        min-height: 100dvh;
+        place-items: center;
+        padding:
+          max(24px, env(safe-area-inset-top))
+          max(24px, env(safe-area-inset-right))
+          max(24px, env(safe-area-inset-bottom))
+          max(24px, env(safe-area-inset-left));
+        text-align: center;
+      }
+
+      .studyShellFallback h1 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.35;
+      }
+
+      .studyShellFallback p {
+        margin: 8px 0 0;
+        color: #5b616b;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="study-root">
+      <main class="studyShellFallback">
+        <div>
+          <h1>일본어 신문 Study</h1>
+          <p lang="ja">日本語新聞の読解と単語・漢字復習</p>
+        </div>
+      </main>
+    </div>
+    <noscript>이 학습 도구를 사용하려면 JavaScript를 활성화해 주세요.</noscript>
+    <script type="module" src="/src/study/main.tsx"></script>
+  </body>
+</html>

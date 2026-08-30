@@ -1,0 +1,22 @@
+{
+  "id": "/study/",
+  "name": "일본어 신문 Study | 日本語新聞",
+  "short_name": "일본어 Study",
+  "description": "일본어 신문 독해와 단어·한자 복습을 위한 개인 학습 도구",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "/study/#review",
+  "scope": "/study/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F1F2F4",
+  "theme_color": "#0A0E14",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

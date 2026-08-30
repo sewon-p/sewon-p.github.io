@@ -7,12 +7,15 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "study:grading": "node --env-file-if-exists=.env.local scripts/study-grading.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
     "motion": "^12.38.0",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "ts-fsrs": "^5.4.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.14",
