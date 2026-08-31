@@ -50,9 +50,7 @@ body,
 }
 
 body {
-  background:
-    linear-gradient(var(--hairline) 1px, transparent 1px) 0 0 / 100% 192px,
-    var(--paper);
+  background: var(--paper);
 }
 
 ::selection {
@@ -1591,6 +1589,13 @@ textarea {
 
 .studySetupPanel h2 {
   font-size: var(--text-h3);
+}
+
+.studyLoginIntro {
+  margin-top: var(--xs);
+  color: var(--mute);
+  font-size: var(--text-small);
+  line-height: 1.6;
 }
 
 .studyLoginForm {

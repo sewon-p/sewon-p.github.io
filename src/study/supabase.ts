@@ -272,16 +272,19 @@ export async function getCurrentSession(): Promise<Session | null> {
   return data.session;
 }
 
-export async function sendMagicLink(email: string): Promise<void> {
+const STUDY_ACCOUNT_DOMAIN = 'auth.sewon-p.github.io';
+
+export async function signInWithStudyId(studyId: string): Promise<void> {
   const client = requireClient();
-  const { error } = await client.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${window.location.origin}/study/`,
-      shouldCreateUser: false,
-    },
+  const normalizedId = studyId.trim().toLowerCase();
+  if (!/^[a-z0-9][a-z0-9_-]{2,31}$/.test(normalizedId)) {
+    throw new Error('아이디는 영문 소문자와 숫자로 입력해 주세요.');
+  }
+  const { error } = await client.auth.signInWithPassword({
+    email: `${normalizedId}@${STUDY_ACCOUNT_DOMAIN}`,
+    password: normalizedId,
   });
-  throwIfError(error);
+  if (error) throw new Error('등록된 아이디를 확인해 주세요.');
 }
 
 export async function signOut(): Promise<void> {

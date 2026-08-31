@@ -38,7 +38,7 @@ import {
   saveRemoteAnnotationInput,
   saveRemoteArticle,
   saveRemoteResponse,
-  sendMagicLink,
+  signInWithStudyId,
   setRemoteCardSuspended,
   signOut,
   supabase,
@@ -173,7 +173,7 @@ function createLocalGradingPacket(
 }
 
 function LoginPage(): ReactElement {
-  const [email, setEmail] = useState('');
+  const [studyId, setStudyId] = useState('');
   const [message, setMessage] = useState('');
   const [pending, setPending] = useState(false);
 
@@ -182,10 +182,9 @@ function LoginPage(): ReactElement {
     setPending(true);
     setMessage('');
     try {
-      await sendMagicLink(email.trim());
-      setMessage('메일로 로그인 링크를 보냈습니다. 같은 기기에서 링크를 열어 주세요.');
+      await signInWithStudyId(studyId);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : '로그인 링크를 보내지 못했습니다.');
+      setMessage(error instanceof Error ? error.message : '학습실에 들어가지 못했습니다.');
     } finally {
       setPending(false);
     }
@@ -201,20 +200,23 @@ function LoginPage(): ReactElement {
         </p>
       </section>
       <section className="studySetupPanel" aria-labelledby="login-heading">
-        <h2 id="login-heading">이메일로 로그인</h2>
+        <h2 id="login-heading">학습실 들어가기</h2>
+        <p className="studyLoginIntro">메일이나 비밀번호 없이 등록한 아이디만 입력합니다.</p>
         <form className="studyLoginForm" onSubmit={submit}>
-          <label htmlFor="study-email">이메일</label>
+          <label htmlFor="study-id">아이디</label>
           <input
-            id="study-email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
-            placeholder="name@example.com"
+            id="study-id"
+            type="text"
+            value={studyId}
+            onChange={(event) => setStudyId(event.target.value)}
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            placeholder="아이디 입력"
             required
           />
           <button type="submit" disabled={pending}>
-            {pending ? '링크 보내는 중' : '로그인 링크 받기'}
+            {pending ? '불러오는 중' : '들어가기'}
           </button>
         </form>
         {message ? <p className="studyLoginMessage" role="status">{message}</p> : null}
