@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "study:grading": "node --env-file-if-exists=.env.local scripts/study-grading.mjs"
+    "study:grading": "node --env-file-if-exists=.env.local scripts/study-grading.mjs",
+    "study:lexicon": "node --env-file-if-exists=.env.local scripts/study-lexicon.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",

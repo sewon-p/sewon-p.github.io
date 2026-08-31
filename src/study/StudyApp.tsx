@@ -15,7 +15,9 @@ import { createDemoWorkspace } from './demo';
 import type {
   GradingCardProposalDecision,
   LearningCard,
+  ExclusionReason,
   NewLearningCard,
+  ReviewEvent,
   StudyArticle,
   StudyGradingPacket,
   StudyResponse,
@@ -33,13 +35,13 @@ import {
   importRemoteWorkspace,
   linkRemoteCardSource,
   loadRemoteWorkspace,
-  recordRemoteReview,
+  recordRemoteReviewBatch as saveRemoteReviewBatch,
   requestRemoteGrading,
   saveRemoteAnnotationInput,
   saveRemoteArticle,
   saveRemoteResponse,
   signInWithStudyId,
-  setRemoteCardSuspended,
+  setRemoteCardLearningState,
   signOut,
   supabase,
 } from './supabase';
@@ -50,7 +52,13 @@ import {
   saveLocalWorkspace,
 } from './storage';
 
-type SyncState = 'saved' | 'saving' | 'error';
+type SyncState = 'saved' | 'saving' | 'queued' | 'error';
+
+const REVIEW_BATCH_DELAY_MS = 1_800;
+const REVIEW_BATCH_MAX_SIZE = 100;
+const REVIEW_RETRY_MAX_DELAY_MS = 30_000;
+const REVIEW_OUTBOX_KEY_PREFIX = 'japanese-study:review-outbox:v1:';
+const REVIEW_TERMINAL_KEY_PREFIX = 'japanese-study:review-terminal:v1:';
 
 const validViews: StudyView[] = ['article', 'review', 'library'];
 
@@ -66,8 +74,367 @@ function navTo(view: StudyView): void {
 
 function statusCopy(state: SyncState, isDemo: boolean): string {
   if (state === 'error') return '저장 확인 필요';
+  if (state === 'queued') return '연결되면 자동 저장';
   if (state === 'saving') return '저장 중';
   return isDemo ? '이 기기에 저장됨' : 'DB와 동기화됨';
+}
+
+function isStoredReviewEvent(value: unknown): value is ReviewEvent {
+  if (!value || typeof value !== 'object') return false;
+  const event = value as Partial<ReviewEvent>;
+  return Boolean(
+    typeof event.id === 'string'
+    && typeof event.cardId === 'string'
+    && typeof event.reviewedAt === 'string'
+    && typeof event.baseRevision === 'number'
+    && typeof event.resultingRevision === 'number'
+    && typeof event.rating === 'number'
+    && event.beforeState
+    && event.afterState,
+  );
+}
+
+function readReviewOutbox(ownerId: string): ReviewEvent[] {
+  try {
+    const stored = window.localStorage.getItem(`${REVIEW_OUTBOX_KEY_PREFIX}${ownerId}`);
+    if (!stored) return [];
+    const parsed: unknown = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed.filter(isStoredReviewEvent) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeReviewOutbox(ownerId: string, events: ReviewEvent[]): void {
+  try {
+    const key = `${REVIEW_OUTBOX_KEY_PREFIX}${ownerId}`;
+    if (events.length) {
+      window.localStorage.setItem(key, JSON.stringify(events));
+    } else {
+      window.localStorage.removeItem(key);
+    }
+  } catch {
+    // The in-memory queue still protects the current session if storage is unavailable.
+  }
+}
+
+function readTerminalReviewEvents(ownerId: string): ReviewEvent[] {
+  try {
+    const stored = window.localStorage.getItem(`${REVIEW_TERMINAL_KEY_PREFIX}${ownerId}`);
+    if (!stored) return [];
+    const parsed: unknown = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed.filter(isStoredReviewEvent) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeTerminalReviewEvents(ownerId: string, events: ReviewEvent[]): void {
+  try {
+    const key = `${REVIEW_TERMINAL_KEY_PREFIX}${ownerId}`;
+    if (events.length) {
+      window.localStorage.setItem(key, JSON.stringify(events));
+    } else {
+      window.localStorage.removeItem(key);
+    }
+  } catch {
+    // Keep the optimistic overlay in memory if storage is unavailable.
+  }
+}
+
+function mergePendingReviews(
+  workspace: StudyWorkspace,
+  pendingEvents: ReviewEvent[],
+): StudyWorkspace {
+  if (!pendingEvents.length) return workspace;
+  const cards = new Map(workspace.cards.map((card) => [card.id, card]));
+  const reviewEvents = new Map(workspace.reviewEvents.map((event) => [event.id, event]));
+
+  pendingEvents.forEach((event) => {
+    const card = cards.get(event.cardId);
+    if (card?.revision === event.baseRevision) {
+      cards.set(event.cardId, {
+        ...card,
+        revision: event.resultingRevision,
+        fsrs: event.afterState,
+      });
+    }
+    reviewEvents.set(event.id, event);
+  });
+
+  return {
+    ...workspace,
+    cards: workspace.cards.map((card) => cards.get(card.id) ?? card),
+    reviewEvents: [...reviewEvents.values()],
+  };
+}
+
+function mergeTerminalReviews(
+  workspace: StudyWorkspace,
+  terminalEvents: ReviewEvent[],
+): StudyWorkspace {
+  if (!terminalEvents.length) return workspace;
+  const cards = new Map(workspace.cards.map((card) => [card.id, card]));
+  const reviewEvents = new Map(workspace.reviewEvents.map((event) => [event.id, event]));
+  const orderedEvents = [...terminalEvents].sort(
+    (a, b) =>
+      a.cardId.localeCompare(b.cardId)
+      || a.resultingRevision - b.resultingRevision
+      || a.reviewedAt.localeCompare(b.reviewedAt),
+  );
+
+  orderedEvents.forEach((event) => {
+    const card = cards.get(event.cardId);
+    if (card && card.revision <= event.resultingRevision) {
+      cards.set(event.cardId, {
+        ...card,
+        revision: event.resultingRevision,
+        fsrs: event.afterState,
+      });
+    }
+    reviewEvents.set(event.id, event);
+  });
+
+  return {
+    ...workspace,
+    cards: workspace.cards.map((card) => cards.get(card.id) ?? card),
+    reviewEvents: [...reviewEvents.values()],
+  };
+}
+
+interface ReviewBatchOutcome {
+  committedIds: Set<string>;
+  retryableIds: Set<string>;
+  terminalEvents: ReviewEvent[];
+}
+
+function isRetryableReviewResult(code?: string): boolean {
+  if (!code) return false;
+  return code.startsWith('08')
+    || code === '40P01'
+    || code === '55P03'
+    || code === '53300'
+    || code === '57014'
+    || code === '57P01';
+}
+
+async function recordRemoteReviewBatch(
+  events: ReviewEvent[],
+): Promise<ReviewBatchOutcome> {
+  const results = await saveRemoteReviewBatch(events);
+  const resultsById = new Map(results.map((result) => [result.eventId, result]));
+  const outcome: ReviewBatchOutcome = {
+    committedIds: new Set<string>(),
+    retryableIds: new Set<string>(),
+    terminalEvents: [],
+  };
+
+  events.forEach((event) => {
+    const result = resultsById.get(event.id);
+    if (!result) {
+      outcome.retryableIds.add(event.id);
+    } else if (result.ok) {
+      outcome.committedIds.add(event.id);
+    } else if (isRetryableReviewResult(result.code)) {
+      outcome.retryableIds.add(event.id);
+    } else {
+      outcome.terminalEvents.push(event);
+    }
+  });
+  return outcome;
+}
+
+class ReviewSyncOutbox {
+  private readonly onStateChange: (state: SyncState) => void;
+  private readonly onReconcileNeeded: () => void;
+  private ownerId: string | null = null;
+  private events: ReviewEvent[] = [];
+  private terminalEvents: ReviewEvent[] = [];
+  private flushTimer: number | null = null;
+  private flushPromise: Promise<ReviewBatchOutcome> | null = null;
+  private retryAttempt = 0;
+  private retryPending = false;
+  private disposed = false;
+  private started = false;
+
+  constructor(
+    onStateChange: (state: SyncState) => void,
+    onReconcileNeeded: () => void,
+  ) {
+    this.onStateChange = onStateChange;
+    this.onReconcileNeeded = onReconcileNeeded;
+  }
+
+  start(): void {
+    if (this.started) return;
+    this.started = true;
+    this.disposed = false;
+    window.addEventListener('online', this.handleOnline);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    if (this.events.length) this.scheduleFlush(REVIEW_BATCH_DELAY_MS);
+  }
+
+  setOwner(ownerId: string | null): void {
+    if (ownerId === this.ownerId) return;
+    this.persist();
+    this.clearTimer();
+    this.ownerId = ownerId;
+    this.events = ownerId ? readReviewOutbox(ownerId) : [];
+    this.terminalEvents = ownerId ? readTerminalReviewEvents(ownerId) : [];
+    this.retryAttempt = 0;
+    this.retryPending = false;
+    if (this.events.length) this.scheduleFlush(REVIEW_BATCH_DELAY_MS);
+  }
+
+  enqueue(event: ReviewEvent): void {
+    if (
+      !this.ownerId
+      || this.events.some((candidate) => candidate.id === event.id)
+      || this.terminalEvents.some((candidate) => candidate.id === event.id)
+    ) return;
+    this.events.push(event);
+    this.persist();
+    this.onStateChange('saving');
+    this.scheduleFlush(REVIEW_BATCH_DELAY_MS);
+  }
+
+  merge(
+    workspace: StudyWorkspace,
+    optimisticWorkspace?: StudyWorkspace,
+  ): StudyWorkspace {
+    const remoteEventIds = new Set(workspace.reviewEvents.map((event) => event.id));
+    const remoteCards = new Map(workspace.cards.map((card) => [card.id, card]));
+    const unresolvedTerminalEvents = this.terminalEvents.filter((event) => {
+      if (remoteEventIds.has(event.id)) return false;
+      const remoteCard = remoteCards.get(event.cardId);
+      return !remoteCard || remoteCard.revision < event.resultingRevision;
+    });
+    if (unresolvedTerminalEvents.length !== this.terminalEvents.length) {
+      this.terminalEvents = unresolvedTerminalEvents;
+      this.persist();
+    }
+    const overlayCardIds = new Set(
+      [...this.terminalEvents, ...this.events].map((event) => event.cardId),
+    );
+    const fallbackCards = optimisticWorkspace?.cards.filter(
+      (card) => overlayCardIds.has(card.id) && !remoteCards.has(card.id),
+    ) ?? [];
+    const mergeBase = fallbackCards.length
+      ? { ...workspace, cards: [...workspace.cards, ...fallbackCards] }
+      : workspace;
+    const withTerminalReviews = mergeTerminalReviews(mergeBase, this.terminalEvents);
+    const merged = mergePendingReviews(withTerminalReviews, this.events);
+    this.settle();
+    return merged;
+  }
+
+  settle(): void {
+    if (this.terminalEvents.length) {
+      this.onStateChange('error');
+    } else if (this.retryPending) {
+      this.onStateChange('queued');
+    } else if (this.events.length || this.flushPromise) {
+      this.onStateChange('saving');
+    } else {
+      this.onStateChange('saved');
+    }
+  }
+
+  dispose(): void {
+    if (!this.started) return;
+    this.started = false;
+    this.disposed = true;
+    this.persist();
+    this.clearTimer();
+    window.removeEventListener('online', this.handleOnline);
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+  }
+
+  private readonly handleOnline = (): void => {
+    this.retryAttempt = 0;
+    this.retryPending = false;
+    this.scheduleFlush(0);
+  };
+
+  private readonly handleVisibilityChange = (): void => {
+    if (document.visibilityState === 'visible' && this.events.length) {
+      this.scheduleFlush(0);
+    }
+  };
+
+  private persist(): void {
+    if (!this.ownerId) return;
+    writeReviewOutbox(this.ownerId, this.events);
+    writeTerminalReviewEvents(this.ownerId, this.terminalEvents);
+  }
+
+  private clearTimer(): void {
+    if (this.flushTimer === null) return;
+    window.clearTimeout(this.flushTimer);
+    this.flushTimer = null;
+  }
+
+  private scheduleFlush(delayMs: number): void {
+    if (this.disposed || !this.ownerId || !this.events.length || this.flushPromise) return;
+    if (this.flushTimer !== null) {
+      if (delayMs !== 0) return;
+      this.clearTimer();
+    }
+    this.flushTimer = window.setTimeout(() => {
+      this.flushTimer = null;
+      void this.flush();
+    }, delayMs);
+  }
+
+  private async flush(): Promise<void> {
+    if (this.flushPromise || !this.ownerId || !this.events.length) return;
+    if (!navigator.onLine) {
+      this.retryPending = true;
+      this.onStateChange('queued');
+      return;
+    }
+
+    const ownerAtStart = this.ownerId;
+    const batch = this.events.slice(0, REVIEW_BATCH_MAX_SIZE);
+    this.retryPending = false;
+    this.onStateChange('saving');
+    const operation = recordRemoteReviewBatch(batch);
+    this.flushPromise = operation;
+
+    try {
+      const outcome = await operation;
+      if (this.ownerId === ownerAtStart) {
+        const terminalIds = new Set(outcome.terminalEvents.map((event) => event.id));
+        const completedIds = new Set([...outcome.committedIds, ...terminalIds]);
+        this.events = this.events.filter((event) => !completedIds.has(event.id));
+        const knownTerminalIds = new Set(this.terminalEvents.map((event) => event.id));
+        outcome.terminalEvents.forEach((event) => {
+          if (!knownTerminalIds.has(event.id)) this.terminalEvents.push(event);
+        });
+        this.persist();
+        this.retryPending = outcome.retryableIds.size > 0;
+        this.retryAttempt = this.retryPending ? this.retryAttempt + 1 : 0;
+        if (outcome.terminalEvents.length) this.onReconcileNeeded();
+      }
+    } catch {
+      this.retryAttempt += 1;
+      this.retryPending = true;
+    } finally {
+      if (this.flushPromise === operation) this.flushPromise = null;
+      if (this.ownerId === ownerAtStart && this.events.length) {
+        if (this.retryPending) {
+          const retryDelay = Math.min(
+            REVIEW_BATCH_DELAY_MS * (2 ** Math.min(this.retryAttempt, 4)),
+            REVIEW_RETRY_MAX_DELAY_MS,
+          );
+          this.scheduleFlush(retryDelay);
+        } else {
+          this.scheduleFlush(0);
+        }
+      }
+      this.settle();
+    }
+  }
 }
 
 function mergeLocalWorkspaces(
@@ -395,6 +762,12 @@ export default function StudyApp(): ReactElement {
     return emptyWorkspace;
   });
   const [syncState, setSyncState] = useState<SyncState>('saved');
+  const [reviewSync] = useState(
+    () => new ReviewSyncOutbox(
+      setSyncState,
+      () => setRemoteLoadAttempt((attempt) => attempt + 1),
+    ),
+  );
   const responseTimers = useRef(new Map<string, number>());
   const articleTimers = useRef(new Map<string, number>());
   const annotationTimers = useRef(new Map<string, number>());
@@ -437,13 +810,18 @@ export default function StudyApp(): ReactElement {
   }, [remoteEnabled]);
 
   useEffect(() => {
-    if (!remoteEnabled || !session) return;
+    reviewSync.setOwner(session?.user.id ?? null);
+  }, [reviewSync, session?.user.id]);
+
+  useEffect(() => {
+    const userId = session?.user.id;
+    if (!remoteEnabled || !userId) return;
     let active = true;
     loadRemoteWorkspace()
       .then((remoteWorkspace) => {
         if (!active) return;
-        setWorkspace(remoteWorkspace);
-        setWorkspaceOwner(session.user.id);
+        setWorkspace((current) => reviewSync.merge(remoteWorkspace, current));
+        setWorkspaceOwner(userId);
       })
       .catch(() => {
         if (!active) return;
@@ -453,19 +831,26 @@ export default function StudyApp(): ReactElement {
     return () => {
       active = false;
     };
-  }, [remoteEnabled, session, remoteLoadAttempt]);
+  }, [remoteEnabled, session?.user.id, remoteLoadAttempt, reviewSync]);
 
   useEffect(() => {
     if (localStorageSlot) saveLocalWorkspace(workspace, localStorageSlot);
   }, [localStorageSlot, workspace]);
 
   useEffect(
-    () => () => {
-      responseTimers.current.forEach((timer) => window.clearTimeout(timer));
-      articleTimers.current.forEach((timer) => window.clearTimeout(timer));
-      annotationTimers.current.forEach((timer) => window.clearTimeout(timer));
+    () => {
+      const responseTimerMap = responseTimers.current;
+      const articleTimerMap = articleTimers.current;
+      const annotationTimerMap = annotationTimers.current;
+      reviewSync.start();
+      return () => {
+        responseTimerMap.forEach((timer) => window.clearTimeout(timer));
+        articleTimerMap.forEach((timer) => window.clearTimeout(timer));
+        annotationTimerMap.forEach((timer) => window.clearTimeout(timer));
+        reviewSync.dispose();
+      };
     },
-    [],
+    [reviewSync],
   );
 
   const saveArticleNow = (
@@ -524,7 +909,7 @@ export default function StudyApp(): ReactElement {
         const next = saveArticleNow(article, session.user.id);
         next
           .then(() => {
-            if (articleSaveChains.current.get(article.id) === next) setSyncState('saved');
+            if (articleSaveChains.current.get(article.id) === next) reviewSync.settle();
           })
           .catch(() => {
             if (articleSaveChains.current.get(article.id) === next) setSyncState('error');
@@ -551,7 +936,7 @@ export default function StudyApp(): ReactElement {
         const next = saveResponseNow(response);
         next
           .then(() => {
-            if (responseSaveChains.current.get(response.id) === next) setSyncState('saved');
+            if (responseSaveChains.current.get(response.id) === next) reviewSync.settle();
           })
           .catch(() => {
             if (responseSaveChains.current.get(response.id) === next) setSyncState('error');
@@ -561,9 +946,14 @@ export default function StudyApp(): ReactElement {
   };
 
   const createCard = (input: NewLearningCard): 'added' | 'linked' | 'exists' => {
-    const canonicalKey = input.kind === 'kanji' ? input.front : `${input.front}|${input.reading}`;
+    const canonicalKey = `${input.front}|${input.reading}`;
     const existingCard = workspace.cards.find(
-      (card) => card.kind === input.kind && card.canonicalKey === canonicalKey,
+      (card) =>
+        card.kind === input.kind
+        && (
+          card.canonicalKey === canonicalKey
+          || (card.kind === 'kanji' && card.front === input.front && card.reading === input.reading)
+        ),
     );
     if (existingCard) {
       const existingSources = new Set([
@@ -599,7 +989,7 @@ export default function StudyApp(): ReactElement {
           input.exampleJa,
           session.user.id,
         )
-          .then(() => setSyncState('saved'))
+          .then(() => reviewSync.settle())
           .catch(() => setSyncState('error'));
       }
       return 'linked';
@@ -613,6 +1003,9 @@ export default function StudyApp(): ReactElement {
       canonicalKey,
       sourceArticleIds: input.sourceArticleId ? [input.sourceArticleId] : [],
       suspended: false,
+      learningState: 'active',
+      excludedReason: null,
+      excludedAt: null,
       revision: 0,
       fsrs: createSerializableFsrsCard(),
     };
@@ -624,7 +1017,7 @@ export default function StudyApp(): ReactElement {
     if (session) {
       setSyncState('saving');
       createRemoteCard(card, session.user.id)
-        .then(() => setSyncState('saved'))
+        .then(() => reviewSync.settle())
         .catch(() => setSyncState('error'));
     }
     return 'added';
@@ -687,7 +1080,7 @@ export default function StudyApp(): ReactElement {
         next
           .then(() => {
             if (annotationSaveChains.current.get(annotationId) === next) {
-              setSyncState('saved');
+              reviewSync.settle();
             }
           })
           .catch(() => {
@@ -702,7 +1095,7 @@ export default function StudyApp(): ReactElement {
   const reloadRemoteWorkspace = async (): Promise<void> => {
     if (!session) return;
     const remoteWorkspace = await loadRemoteWorkspace();
-    setWorkspace(remoteWorkspace);
+    setWorkspace((current) => reviewSync.merge(remoteWorkspace, current));
     setWorkspaceOwner(session.user.id);
   };
 
@@ -774,7 +1167,7 @@ export default function StudyApp(): ReactElement {
       );
       await requestRemoteGrading(targetArticle.sessionId, session.user.id);
       await reloadRemoteWorkspace();
-      setSyncState('saved');
+      reviewSync.settle();
     } catch (error) {
       setSyncState('error');
       throw error;
@@ -830,7 +1223,7 @@ export default function StudyApp(): ReactElement {
     try {
       await decideRemoteGradingCardProposal(proposalId, decision, session.user.id);
       await reloadRemoteWorkspace();
-      setSyncState('saved');
+      reviewSync.settle();
     } catch (error) {
       setSyncState('error');
       await reloadRemoteWorkspace().catch(() => undefined);
@@ -858,53 +1251,119 @@ export default function StudyApp(): ReactElement {
     try {
       await confirmRemoteGradingCards(targetArticle.sessionId, session.user.id);
       await reloadRemoteWorkspace();
-      setSyncState('saved');
+      reviewSync.settle();
     } catch (error) {
       setSyncState('error');
       throw error;
     }
   };
 
-  const rateCard = (cardId: string, rating: Grade, startedAt: number): void => {
+  const rateCard = (
+    cardId: string,
+    rating: Grade,
+    startedAt: number,
+    reviewedAt: Date,
+  ): LearningCard | null => {
     const target = workspace.cards.find((card) => card.id === cardId);
-    if (!target) return;
-    const { card, event } = reviewCard(target, rating, startedAt);
+    if (!target) return null;
+    const { card, event } = reviewCard(target, rating, startedAt, reviewedAt);
     setWorkspace((current) => ({
       ...current,
       cards: current.cards.map((item) => (item.id === cardId ? card : item)),
       reviewEvents: [...current.reviewEvents, event],
       updatedAt: new Date().toISOString(),
     }));
-    if (session) {
-      setSyncState('saving');
-      recordRemoteReview(event)
-        .then(() => setSyncState('saved'))
-        .catch(async () => {
-          setSyncState('error');
-          try {
-            setWorkspace(await loadRemoteWorkspace());
-          } catch {
-            // Keep the optimistic local state visible until the connection returns.
-          }
-        });
-    }
+    if (session) reviewSync.enqueue(event);
+    return card;
   };
 
   const toggleSuspend = (cardId: string): void => {
     const target = workspace.cards.find((card) => card.id === cardId);
     if (!target) return;
-    const suspended = !target.suspended;
+    const currentState = target.learningState ?? (target.suspended ? 'suspended' : 'active');
+    const learningState = currentState === 'active' ? 'suspended' : 'active';
     setWorkspace((current) => ({
       ...current,
       cards: current.cards.map((card) =>
-        card.id === cardId ? { ...card, suspended } : card,
+        card.id === cardId
+          ? {
+              ...card,
+              suspended: learningState !== 'active',
+              learningState,
+              excludedReason: null,
+              excludedAt: null,
+            }
+          : card,
       ),
     }));
     if (session) {
       setSyncState('saving');
-      setRemoteCardSuspended(cardId, suspended)
-        .then(() => setSyncState('saved'))
-        .catch(() => setSyncState('error'));
+      setRemoteCardLearningState(cardId, learningState)
+        .then(() => reviewSync.settle())
+        .catch(() => {
+          setWorkspace((current) => ({
+            ...current,
+            cards: current.cards.map((card) => {
+              const savedState = card.learningState ?? (card.suspended ? 'suspended' : 'active');
+              if (card.id !== cardId || savedState !== learningState) return card;
+              return {
+                ...card,
+                suspended: currentState !== 'active',
+                learningState: currentState,
+                excludedReason: target.excludedReason ?? null,
+                excludedAt: target.excludedAt ?? null,
+              };
+            }),
+          }));
+          setSyncState('error');
+        });
+    }
+  };
+
+  const excludeCard = (
+    cardId: string,
+    reason: ExclusionReason = 'too_basic',
+  ): void => {
+    const target = workspace.cards.find((card) => card.id === cardId);
+    if (!target) return;
+    const excludedAt = new Date().toISOString();
+    setWorkspace((current) => ({
+      ...current,
+      cards: current.cards.map((card) =>
+        card.id === cardId
+          ? {
+              ...card,
+              suspended: true,
+              learningState: 'excluded',
+              excludedReason: reason,
+              excludedAt,
+            }
+          : card,
+      ),
+      updatedAt: excludedAt,
+    }));
+    if (session) {
+      setSyncState('saving');
+      setRemoteCardLearningState(cardId, 'excluded', reason)
+        .then(() => reviewSync.settle())
+        .catch(() => {
+          const priorState = target.learningState ?? (target.suspended ? 'suspended' : 'active');
+          setWorkspace((current) => ({
+            ...current,
+            cards: current.cards.map((card) => {
+              const savedState = card.learningState ?? (card.suspended ? 'suspended' : 'active');
+              if (card.id !== cardId || savedState !== 'excluded') return card;
+              return {
+                ...card,
+                suspended: priorState !== 'active',
+                learningState: priorState,
+                excludedReason: target.excludedReason ?? null,
+                excludedAt: target.excludedAt ?? null,
+              };
+            }),
+          }));
+          setSyncState('error');
+        });
     }
   };
 
@@ -912,8 +1371,9 @@ export default function StudyApp(): ReactElement {
     if (session) {
       setSyncState('saving');
       await importRemoteWorkspace(incoming, session.user.id);
-      setWorkspace(await loadRemoteWorkspace());
-      setSyncState('saved');
+      const remoteWorkspace = await loadRemoteWorkspace();
+      setWorkspace((current) => reviewSync.merge(remoteWorkspace, current));
+      reviewSync.settle();
     } else {
       setWorkspace(mergeLocalWorkspaces(workspace, incoming));
     }
@@ -989,6 +1449,7 @@ export default function StudyApp(): ReactElement {
       <ReviewSession
         cards={workspace.cards}
         onRate={rateCard}
+        onExclude={excludeCard}
         onOpenLibrary={() => navTo('library')}
       />
     );
@@ -997,6 +1458,7 @@ export default function StudyApp(): ReactElement {
       <CardLibrary
         cards={workspace.cards}
         onToggleSuspend={toggleSuspend}
+        onExclude={excludeCard}
         onStartReview={() => navTo('review')}
       />
     );

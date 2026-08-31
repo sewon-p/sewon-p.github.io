@@ -1,4 +1,4 @@
-import type { LearningCard, StudyWorkspace } from './model';
+import type { CardLexicalData, LearningCard, StudyWorkspace } from './model';
 import { createSerializableFsrsCard } from './scheduler';
 
 function demoCard(
@@ -8,11 +8,12 @@ function demoCard(
   reading: string,
   meaningKo: string,
   exampleJa: string,
+  lexicalData?: CardLexicalData,
 ): LearningCard {
   return {
     id,
     kind,
-    canonicalKey: kind === 'kanji' ? front : `${front}|${reading}`,
+    canonicalKey: `${front}|${reading}`,
     front,
     reading,
     meaningKo,
@@ -22,6 +23,8 @@ function demoCard(
     sourceLabel: '개발용 미리보기',
     initialKind: 'context_guess',
     suspended: false,
+    learningState: 'active',
+    lexicalData,
     revision: 0,
     fsrs: createSerializableFsrsCard(),
   };
@@ -85,8 +88,65 @@ export function createDemoWorkspace(): StudyWorkspace {
       },
     ],
     cards: [
-      demoCard('demo-word-1', 'word', '方針', 'ほうしん', '방침', '投資方針を発表する'),
-      demoCard('demo-kanji-1', 'kanji', '針', 'しん', '바늘, 방향의 기준', '方針・指針'),
+      demoCard(
+        'demo-word-1',
+        'word',
+        '方針',
+        'ほうしん',
+        '방침',
+        '投資方針を発表する',
+        {
+          kind: 'word',
+          dictionaryRef: { source: 'jmdict', entryId: '1517040', sourceVersion: 'demo' },
+          dictionaryForm: '方針',
+          forms: ['方針', 'ほうしん'],
+          readings: ['ほうしん'],
+          senses: [
+            {
+              id: '1517040:1',
+              partsOfSpeech: ['n'],
+              glossesEn: ['policy', 'course', 'plan of action'],
+              meaningKo: '방침; 행동 방향·계획·원칙',
+            },
+            {
+              id: '1517040:2',
+              partsOfSpeech: ['n'],
+              glossesEn: ['magnetic needle'],
+              meaningKo: '나침반의 자침',
+            },
+          ],
+          selectedReading: 'ほうしん',
+          selectedSenseIds: ['1517040:1'],
+          meaningKoInContext: '방침',
+        },
+      ),
+      demoCard(
+        'demo-kanji-1',
+        'kanji',
+        '針',
+        'しん',
+        '바늘, 방향의 기준',
+        '方針・指針',
+        {
+          kind: 'kanji',
+          dictionaryRef: { source: 'kanjidic2', entryId: '針', sourceVersion: 'demo' },
+          literal: '針',
+          onReadings: ['シン'],
+          kunReadings: ['はり'],
+          nanoriReadings: [],
+          meaningsEn: ['needle', 'pin', 'staple'],
+          meaningsKo: ['바늘', '지침'],
+          grade: 6,
+          strokeCount: 10,
+          articleTargets: [{
+            word: '方針',
+            wordReading: 'ほうしん',
+            characterReading: 'しん',
+            meaningKoInContext: '방침의 방향·기준을 나타냄',
+            articleId: 'demo-article',
+          }],
+        },
+      ),
       demoCard('demo-word-2', 'word', '影響', 'えいきょう', '영향', '市場への影響を見る'),
       demoCard('demo-kanji-2', 'kanji', '響', 'きょう', '울리다, 영향을 미치다', '影響・反響'),
     ],

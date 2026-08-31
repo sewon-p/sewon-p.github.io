@@ -11,6 +11,59 @@ export type GradingStatus = 'draft' | 'submitted' | 'graded' | 'cards_confirmed'
 export type GradingJudgement = 'correct' | 'partial' | 'incorrect' | 'ungraded';
 export type GradingCardSourceType = 'annotation' | 'response' | 'article';
 export type GradingCardProposalDecision = 'proposed' | 'accepted' | 'rejected';
+export type LearningState = 'active' | 'suspended' | 'excluded';
+export type ExclusionReason = 'too_basic' | 'not_useful' | 'duplicate' | 'bad_card';
+
+export interface DictionaryReference {
+  source: 'jmdict' | 'kanjidic2' | 'jmnedict' | 'custom';
+  entryId?: string;
+  sourceVersion: string;
+}
+
+export interface WordSenseSnapshot {
+  id: string;
+  partsOfSpeech: string[];
+  glossesEn: string[];
+  meaningKo: string;
+}
+
+export interface WordLexicalData {
+  kind: 'word';
+  dictionaryRef: DictionaryReference;
+  dictionaryForm: string;
+  forms: string[];
+  readings: string[];
+  senses: WordSenseSnapshot[];
+  selectedReading: string;
+  selectedSenseIds: string[];
+  meaningKoInContext: string;
+}
+
+export interface KanjiArticleTarget {
+  word: string;
+  wordReading: string;
+  characterReading: string;
+  meaningKoInContext: string;
+  articleId: string | null;
+  annotationId?: string;
+}
+
+export interface KanjiLexicalData {
+  kind: 'kanji';
+  dictionaryRef: DictionaryReference;
+  literal: string;
+  onReadings: string[];
+  kunReadings: string[];
+  nanoriReadings: string[];
+  meaningsEn: string[];
+  meaningsKo: string[];
+  grade?: number;
+  frequency?: number;
+  strokeCount?: number;
+  articleTargets: KanjiArticleTarget[];
+}
+
+export type CardLexicalData = WordLexicalData | KanjiLexicalData;
 
 export interface GradingCardProposal {
   id: string;
@@ -149,6 +202,10 @@ export interface LearningCard {
   sourceLabel: string;
   initialKind: AnnotationKind | null;
   suspended: boolean;
+  learningState?: LearningState;
+  excludedReason?: ExclusionReason | null;
+  excludedAt?: string | null;
+  lexicalData?: CardLexicalData | null;
   revision: number;
   fsrs: SerializableFsrsCard;
 }
@@ -184,4 +241,5 @@ export interface NewLearningCard {
   sourceArticleId: string | null;
   sourceLabel: string;
   initialKind: AnnotationKind | null;
+  lexicalData?: CardLexicalData | null;
 }

@@ -2,8 +2,11 @@ import { createClient, type Session, type SupabaseClient } from '@supabase/supab
 import type {
   AnnotationKind,
   AnnotationGradingFeedback,
+  CardLexicalData,
+  ExclusionReason,
   GradingCardProposalDecision,
   LearningCard,
+  LearningState,
   NewLearningCard,
   ReviewEvent,
   SerializableFsrsCard,
@@ -86,6 +89,10 @@ interface CardRow {
   example_ja: string | null;
   initial_kind: AnnotationKind | null;
   suspended: boolean;
+  learning_state?: LearningState;
+  excluded_reason?: ExclusionReason | null;
+  excluded_at?: string | null;
+  lexical_data?: CardLexicalData | null;
   due_at: string;
   fsrs_state: number;
   stability: number;
@@ -176,6 +183,22 @@ interface GradingCardProposalRow {
   created_card_id: string | null;
 }
 
+export interface RemoteCardLearningStateResult {
+  cardId: string;
+  learningState: LearningState;
+  suspended: boolean;
+  excludedReason: ExclusionReason | null;
+  excludedAt: string | null;
+  revision: number;
+}
+
+export interface RemoteReviewBatchResult {
+  eventId: string;
+  ok: boolean;
+  error?: string;
+  code?: string;
+}
+
 function requireClient(): SupabaseClient {
   if (!supabase) throw new Error('Supabase 연결값이 설정되지 않았습니다.');
   return supabase;
@@ -231,10 +254,40 @@ function storedFsrsPayload(state: SerializableFsrsCard, revision: number) {
   };
 }
 
+function reviewEventRpcPayload(event: ReviewEvent) {
+  const after = event.afterState;
+  return {
+    event_id: event.id,
+    card_id: event.cardId,
+    expected_revision: event.baseRevision,
+    rating: event.rating,
+    reviewed_at: event.reviewedAt,
+    duration_ms: event.durationMs,
+    after_state: {
+      due_at: after.due,
+      fsrs_state: after.state,
+      stability: after.stability,
+      difficulty: after.difficulty,
+      elapsed_days: after.elapsed_days,
+      scheduled_days: after.scheduled_days,
+      learning_steps: after.learning_steps,
+      reps: after.reps,
+      lapses: after.lapses,
+    },
+    scheduler_version: event.schedulerVersion,
+  };
+}
+
 function cardInsertPayload(userId: string, card: LearningCard | NewLearningCard) {
   const id = 'id' in card ? card.id : crypto.randomUUID();
   const fsrsState = 'fsrs' in card ? card.fsrs : createSerializableFsrsCard();
   const revision = 'revision' in card ? card.revision : 0;
+  const legacySuspended = 'suspended' in card ? card.suspended : false;
+  const learningState = 'learningState' in card
+    ? card.learningState ?? (legacySuspended ? 'suspended' : 'active')
+    : 'active';
+  const excludedReason = 'excludedReason' in card ? card.excludedReason ?? null : null;
+  const excludedAt = 'excludedAt' in card ? card.excludedAt ?? null : null;
   return {
     id,
     user_id: userId,
@@ -242,15 +295,18 @@ function cardInsertPayload(userId: string, card: LearningCard | NewLearningCard)
     canonical_key:
       'canonicalKey' in card
         ? card.canonicalKey
-        : card.kind === 'kanji'
-          ? card.front
-          : `${card.front}|${card.reading}`,
+        : `${card.front}|${card.reading}`,
     front: card.front,
     reading: card.reading || null,
     meaning_ko: card.meaningKo || null,
     example_ja: card.exampleJa || null,
     initial_kind: card.initialKind,
-    suspended: 'suspended' in card ? card.suspended : false,
+    suspended: learningState !== 'active',
+    learning_state: learningState,
+    excluded_reason: learningState === 'excluded' ? excludedReason : null,
+    excluded_at:
+      learningState === 'excluded' ? excludedAt ?? new Date().toISOString() : null,
+    lexical_data: card.lexicalData ?? null,
     due_at: fsrsState.due,
     fsrs_state: fsrsState.state,
     stability: fsrsState.stability,
@@ -472,6 +528,8 @@ export async function loadRemoteWorkspace(): Promise<StudyWorkspace> {
     const sources = sourcesByCard.get(row.id) ?? [];
     const source = sources[0];
     const sourceSession = source ? sessionByArticle.get(source.article_id) : undefined;
+    const learningState = row.learning_state
+      ?? (row.suspended ? 'suspended' : 'active');
     return {
       id: row.id,
       kind: row.kind,
@@ -484,7 +542,11 @@ export async function loadRemoteWorkspace(): Promise<StudyWorkspace> {
       sourceArticleIds: sources.map((item) => item.article_id),
       sourceLabel: sourceSession ? `Day ${sourceSession.day_no}` : '직접 등록',
       initialKind: row.initial_kind,
-      suspended: row.suspended,
+      suspended: learningState !== 'active',
+      learningState,
+      excludedReason: row.excluded_reason ?? null,
+      excludedAt: row.excluded_at ?? null,
+      lexicalData: row.lexical_data ?? null,
       revision: row.revision,
       fsrs: fsrsFromRow(row),
     };
@@ -573,37 +635,83 @@ export async function linkRemoteCardSource(
 export async function setRemoteCardSuspended(
   cardId: string,
   suspended: boolean,
-): Promise<void> {
-  const { error } = await requireClient()
-    .from('study_cards')
-    .update({ suspended })
-    .eq('id', cardId);
+  expectedRevision?: number,
+): Promise<RemoteCardLearningStateResult> {
+  return setRemoteCardLearningState(
+    cardId,
+    suspended ? 'suspended' : 'active',
+    null,
+    expectedRevision,
+  );
+}
+
+export async function setRemoteCardLearningState(
+  cardId: string,
+  learningState: LearningState,
+  reason: ExclusionReason | null = null,
+  expectedRevision?: number,
+): Promise<RemoteCardLearningStateResult> {
+  const { data, error } = await requireClient().rpc('set_study_card_learning_state', {
+    p_card_id: cardId,
+    p_learning_state: learningState,
+    p_reason: learningState === 'excluded' ? reason : null,
+    p_expected_revision: expectedRevision ?? null,
+  });
   throwIfError(error);
+  const row = (Array.isArray(data) ? data[0] : data) as CardRow | null;
+  if (!row) throw new Error('카드 학습 상태 저장 결과가 없습니다.');
+  const savedState = row.learning_state ?? (row.suspended ? 'suspended' : 'active');
+  return {
+    cardId: row.id,
+    learningState: savedState,
+    suspended: savedState !== 'active',
+    excludedReason: row.excluded_reason ?? null,
+    excludedAt: row.excluded_at ?? null,
+    revision: row.revision,
+  };
 }
 
 export async function recordRemoteReview(event: ReviewEvent): Promise<void> {
-  const after = event.afterState;
+  const payload = reviewEventRpcPayload(event);
   const { error } = await requireClient().rpc('record_review', {
-    p_event_id: event.id,
-    p_card_id: event.cardId,
-    p_expected_revision: event.baseRevision,
-    p_rating: event.rating,
-    p_reviewed_at: event.reviewedAt,
-    p_duration_ms: event.durationMs,
-    p_after_state: {
-      due_at: after.due,
-      fsrs_state: after.state,
-      stability: after.stability,
-      difficulty: after.difficulty,
-      elapsed_days: after.elapsed_days,
-      scheduled_days: after.scheduled_days,
-      learning_steps: after.learning_steps,
-      reps: after.reps,
-      lapses: after.lapses,
-    },
-    p_scheduler_version: event.schedulerVersion,
+    p_event_id: payload.event_id,
+    p_card_id: payload.card_id,
+    p_expected_revision: payload.expected_revision,
+    p_rating: payload.rating,
+    p_reviewed_at: payload.reviewed_at,
+    p_duration_ms: payload.duration_ms,
+    p_after_state: payload.after_state,
+    p_scheduler_version: payload.scheduler_version,
   });
   throwIfError(error);
+}
+
+export async function recordRemoteReviewBatch(
+  events: ReviewEvent[],
+): Promise<RemoteReviewBatchResult[]> {
+  if (!events.length) return [];
+  const { data, error } = await requireClient().rpc('record_reviews_batch', {
+    p_events: events.map(reviewEventRpcPayload),
+  });
+  throwIfError(error);
+  if (!Array.isArray(data)) {
+    throw new Error('복습 배치 저장 결과 형식이 올바르지 않습니다.');
+  }
+  return data.map((item, index) => {
+    const result = item as {
+      event_id?: unknown;
+      ok?: unknown;
+      error?: unknown;
+      code?: unknown;
+    };
+    return {
+      eventId:
+        typeof result.event_id === 'string' ? result.event_id : events[index]?.id ?? `index:${index + 1}`,
+      ok: result.ok === true,
+      ...(typeof result.error === 'string' ? { error: result.error } : {}),
+      ...(typeof result.code === 'string' ? { code: result.code } : {}),
+    };
+  });
 }
 
 export async function saveRemoteAnnotationInput(
@@ -789,7 +897,11 @@ export async function importRemoteWorkspace(
           ...(card.sourceArticleId ? [card.sourceArticleId] : []),
         ].filter((articleId, index, all) => all.indexOf(articleId) === index),
         initial_kind: card.initialKind,
-        suspended: card.suspended,
+        suspended: (card.learningState ?? (card.suspended ? 'suspended' : 'active')) !== 'active',
+        learning_state: card.learningState ?? (card.suspended ? 'suspended' : 'active'),
+        excluded_reason: card.excludedReason ?? null,
+        excluded_at: card.excludedAt ?? null,
+        lexical_data: card.lexicalData ?? null,
         current_state: storedFsrsPayload(card.fsrs, card.revision),
       })),
       review_events: workspace.reviewEvents.map((event) => ({

@@ -1276,6 +1276,24 @@ textarea {
   font-size: 12px;
 }
 
+.studyCardTopline > div {
+  display: flex;
+  align-items: center;
+  gap: var(--sm);
+}
+
+.studyCardTopline button {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface) 88%, var(--paper));
+  box-shadow: var(--ring);
+  color: var(--mute);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: var(--weight-ui);
+}
+
 .studyCardKanji,
 .studyCardWord {
   font-family: var(--study-japanese);
@@ -1291,6 +1309,26 @@ textarea {
 .studyCardWord {
   font-size: clamp(52px, 9vw, 88px);
   line-height: 1.2;
+}
+
+.studyKanjiPrompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--xs);
+  margin-top: var(--xs);
+  font-family: var(--study-japanese);
+}
+
+.studyKanjiPrompt span {
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.studyKanjiPrompt strong {
+  font-size: 18px;
+  letter-spacing: -0.4px;
 }
 
 .studyAnswerReveal {
@@ -1329,6 +1367,149 @@ textarea {
   color: var(--mute);
   font-family: var(--study-japanese);
   font-size: 15px;
+}
+
+.studyDictionaryAnswer {
+  width: min(600px, 100%);
+  margin: 0 auto;
+}
+
+.studyDictionaryContext {
+  margin-top: var(--md);
+}
+
+.studyDictionaryContext > span,
+.studyDictionarySource,
+.studyKanjiReadings dt,
+.studyWordDictionary dt {
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.studyDictionaryContext p {
+  margin-top: 4px;
+  font-family: var(--study-japanese);
+  font-size: 19px;
+}
+
+.studyDictionaryContext p strong {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  margin-left: var(--xs);
+  padding: 0 9px;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 16px;
+}
+
+.studyDictionaryContext small {
+  display: block;
+  margin-top: 3px;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+.studyKanjiReadings,
+.studyWordDictionary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: var(--sm);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+}
+
+.studyWordDictionary {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.studyKanjiReadings > div,
+.studyWordDictionary > div {
+  min-width: 0;
+  padding: 10px var(--xs);
+}
+
+.studyKanjiReadings > div + div,
+.studyWordDictionary > div + div {
+  border-left: 1px solid var(--hairline);
+}
+
+.studyKanjiReadings dd,
+.studyWordDictionary dd {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.studyDictionarySource {
+  margin-top: 6px;
+  text-align: right;
+}
+
+.studyDictionarySource a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.studyWordSenses {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: var(--xs);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+}
+
+.studyWordSenses > span {
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.studyWordSenses ol {
+  display: grid;
+  gap: 4px;
+  counter-reset: study-sense;
+}
+
+.studyWordSenses li {
+  position: relative;
+  padding-left: 20px;
+  color: var(--mute);
+  font-size: 13px;
+  line-height: 20px;
+  counter-increment: study-sense;
+}
+
+.studyWordSenses li::before {
+  content: counter(study-sense) '.';
+  position: absolute;
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.studyWordSenses .studyWordSenseActive {
+  color: var(--ink);
+  font-weight: var(--weight-ui);
+}
+
+.studyWordSenses small {
+  display: inline-flex;
+  min-height: 20px;
+  align-items: center;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 10px;
 }
 
 .studyReviewActions {
@@ -1402,11 +1583,15 @@ textarea {
   color: #c8cbd1;
 }
 
-.studyHardRule {
+.studyReviewFootnotes {
   margin-top: var(--xs);
   color: var(--mute);
   font-size: 12px;
   text-align: center;
+}
+
+.studyReviewFootnotes p + p {
+  margin-top: 2px;
 }
 
 .studyReviewComplete {
@@ -1550,6 +1735,16 @@ textarea {
   background: var(--surface);
   box-shadow: var(--ring);
   font-size: 13px;
+}
+
+.studyLibraryControl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.studyLibraryControl button + button {
+  color: var(--study-red);
 }
 
 .studyLibraryRowSuspended {
@@ -1948,6 +2143,35 @@ textarea {
 
   .studyCardReading {
     margin-top: var(--md);
+  }
+
+  .studyCardTopline {
+    align-items: start;
+  }
+
+  .studyCardTopline > div {
+    flex-direction: column;
+    align-items: end;
+    gap: 3px;
+  }
+
+  .studyKanjiReadings,
+  .studyWordDictionary {
+    grid-template-columns: 1fr;
+  }
+
+  .studyKanjiReadings > div,
+  .studyWordDictionary > div {
+    display: grid;
+    grid-template-columns: 68px 1fr;
+    gap: var(--xs);
+    padding: 6px 0;
+  }
+
+  .studyKanjiReadings > div + div,
+  .studyWordDictionary > div + div {
+    border-top: 1px solid var(--hairline);
+    border-left: 0;
   }
 
   .studyReviewActions {

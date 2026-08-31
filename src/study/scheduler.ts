@@ -1,5 +1,7 @@
 import {
+  GenSeedStrategyWithCardId,
   Rating,
+  StrategyMode,
   createEmptyCard,
   fsrs,
   type Card,
@@ -11,16 +13,18 @@ import type {
   SerializableFsrsCard,
 } from './model';
 
-export const SCHEDULER_VERSION = 'fsrs-6/ts-fsrs-5.4.1';
+export const SCHEDULER_VERSION = 'fsrs-6/ts-fsrs-5.4.1-seeded-v2';
 
 const scheduler = fsrs({
   request_retention: 0.9,
   maximum_interval: 36500,
   enable_fuzz: true,
   enable_short_term: true,
-  learning_steps: ['10m'],
+  learning_steps: ['1m', '10m'],
   relearning_steps: ['10m'],
-});
+}).useStrategy(StrategyMode.SEED, GenSeedStrategyWithCardId('card_id'));
+
+type SeededFsrsCard = Card & { card_id: string };
 
 export const ratingOrder = [
   Rating.Again,
@@ -38,7 +42,14 @@ export const ratingCopy: Record<Grade, { label: string; hint: string }> = {
 
 export function serializeFsrsCard(card: Card): SerializableFsrsCard {
   return {
-    ...card,
+    stability: card.stability,
+    difficulty: card.difficulty,
+    elapsed_days: card.elapsed_days,
+    scheduled_days: card.scheduled_days,
+    learning_steps: card.learning_steps,
+    reps: card.reps,
+    lapses: card.lapses,
+    state: card.state,
     due: card.due.toISOString(),
     last_review: card.last_review?.toISOString(),
   };
@@ -56,8 +67,15 @@ export function createSerializableFsrsCard(now = new Date()): SerializableFsrsCa
   return serializeFsrsCard(createEmptyCard(now));
 }
 
+function hydrateLearningCard(card: LearningCard): SeededFsrsCard {
+  return {
+    ...hydrateFsrsCard(card.fsrs),
+    card_id: card.id,
+  };
+}
+
 export function getRatingPreview(card: LearningCard, now = new Date()) {
-  const result = scheduler.repeat(hydrateFsrsCard(card.fsrs), now);
+  const result = scheduler.repeat(hydrateLearningCard(card), now);
   return ratingOrder.map((rating) => ({
     rating,
     due: result[rating].card.due,
@@ -71,7 +89,7 @@ export function reviewCard(
   now = new Date(),
 ): { card: LearningCard; event: ReviewEvent } {
   const beforeState = learningCard.fsrs;
-  const result = scheduler.next(hydrateFsrsCard(beforeState), now, rating);
+  const result = scheduler.next(hydrateLearningCard(learningCard), now, rating);
   const afterState = serializeFsrsCard(result.card);
   const nextRevision = learningCard.revision + 1;
 

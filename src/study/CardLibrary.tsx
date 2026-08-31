@@ -1,11 +1,12 @@
 import { useMemo, useState, type ReactElement } from 'react';
 import type { CardKind, LearningCard } from './model';
 
-type CardFilter = 'all' | CardKind;
+type CardFilter = 'all' | CardKind | 'excluded';
 
 interface CardLibraryProps {
   cards: LearningCard[];
   onToggleSuspend: (cardId: string) => void;
+  onExclude: (cardId: string) => void;
   onStartReview: () => void;
 }
 
@@ -29,6 +30,7 @@ function sourceCount(card: LearningCard): number {
 export function CardLibrary({
   cards,
   onToggleSuspend,
+  onExclude,
   onStartReview,
 }: CardLibraryProps): ReactElement {
   const [filter, setFilter] = useState<CardFilter>('all');
@@ -36,12 +38,19 @@ export function CardLibrary({
   const visibleCards = useMemo(
     () =>
       cards
-        .filter((card) => filter === 'all' || card.kind === filter)
+        .filter((card) => {
+          if (filter === 'all') return true;
+          if (filter === 'excluded') return card.learningState === 'excluded';
+          return card.kind === filter && card.learningState !== 'excluded';
+        })
         .sort((a, b) => a.front.localeCompare(b.front, 'ja')),
     [cards, filter],
   );
   const dueCount = cards.filter(
-    (card) => !card.suspended && new Date(card.fsrs.due).getTime() <= clock,
+    (card) =>
+      !card.suspended
+      && card.learningState !== 'excluded'
+      && new Date(card.fsrs.due).getTime() <= clock,
   ).length;
 
   return (
@@ -61,6 +70,7 @@ export function CardLibrary({
           ['all', '전체'],
           ['word', '단어'],
           ['kanji', '한자 1글자'],
+          ['excluded', '제외됨'],
         ] as const).map(([value, label]) => (
           <button
             type="button"
@@ -72,7 +82,11 @@ export function CardLibrary({
             <span>
               {value === 'all'
                 ? cards.length
-                : cards.filter((card) => card.kind === value).length}
+                : value === 'excluded'
+                  ? cards.filter((card) => card.learningState === 'excluded').length
+                  : cards.filter(
+                      (card) => card.kind === value && card.learningState !== 'excluded',
+                    ).length}
             </span>
           </button>
         ))}
@@ -98,16 +112,31 @@ export function CardLibrary({
             <div role="cell" className="studyLibraryAnswer">
               <span lang="ja">{card.reading}</span>
               <p>{card.meaningKo}</p>
+              {card.lexicalData?.kind === 'kanji' ? (
+                <small lang="ja">
+                  音 {card.lexicalData.onReadings.join(' · ') || '—'} ／ 訓{' '}
+                  {card.lexicalData.kunReadings.join(' · ') || '—'}
+                </small>
+              ) : null}
               <small>{sourceCount(card)}개 기사에서 표시</small>
             </div>
             <div role="cell" className="studyLibraryDue">
-              <strong>{card.suspended ? '정지' : formatDue(card.fsrs.due)}</strong>
+              <strong>
+                {card.learningState === 'excluded'
+                  ? '학습 제외'
+                  : card.suspended
+                    ? '일시 정지'
+                    : formatDue(card.fsrs.due)}
+              </strong>
               <span>{card.fsrs.reps}회 복습</span>
             </div>
             <div role="cell" className="studyLibraryControl">
               <button type="button" onClick={() => onToggleSuspend(card.id)}>
-                {card.suspended ? '복습 재개' : '잠시 제외'}
+                {card.suspended ? '다시 포함' : '일시 정지'}
               </button>
+              {!card.suspended ? (
+                <button type="button" onClick={() => onExclude(card.id)}>학습 제외</button>
+              ) : null}
             </div>
           </div>
         ))}
