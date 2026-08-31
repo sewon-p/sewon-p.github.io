@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "study:grading": "node --env-file-if-exists=.env.local scripts/study-grading.mjs",
+    "study:import": "node --env-file-if-exists=.env.local scripts/study-import.mjs",
     "study:lexicon": "node --env-file-if-exists=.env.local scripts/study-lexicon.mjs"
   },
   "dependencies": {
