@@ -473,7 +473,7 @@ textarea {
 }
 
 .studyMarkToolbar button {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 10px;
   border-radius: 4px;
   background: var(--surface);
@@ -511,7 +511,22 @@ textarea {
 
 .studyArticleTextLocked {
   cursor: default;
-  user-select: none;
+  user-select: text;
+}
+
+.studyArticleDictionary {
+  scroll-margin-top: calc(var(--study-header-height) + 90px);
+}
+
+.studyDictionaryAttribution {
+  padding: var(--xs) 0 var(--md);
+  text-align: right;
+}
+
+.studyDictionaryAttribution a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .studySourceEditor {
@@ -2055,7 +2070,7 @@ textarea {
 
   .studyMarkToolbar > div {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 
   .studyMarkToolbar button {

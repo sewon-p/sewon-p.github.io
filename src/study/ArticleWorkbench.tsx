@@ -6,6 +6,8 @@ import {
   type ReactElement,
 } from 'react';
 import { GradingPanel } from './GradingPanel';
+import { DictionaryPanel } from './DictionaryPanel';
+import { lookupJotoba } from './dictionary';
 import type {
   AnnotationGradingFeedback,
   AnnotationKind,
@@ -254,7 +256,9 @@ export function ArticleWorkbench({
   onConfirmGradingCards,
 }: ArticleWorkbenchProps): ReactElement {
   const articleRef = useRef<HTMLDivElement>(null);
+  const dictionaryRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<SelectionRange | null>(null);
+  const [dictionaryQuery, setDictionaryQuery] = useState('');
   const [importText, setImportText] = useState('');
   const [cardNotice, setCardNotice] = useState('');
   const gradingStatus = article.grading?.status ?? 'draft';
@@ -274,9 +278,10 @@ export function ArticleWorkbench({
   );
 
   const updateSelection = (): void => {
-    if (inputsLocked) return;
     if (!articleRef.current) return;
-    setSelection(captureSelection(articleRef.current));
+    const nextSelection = captureSelection(articleRef.current);
+    setSelection(nextSelection);
+    if (nextSelection) setDictionaryQuery(nextSelection.quote.trim());
   };
 
   const applyAnnotation = (kind: AnnotationKind | null): void => {
@@ -409,7 +414,11 @@ export function ArticleWorkbench({
               <select
                 aria-label="학습할 Day 선택"
                 value={article.id}
-                onChange={(event) => onSelectArticle(event.target.value)}
+                onChange={(event) => {
+                  setSelection(null);
+                  setDictionaryQuery('');
+                  onSelectArticle(event.target.value);
+                }}
               >
                 {articleOptions.map((option) => (
                   <option key={option.id} value={option.id}>
@@ -511,6 +520,19 @@ export function ArticleWorkbench({
               >
                 표시 지우기
               </button>
+              <button
+                type="button"
+                disabled={!selection}
+                onPointerDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  if (!selection) return;
+                  setDictionaryQuery(selection.quote.trim());
+                  dictionaryRef.current?.scrollIntoView({ block: 'start' });
+                  dictionaryRef.current?.querySelector('input')?.focus({ preventScroll: true });
+                }}
+              >
+                사전
+              </button>
             </div>
           </div>
 
@@ -518,11 +540,21 @@ export function ArticleWorkbench({
             ref={articleRef}
             className={`studyArticleText ${inputsLocked ? 'studyArticleTextLocked' : ''}`}
             lang="ja"
-            aria-disabled={inputsLocked}
             onMouseUp={updateSelection}
             onKeyUp={updateSelection}
           >
             {renderAnnotatedText(article.bodyText, article.annotations)}
+          </div>
+
+          <div className="studyArticleDictionary" ref={dictionaryRef}>
+            <DictionaryPanel
+              key={article.id}
+              workspace={{ cards, articles: articleOptions }}
+              activeArticleId={article.id}
+              query={dictionaryQuery}
+              onQueryChange={setDictionaryQuery}
+              lookup={lookupJotoba}
+            />
           </div>
 
           <details className="studySourceEditor">

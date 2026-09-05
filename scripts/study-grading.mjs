@@ -5,6 +5,8 @@ import { resolve } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 
 const CLI_VERSION = 'local-bridge/1';
+const STUDY_ACCOUNT_DOMAIN = 'auth.sewon-p.github.io';
+const STUDY_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{2,31}$/;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -15,12 +17,14 @@ const HELP = `일본어 학습 로컬 채점 브리지
   npm run --silent study:grading -- template --day N [--user-id UUID]
   npm run --silent study:grading -- apply  --day N --file result.json [--user-id UUID]
   npm run --silent study:grading -- fail   --day N --message "실패 사유" [--user-id UUID]
+  npm run --silent study:grading -- accept-all --day N [--user-id UUID]
 
 명령:
   packet   제출된 Day의 채점 입력을 한 줄짜리 compact JSON으로 출력합니다.
   template packet과 ID가 맞는 편집용 result.json 초안을 출력합니다.
   apply    result.json을 기존 원자적 채점 RPC로 검증하고 적용합니다.
   fail     현재 제출을 실패 상태로 바꾸고 재제출할 수 있게 합니다.
+  accept-all  채점 카드 후보를 전부 등록하고 Day 카드 정리를 완료합니다.
 
 옵션:
   --day N          Day 번호입니다. Day 0도 허용합니다.
@@ -32,6 +36,7 @@ const HELP = `일본어 학습 로컬 채점 브리지
 환경 변수:
   SUPABASE_SECRET_KEY   필수. 로컬 셸 또는 .env.local에만 둡니다.
   SUPABASE_URL          권장. 없으면 VITE_SUPABASE_URL을 사용합니다.
+  VITE_SUPABASE_PUBLISHABLE_KEY  accept-all의 학습 계정 로그인에 사용합니다.
 
 예시:
   npm run --silent study:grading -- packet --day 1 > /tmp/day1-packet.json
@@ -85,7 +90,7 @@ function parseArguments(argv) {
   }
 
   const [command, ...rest] = argv;
-  if (!['packet', 'template', 'apply', 'fail'].includes(command)) {
+  if (!['packet', 'template', 'apply', 'fail', 'accept-all'].includes(command)) {
     throw new CliError(`알 수 없는 명령 '${command}'입니다. --help로 사용법을 확인해 주세요.`);
   }
 
@@ -157,6 +162,23 @@ function createServiceClient() {
   }
 
   return createClient(parsedUrl.toString().replace(/\/$/, ''), secretKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
+function createPublicClient() {
+  const url = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '').trim();
+  const publishableKey = (process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '').trim();
+  if (!url || !publishableKey) {
+    throw new CliError(
+      'accept-all에는 Supabase URL과 VITE_SUPABASE_PUBLISHABLE_KEY가 필요합니다.',
+    );
+  }
+  return createClient(url.replace(/\/$/, ''), publishableKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -393,6 +415,114 @@ async function runFail(client, userId, day, message) {
   process.stdout.write(`${JSON.stringify({ status: 'failed', day })}\n`);
 }
 
+async function signInStudyUser(serviceClient, userId) {
+  const { data, error } = await serviceClient.auth.admin.getUserById(userId);
+  const email = data?.user?.email?.trim().toLowerCase() ?? '';
+  const suffix = `@${STUDY_ACCOUNT_DOMAIN}`;
+  if (error || !email.endsWith(suffix)) {
+    throw new CliError('대상 사용자가 일본어 학습 계정인지 확인하지 못했습니다.');
+  }
+  const studyId = email.slice(0, -suffix.length);
+  if (!STUDY_ID_PATTERN.test(studyId)) {
+    throw new CliError('학습 계정 이메일에서 유효한 학습 아이디를 확인하지 못했습니다.');
+  }
+
+  const client = createPublicClient();
+  const { data: signInData, error: signInError } = await client.auth.signInWithPassword({
+    email,
+    password: studyId,
+  });
+  if (signInError || signInData.user?.id !== userId) {
+    throw new CliError('학습 계정으로 로그인하지 못했습니다. 계정 설정을 확인해 주세요.');
+  }
+  return client;
+}
+
+async function runAcceptAll(serviceClient, userId, day) {
+  const session = await findSession(serviceClient, userId, day, ['graded', 'cards_confirmed']);
+  const { data: proposals, error: proposalError } = await serviceClient
+    .from('grading_card_proposals')
+    .select('id, decision, created_card_id')
+    .eq('user_id', userId)
+    .eq('session_id', session.id)
+    .order('created_at');
+  if (proposalError) {
+    throw new CliError(`Day ${day} 카드 후보를 읽지 못했습니다: ${proposalError.message}`);
+  }
+  if (!proposals?.length) {
+    throw new CliError(`Day ${day}에는 등록할 카드 후보가 없습니다.`);
+  }
+
+  const rejected = proposals.filter((proposal) => proposal.decision === 'rejected');
+  if (rejected.length) {
+    throw new CliError(
+      `Day ${day}에 이미 제외 확정된 카드 후보 ${rejected.length}개가 있어 전부 등록할 수 없습니다.`,
+    );
+  }
+
+  if (session.grading_status === 'cards_confirmed') {
+    const cardIds = proposals
+      .map((proposal) => proposal.created_card_id)
+      .filter(Boolean);
+    process.stdout.write(`${JSON.stringify({
+      status: 'cards_confirmed',
+      day,
+      accepted: cardIds.length,
+      uniqueCards: new Set(cardIds).size,
+      addedNow: 0,
+    })}\n`);
+    return;
+  }
+
+  const { data: existingCards, error: cardsError } = await serviceClient
+    .from('study_cards')
+    .select('id')
+    .eq('user_id', userId);
+  if (cardsError) {
+    throw new CliError(`기존 카드 목록을 읽지 못했습니다: ${cardsError.message}`);
+  }
+  const existingCardIds = new Set((existingCards ?? []).map((card) => card.id));
+  const client = await signInStudyUser(serviceClient, userId);
+  const cardIds = [];
+
+  for (const proposal of proposals) {
+    if (proposal.decision === 'accepted' && proposal.created_card_id) {
+      cardIds.push(proposal.created_card_id);
+      continue;
+    }
+    const { data: cardId, error } = await client.rpc('decide_grading_card_proposal', {
+      p_user_id: userId,
+      p_proposal_id: proposal.id,
+      p_decision: 'accepted',
+    });
+    if (error || !cardId) {
+      throw new CliError(
+        `카드 후보 등록 중 중단되었습니다. 다시 실행하면 남은 후보부터 이어집니다: ${error?.message ?? '카드 ID 없음'}`,
+      );
+    }
+    cardIds.push(cardId);
+  }
+
+  const { error: confirmError } = await client.rpc('confirm_study_grading_cards', {
+    p_user_id: userId,
+    p_session_id: session.id,
+  });
+  if (confirmError) {
+    throw new CliError(`Day ${day} 카드 정리를 완료하지 못했습니다: ${confirmError.message}`);
+  }
+
+  const uniqueCardIds = new Set(cardIds);
+  const reused = [...uniqueCardIds].filter((cardId) => existingCardIds.has(cardId)).length;
+  process.stdout.write(`${JSON.stringify({
+    status: 'cards_confirmed',
+    day,
+    accepted: proposals.length,
+    uniqueCards: uniqueCardIds.size,
+    addedNow: uniqueCardIds.size - reused,
+    mergedWithExisting: reused,
+  })}\n`);
+}
+
 async function main() {
   const options = parseArguments(process.argv.slice(2));
   if (options.help) {
@@ -408,6 +538,8 @@ async function main() {
     await runTemplate(client, userId, options.day);
   } else if (options.command === 'apply') {
     await runApply(client, userId, options.day, options.file);
+  } else if (options.command === 'accept-all') {
+    await runAcceptAll(client, userId, options.day);
   } else {
     await runFail(client, userId, options.day, options.message);
   }
