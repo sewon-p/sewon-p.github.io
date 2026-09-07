@@ -1479,8 +1479,9 @@ export default function StudyApp(): ReactElement {
           && article.grading.status !== 'draft'
           && article.grading.status !== 'failed'
         }
-        onRequestGrading={requestArticleGrading}
-        onRetryGrading={requestArticleGrading}
+        onRequestGrading={session ? requestArticleGrading : undefined}
+        onRetryGrading={session ? requestArticleGrading : undefined}
+        onRefreshGrading={session ? reloadRemoteWorkspace : undefined}
         onUpdateAnnotationGrading={updateAnnotationGrading}
         onUpdateCardProposalDecision={updateCardProposalDecision}
         onConfirmGradingCards={confirmGradingCards}

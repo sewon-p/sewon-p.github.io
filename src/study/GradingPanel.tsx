@@ -6,7 +6,7 @@ import type {
   TextAnnotation,
 } from './model';
 
-type GradingAction = 'request' | 'retry' | 'confirm' | null;
+type GradingAction = 'request' | 'retry' | 'refresh' | 'confirm' | null;
 
 const statusCopy: Record<
   NonNullable<ArticleGrading['status']>,
@@ -14,11 +14,11 @@ const statusCopy: Record<
 > = {
   draft: {
     label: '작성 중',
-    description: '답안과 최초 표시를 현재 상태로 보냅니다.',
+    description: '짧은 답과 최초 표시만 채점합니다.',
   },
   submitted: {
     label: '채점 요청됨',
-    description: '요청이 저장됐습니다. Codex 채팅에서 “이 Day를 채점해”라고 말해 주세요.',
+    description: '현재 Day의 제출본이 준비됐습니다. 채점은 자동으로 시작되지 않습니다.',
   },
   graded: {
     label: '채점 완료',
@@ -41,12 +41,14 @@ const proposalSourceCopy = {
 } as const;
 
 export interface GradingPanelProps {
+  dayNo: number;
   grading?: ArticleGrading;
   responses: StudyResponse[];
   annotations: TextAnnotation[];
   inputsLocked: boolean;
   onRequestGrading?: () => void | Promise<void>;
   onRetryGrading?: () => void | Promise<void>;
+  onRefreshGrading?: () => void | Promise<void>;
   onProposalDecision?: (
     proposalId: string,
     decision: Extract<GradingCardProposalDecision, 'accepted' | 'rejected'>,
@@ -95,12 +97,14 @@ function GradingDiagnosis({ grading }: { grading: ArticleGrading }): ReactElemen
 }
 
 export function GradingPanel({
+  dayNo,
   grading,
   responses,
   annotations,
   inputsLocked,
   onRequestGrading,
   onRetryGrading,
+  onRefreshGrading,
   onProposalDecision,
   onConfirmCards,
 }: GradingPanelProps): ReactElement {
@@ -116,6 +120,7 @@ export function GradingPanel({
   const rejectedCount = proposals.filter((proposal) => proposal.decision === 'rejected').length;
   const pendingCount = proposals.length - acceptedCount - rejectedCount;
   const submittedAt = formatSubmittedAt(grading?.submittedAt);
+  const hasGradingInput = answeredCount > 0 || annotations.length > 0;
 
   const runAction = async (
     action: Exclude<GradingAction, null>,
@@ -130,6 +135,8 @@ export function GradingPanel({
       setActionError(
         action === 'confirm'
           ? '카드 정리를 완료하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.'
+          : action === 'refresh'
+            ? '채점 결과를 확인하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.'
           : '채점을 요청하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.',
       );
     } finally {
@@ -169,10 +176,10 @@ export function GradingPanel({
       <div className="studyGradingBody">
         {status === 'draft' ? (
           <div className="studyGradingDraft">
-            {responses.length ? (
+            {hasGradingInput ? (
               <>
                 <p className="studyGradingCount">
-                  답안 {answeredCount}/{responses.length} · 표시 {annotations.length}개
+                  짧은 확인 {answeredCount}/{responses.length} · 표시 {annotations.length}개
                 </p>
                 {blankCount ? (
                   <p className="studyGradingHint">빈 답안 {blankCount}개도 현재 상태로 포함됩니다.</p>
@@ -180,19 +187,33 @@ export function GradingPanel({
                 {!annotations.length ? (
                   <p className="studyGradingHint">표시가 없어도 답안만 채점할 수 있습니다.</p>
                 ) : null}
-                <button
-                  type="button"
-                  className="studyPrimaryButton studyGradingPrimary"
-                  disabled={!answeredCount || !onRequestGrading || inputsLocked || Boolean(activeAction)}
-                  onClick={() => void runAction('request', onRequestGrading)}
-                >
-                  {activeAction === 'request' ? '채점 요청 중' : '채점 요청'}
-                </button>
+                {!answeredCount ? (
+                  <p className="studyGradingHint">답안 없이 표시만 보내도 단어와 한자를 정리할 수 있습니다.</p>
+                ) : null}
+                {onRequestGrading ? (
+                  <>
+                    <p className="studyGradingHint">
+                      요청하면 현재 답과 표시가 고정되며, 채점이 끝날 때까지 수정할 수 없습니다.
+                    </p>
+                    <button
+                      type="button"
+                      className="studyPrimaryButton studyGradingPrimary"
+                      disabled={inputsLocked || Boolean(activeAction)}
+                      onClick={() => void runAction('request', onRequestGrading)}
+                    >
+                      {activeAction === 'request' ? '제출본 저장 중' : `Day ${dayNo} 채점 요청`}
+                    </button>
+                  </>
+                ) : (
+                  <p className="studyGradingHint">
+                    개발용 미리보기와 기기 전용 모드에서는 채점 요청을 보내지 않습니다.
+                  </p>
+                )}
               </>
             ) : (
               <div className="studyGradingEmpty">
-                <p>아직 채점할 답안이 없습니다.</p>
-                <span>내용 이해에 답을 적으면 여기서 요청할 수 있습니다.</span>
+                <p>아직 채점할 기록이 없습니다.</p>
+                <span>짧은 확인에 답하거나 본문에 색 표시를 남기면 요청할 수 있습니다.</span>
               </div>
             )}
           </div>
@@ -200,12 +221,21 @@ export function GradingPanel({
 
         {status === 'submitted' ? (
           <div className="studyGradingPending" role="status" aria-live="polite">
-            <span className="studyGradingPulse" aria-hidden="true" />
             <div>
-              <strong>채점 요청이 저장됐습니다.</strong>
-              <p>Codex 채팅에서 “이 Day를 채점해”라고 말해 주세요.</p>
-              <small>요청한 답안과 표시는 잠겨 있습니다.</small>
-              {submittedAt ? <small>요청 {submittedAt}</small> : null}
+              <strong>Day {dayNo} 제출본이 준비됐습니다.</strong>
+              <p>Codex에서 “Day {dayNo} 채점해”라고 보내 주세요.</p>
+              <small>채점은 자동으로 시작되지 않으며, 요청 시점의 답과 표시가 고정되어 있습니다.</small>
+              {submittedAt ? <small>제출본 저장 {submittedAt}</small> : null}
+              {onRefreshGrading ? (
+                <button
+                  type="button"
+                  className="studySecondaryButton studyGradingRetry"
+                  disabled={Boolean(activeAction)}
+                  onClick={() => void runAction('refresh', onRefreshGrading)}
+                >
+                  {activeAction === 'refresh' ? '확인 중' : '채점 결과 확인'}
+                </button>
+              ) : null}
             </div>
           </div>
         ) : null}

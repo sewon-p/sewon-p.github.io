@@ -72,6 +72,7 @@ export interface ArticleWorkbenchProps {
   gradingInputsLocked?: boolean;
   onRequestGrading?: (articleId: string) => void | Promise<void>;
   onRetryGrading?: (articleId: string) => void | Promise<void>;
+  onRefreshGrading?: () => void | Promise<void>;
   onUpdateAnnotationGrading?: (
     articleId: string,
     annotationId: string,
@@ -253,6 +254,7 @@ export function ArticleWorkbench({
   gradingInputsLocked,
   onRequestGrading,
   onRetryGrading,
+  onRefreshGrading,
   onUpdateAnnotationGrading,
   onUpdateCardProposalDecision,
   onConfirmGradingCards,
@@ -646,8 +648,8 @@ export function ArticleWorkbench({
             <div className="studySectionHeading">
               <span>02</span>
               <div>
-                <h2 id="questions-heading">내용 이해</h2>
-                <p>원문을 다시 보지 않고 핵심만 답합니다.</p>
+                <h2 id="questions-heading">짧은 확인</h2>
+                <p>한국어 작문이 아니라 기사에서 놓치기 쉬운 핵심만 확인합니다.</p>
               </div>
             </div>
             {articleResponses.map((response) => (
@@ -668,8 +670,8 @@ export function ArticleWorkbench({
                       true,
                     )
                   }
-                  rows={4}
-                  placeholder="내 답을 적습니다."
+                  rows={2}
+                  placeholder="한두 문장으로 짧게 답합니다."
                   disabled={inputsLocked}
                 />
                 <ResponseGradingResult response={response} />
@@ -689,6 +691,7 @@ export function ArticleWorkbench({
 
         <aside className="studyAnalysisColumn" aria-label="기사 채점과 표시 기록">
           <GradingPanel
+            dayNo={article.dayNo}
             grading={article.grading}
             responses={articleResponses}
             annotations={sortedAnnotations}
@@ -697,6 +700,7 @@ export function ArticleWorkbench({
             onRetryGrading={
               onRetryGrading ? () => onRetryGrading(article.id) : undefined
             }
+            onRefreshGrading={onRefreshGrading}
             onProposalDecision={
               onUpdateCardProposalDecision ? updateProposalDecision : undefined
             }

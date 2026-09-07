@@ -835,18 +835,8 @@ textarea {
 
 .studyGradingPending {
   display: grid;
-  grid-template-columns: 12px minmax(0, 1fr);
-  gap: var(--sm);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
-}
-
-.studyGradingPulse {
-  width: 8px;
-  height: 8px;
-  margin-top: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--tint);
-  box-shadow: 0 0 0 5px color-mix(in srgb, var(--tint) 10%, transparent);
 }
 
 .studyGradingPending p,
