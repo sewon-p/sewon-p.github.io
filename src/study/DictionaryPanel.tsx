@@ -77,6 +77,7 @@ export interface DictionaryPanelProps {
   onQueryChange?: (query: string) => void;
   maxResults?: number;
   autoFocus?: boolean;
+  floating?: boolean;
   className?: string;
 }
 
@@ -86,6 +87,9 @@ const styles = {
   panel: {
     marginTop: 'var(--xl)',
     borderTop: '1px solid var(--ink)',
+    color: 'var(--ink)',
+  },
+  floatingPanel: {
     color: 'var(--ink)',
   },
   header: {
@@ -944,6 +948,7 @@ export function DictionaryPanel({
   onQueryChange,
   maxResults = 12,
   autoFocus = false,
+  floating = false,
   className,
 }: DictionaryPanelProps): ReactElement {
   const inputId = useId();
@@ -1039,11 +1044,15 @@ export function DictionaryPanel({
   const isRepeatedLoadingQuery = status === 'loading'
     && query.normalize('NFKC').trim() === submittedQuery;
   const resultRegionId = `${inputId}-results`;
+  const externalQuery = query.normalize('NFKC').trim();
+  const naverDictionaryUrl = externalQuery
+    ? `https://ja.dict.naver.com/#/search?query=${encodeURIComponent(externalQuery)}`
+    : 'https://ja.dict.naver.com/';
 
   return (
     <section
       className={panelClassName}
-      style={styles.panel}
+      style={floating ? styles.floatingPanel : styles.panel}
       aria-labelledby={`${inputId}-heading`}
       aria-busy={visibleStatus === 'loading'}
     >
@@ -1081,7 +1090,7 @@ export function DictionaryPanel({
           </button>
         </div>
         <small id={hintId} style={styles.hint}>
-          본문에서 드래그한 표기도 자동으로 들어옵니다. 단어·한자·가나 읽기로 찾을 수 있습니다.
+          본문에서 최초 색을 남긴 표기가 자동으로 들어옵니다. 단어·한자·가나 읽기로 찾을 수 있습니다.
         </small>
       </form>
 
@@ -1125,13 +1134,20 @@ export function DictionaryPanel({
               aria-controls={resultRegionId}
               aria-expanded={resultsExpanded}
               onClick={() => setResultsExpanded((expanded) => !expanded)}
-              style={styles.collapseButton}
+              style={floating
+                ? { ...styles.collapseButton, minHeight: '44px' }
+                : styles.collapseButton}
             >
               {resultsExpanded ? '결과 접기' : '결과 펼치기'}
             </button>
           </div>
           {resultsExpanded ? (
-            <ol id={resultRegionId} style={styles.resultViewport}>
+            <ol
+              id={resultRegionId}
+              style={floating
+                ? { ...styles.resultViewport, maxHeight: 'none' }
+                : styles.resultViewport}
+            >
               {visibleResults.map((result) => (
                 <li key={`${result.kind}-${result.id}`}>
                   {result.kind === 'word'
@@ -1145,6 +1161,8 @@ export function DictionaryPanel({
       ) : null}
 
       <p className="studyDictionaryAttribution" style={styles.source}>
+        한국어 뜻: <a href={naverDictionaryUrl} target="_blank" rel="noreferrer">네이버 일본어사전 ↗</a>
+        {' · '}
         온라인 사전: <a href="https://jotoba.de/" target="_blank" rel="noreferrer">Jotoba</a>
         {' · '}원자료: <a href="https://www.edrdg.org/" target="_blank" rel="noreferrer">EDRDG · JMdict / KANJIDIC2</a>
       </p>

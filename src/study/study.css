@@ -514,13 +514,122 @@ textarea {
   user-select: text;
 }
 
-.studyArticleDictionary {
-  scroll-margin-top: calc(var(--study-header-height) + 90px);
-}
-
 .studyDictionaryAttribution {
   padding: var(--xs) 0 var(--md);
   text-align: right;
+}
+
+.studyDictionaryDock {
+  position: fixed;
+  top: calc(var(--study-header-height) + 20px);
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 50;
+  width: min(432px, calc(100vw - 32px));
+  max-height: calc(100dvh - var(--study-header-height) - 32px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--ink) 18%, transparent);
+  animation: studyDictionaryDockIn var(--dur-rise) var(--ease-settle) both;
+}
+
+.studyDictionaryDock[data-positioned='true'] {
+  top: var(--study-dictionary-y);
+  right: auto;
+  left: var(--study-dictionary-x);
+  max-height: calc(100dvh - var(--study-dictionary-y) - 12px);
+}
+
+@keyframes studyDictionaryDockIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.studyDictionaryDockHeader {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  border-bottom: 1px solid var(--ink);
+  background: var(--surface);
+}
+
+.studyDictionaryDragHandle {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px var(--sm);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.studyDictionaryDragHandle:active {
+  cursor: grabbing;
+  transform: none;
+}
+
+.studyDictionaryDragHandle span {
+  color: var(--tint);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--weight-ui);
+  letter-spacing: 0.5px;
+}
+
+.studyDictionaryDragHandle strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: var(--weight-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studyDictionaryDockMobileCopy {
+  display: none;
+}
+
+.studyDictionaryDockActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 6px;
+}
+
+.studyDictionaryDockActions button {
+  min-height: 40px;
+  padding: 0 8px;
+  border-radius: 4px;
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: var(--weight-ui);
+}
+
+.studyDictionaryDockActions button:hover {
+  background: var(--paper);
+  box-shadow: var(--ring);
+  color: var(--ink);
+}
+
+.studyDictionaryDockBody {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--md);
+  scrollbar-gutter: stable;
 }
 
 .studyDictionaryAttribution a {
@@ -1956,6 +2065,45 @@ textarea {
   }
 }
 
+@media (max-width: 900px) {
+  .studyDictionaryDock,
+  .studyDictionaryDock[data-positioned='true'] {
+    top: auto;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: max(8px, env(safe-area-inset-left));
+    width: auto;
+    max-height: min(70dvh, 680px);
+    border-radius: 8px 8px 0 0;
+  }
+
+  .studyDictionaryDragHandle {
+    cursor: default;
+    touch-action: auto;
+  }
+
+  .studyDictionaryDragHandle strong {
+    font-size: 12px;
+  }
+
+  .studyDictionaryDockDesktopCopy,
+  .studyDictionaryReset {
+    display: none;
+  }
+
+  .studyDictionaryDockMobileCopy {
+    display: block;
+  }
+
+  .studyDictionaryDockActions button {
+    min-height: 44px;
+  }
+
+  .studyDictionaryDockBody {
+    padding: 0 var(--sm);
+  }
+}
+
 @media (max-width: 720px) {
   :root {
     --study-header-height: 56px;
@@ -1963,6 +2111,11 @@ textarea {
 
   body {
     background: var(--paper);
+  }
+
+  .studyDictionaryDock,
+  .studyDictionaryDock[data-positioned='true'] {
+    bottom: calc(64px + env(safe-area-inset-bottom));
   }
 
   .studyTopbar {

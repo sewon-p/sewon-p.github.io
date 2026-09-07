@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -7,6 +8,7 @@ import {
 } from 'react';
 import { GradingPanel } from './GradingPanel';
 import { DictionaryPanel } from './DictionaryPanel';
+import { DictionaryDock } from './DictionaryDock';
 import { lookupJotoba } from './dictionary';
 import type {
   AnnotationGradingFeedback,
@@ -257,8 +259,11 @@ export function ArticleWorkbench({
 }: ArticleWorkbenchProps): ReactElement {
   const articleRef = useRef<HTMLDivElement>(null);
   const dictionaryRef = useRef<HTMLDivElement>(null);
+  const dictionaryTriggerRef = useRef<HTMLButtonElement>(null);
   const [selection, setSelection] = useState<SelectionRange | null>(null);
+  const [lastMarkedSelection, setLastMarkedSelection] = useState<SelectionRange | null>(null);
   const [dictionaryQuery, setDictionaryQuery] = useState('');
+  const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const [importText, setImportText] = useState('');
   const [cardNotice, setCardNotice] = useState('');
   const gradingStatus = article.grading?.status ?? 'draft';
@@ -281,8 +286,25 @@ export function ArticleWorkbench({
     if (!articleRef.current) return;
     const nextSelection = captureSelection(articleRef.current);
     setSelection(nextSelection);
-    if (nextSelection) setDictionaryQuery(nextSelection.quote.trim());
   };
+
+  useEffect(() => {
+    let frame: number | null = null;
+    const handleSelectionChange = (): void => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        if (!articleRef.current) return;
+        const nextSelection = captureSelection(articleRef.current);
+        if (nextSelection) setSelection(nextSelection);
+      });
+    };
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   const applyAnnotation = (kind: AnnotationKind | null): void => {
     if (inputsLocked || !selection) return;
@@ -307,8 +329,37 @@ export function ArticleWorkbench({
       ...article,
       annotations: nextAnnotations,
     });
+    if (kind) {
+      setLastMarkedSelection(selection);
+      setDictionaryQuery(selection.quote.trim());
+    } else {
+      setLastMarkedSelection(null);
+      setDictionaryQuery('');
+      setDictionaryOpen(false);
+    }
     window.getSelection()?.removeAllRanges();
     setSelection(null);
+  };
+
+  const selectionHasInitialMark = Boolean(selection && article.annotations.some(
+    (annotation) => annotation.start <= selection.start && annotation.end >= selection.end,
+  ));
+  const dictionaryTarget = selection
+    ? (inputsLocked || selectionHasInitialMark ? selection : null)
+    : lastMarkedSelection;
+
+  const closeDictionary = (): void => {
+    setDictionaryOpen(false);
+    window.requestAnimationFrame(() => dictionaryTriggerRef.current?.focus());
+  };
+
+  const openDictionary = (): void => {
+    if (!dictionaryTarget) return;
+    setDictionaryQuery(dictionaryTarget.quote.trim());
+    setDictionaryOpen(true);
+    window.requestAnimationFrame(() => {
+      dictionaryRef.current?.querySelector('input')?.focus({ preventScroll: true });
+    });
   };
 
   const replaceBody = (): void => {
@@ -321,6 +372,9 @@ export function ArticleWorkbench({
       bodyRevision: article.bodyRevision + 1,
     });
     setImportText('');
+    setLastMarkedSelection(null);
+    setDictionaryQuery('');
+    setDictionaryOpen(false);
   };
 
   const submitCard = (
@@ -416,7 +470,9 @@ export function ArticleWorkbench({
                 value={article.id}
                 onChange={(event) => {
                   setSelection(null);
+                  setLastMarkedSelection(null);
                   setDictionaryQuery('');
+                  setDictionaryOpen(false);
                   onSelectArticle(event.target.value);
                 }}
               >
@@ -481,14 +537,16 @@ export function ArticleWorkbench({
           <div className="studyMarkToolbar" aria-label="선택한 본문 표시">
             <p>
               {selection
-                ? `선택: ${selection.quote.replace(/\s+/g, ' ').slice(0, 28)}`
+                ? `선택: ${selection.quote.replace(/\s+/g, ' ').slice(0, 28)}${!inputsLocked && !selectionHasInitialMark ? ' · 색을 먼저 고르세요' : selectionHasInitialMark ? ' · 이미 표시됨' : ''}`
+                : lastMarkedSelection
+                  ? `표시 완료: ${lastMarkedSelection.quote.replace(/\s+/g, ' ').slice(0, 28)} · 사전에서 확인할 수 있습니다.`
                 : '본문에서 단어나 한자를 드래그하세요.'}
             </p>
             <div>
               <button
                 type="button"
                 className="studyMarkBlue"
-                disabled={inputsLocked || !selection}
+                disabled={inputsLocked || !selection || selectionHasInitialMark}
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => applyAnnotation('reading_unknown')}
               >
@@ -497,7 +555,7 @@ export function ArticleWorkbench({
               <button
                 type="button"
                 className="studyMarkOrange"
-                disabled={inputsLocked || !selection}
+                disabled={inputsLocked || !selection || selectionHasInitialMark}
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => applyAnnotation('context_guess')}
               >
@@ -506,7 +564,7 @@ export function ArticleWorkbench({
               <button
                 type="button"
                 className="studyMarkOchre"
-                disabled={inputsLocked || !selection}
+                disabled={inputsLocked || !selection || selectionHasInitialMark}
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => applyAnnotation('unknown')}
               >
@@ -521,17 +579,13 @@ export function ArticleWorkbench({
                 표시 지우기
               </button>
               <button
+                ref={dictionaryTriggerRef}
                 type="button"
-                disabled={!selection}
+                disabled={!dictionaryTarget}
                 onPointerDown={(event) => event.preventDefault()}
-                onClick={() => {
-                  if (!selection) return;
-                  setDictionaryQuery(selection.quote.trim());
-                  dictionaryRef.current?.scrollIntoView({ block: 'start' });
-                  dictionaryRef.current?.querySelector('input')?.focus({ preventScroll: true });
-                }}
+                onClick={openDictionary}
               >
-                사전
+                {selection && !dictionaryTarget ? '색 먼저' : '사전'}
               </button>
             </div>
           </div>
@@ -541,12 +595,17 @@ export function ArticleWorkbench({
             className={`studyArticleText ${inputsLocked ? 'studyArticleTextLocked' : ''}`}
             lang="ja"
             onMouseUp={updateSelection}
+            onPointerUp={updateSelection}
             onKeyUp={updateSelection}
           >
             {renderAnnotatedText(article.bodyText, article.annotations)}
           </div>
 
-          <div className="studyArticleDictionary" ref={dictionaryRef}>
+          <DictionaryDock
+            open={dictionaryOpen}
+            onClose={closeDictionary}
+            contentRef={dictionaryRef}
+          >
             <DictionaryPanel
               key={article.id}
               workspace={{ cards, articles: articleOptions }}
@@ -554,8 +613,9 @@ export function ArticleWorkbench({
               query={dictionaryQuery}
               onQueryChange={setDictionaryQuery}
               lookup={lookupJotoba}
+              floating
             />
-          </div>
+          </DictionaryDock>
 
           <details className="studySourceEditor">
             <summary>본문 붙여넣기 또는 교체</summary>
