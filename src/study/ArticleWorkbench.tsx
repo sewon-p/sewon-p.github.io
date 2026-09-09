@@ -65,10 +65,11 @@ export interface ArticleWorkbenchProps {
   responses: StudyResponse[];
   cards: LearningCard[];
   isDemo: boolean;
+  cardPipelineManaged?: boolean;
   onSelectArticle: (articleId: string) => void;
   onUpdateArticle: (article: StudyArticle) => void;
   onUpdateResponse: (response: StudyResponse, saveImmediately?: boolean) => void;
-  onCreateCard: (card: NewLearningCard) => 'added' | 'linked' | 'exists';
+  onCreateCard: (card: NewLearningCard) => 'added' | 'linked' | 'exists' | 'blocked';
   gradingInputsLocked?: boolean;
   onRequestGrading?: (articleId: string) => void | Promise<void>;
   onRetryGrading?: (articleId: string) => void | Promise<void>;
@@ -247,6 +248,7 @@ export function ArticleWorkbench({
   responses,
   cards,
   isDemo,
+  cardPipelineManaged = false,
   onSelectArticle,
   onUpdateArticle,
   onUpdateResponse,
@@ -402,9 +404,11 @@ export function ArticleWorkbench({
         ? `${front} 카드를 추가했습니다.`
         : result === 'linked'
           ? `${front} 카드에 이 기사를 연결했습니다.`
-          : `${front} 카드는 이미 있습니다.`,
+          : result === 'blocked'
+            ? '한자 카드는 채점 후 사전 기반 생성기로 등록합니다.'
+            : `${front} 카드는 이미 있습니다.`,
     );
-    if (result !== 'exists') event.currentTarget.reset();
+    if (result === 'added' || result === 'linked') event.currentTarget.reset();
   };
 
   const updateAnnotationGradingInput = (
@@ -696,16 +700,21 @@ export function ArticleWorkbench({
             responses={articleResponses}
             annotations={sortedAnnotations}
             inputsLocked={inputsLocked}
+            cardPipelineManaged={cardPipelineManaged}
             onRequestGrading={onRequestGrading ? requestArticleGrading : undefined}
             onRetryGrading={
               onRetryGrading ? () => onRetryGrading(article.id) : undefined
             }
             onRefreshGrading={onRefreshGrading}
             onProposalDecision={
-              onUpdateCardProposalDecision ? updateProposalDecision : undefined
+              !cardPipelineManaged && onUpdateCardProposalDecision
+                ? updateProposalDecision
+                : undefined
             }
             onConfirmCards={
-              onConfirmGradingCards ? confirmGradingCards : undefined
+              !cardPipelineManaged && onConfirmGradingCards
+                ? confirmGradingCards
+                : undefined
             }
           />
 
@@ -835,6 +844,10 @@ export function ArticleWorkbench({
                                 </li>
                               ))}
                             </ul>
+                          ) : cardPipelineManaged ? (
+                            <p className="studyManagedCardNote">
+                              카드는 채점 후 사전 기반 생성기로 등록합니다.
+                            </p>
                           ) : (
                             <form onSubmit={(event) => submitCard(event, annotation)}>
                               <label>

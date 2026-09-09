@@ -25,6 +25,7 @@ import type {
   StudyWorkspace,
 } from './model';
 import { ReviewSession } from './ReviewSession';
+import { hasCompleteKanjiDictionaryData } from './kanjiLexicon';
 import { createSerializableFsrsCard, reviewCard } from './scheduler';
 import {
   confirmRemoteGradingCards,
@@ -945,7 +946,18 @@ export default function StudyApp(): ReactElement {
     );
   };
 
-  const createCard = (input: NewLearningCard): 'added' | 'linked' | 'exists' => {
+  const createCard = (
+    input: NewLearningCard,
+  ): 'added' | 'linked' | 'exists' | 'blocked' => {
+    if (
+      input.kind === 'kanji'
+      && (
+        input.lexicalData?.kind !== 'kanji'
+        || !hasCompleteKanjiDictionaryData(input.lexicalData, input.front, input.reading)
+      )
+    ) {
+      return 'blocked';
+    }
     const canonicalKey = `${input.front}|${input.reading}`;
     const existingCard = workspace.cards.find(
       (card) =>
@@ -1470,6 +1482,7 @@ export default function StudyApp(): ReactElement {
         responses={workspace.responses}
         cards={workspace.cards}
         isDemo={isDemo}
+        cardPipelineManaged
         onSelectArticle={setActiveArticleId}
         onUpdateArticle={updateArticle}
         onUpdateResponse={updateResponse}

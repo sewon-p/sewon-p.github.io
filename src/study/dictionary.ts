@@ -12,6 +12,8 @@ const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const CACHE_LIMIT = 50;
 const REQUEST_TIMEOUT_MS = 8_000;
 const KANJI_PATTERN = /\p{Script=Han}/gu;
+const kanjiLookupPromises = new Map<string, Promise<DictionaryKanjiResult>>();
+const wordLookupPromises = new Map<string, Promise<DictionaryWordResult[]>>();
 
 interface CacheEntry {
   query: string;
@@ -94,6 +96,7 @@ function isDictionaryResult(value: unknown): value is DictionaryResult {
 }
 
 function readCache(): CacheEntry[] {
+  if (typeof window === 'undefined') return [];
   try {
     const raw = window.localStorage.getItem(CACHE_KEY);
     if (!raw) return [];
@@ -114,6 +117,7 @@ function readCache(): CacheEntry[] {
 }
 
 function writeCache(entries: CacheEntry[]): void {
+  if (typeof window === 'undefined') return;
   try {
     const payload: CacheStore = {
       version: 1,
@@ -187,6 +191,8 @@ function parseWord(value: unknown, index: number): DictionaryWordResult | null {
     forms: [headword],
     readings: kana ? [kana] : [],
     senses,
+    furigana: text(value.reading.furigana),
+    common: value.common === true,
   };
 }
 
@@ -238,6 +244,94 @@ function parseResponse(payload: unknown, query: string): DictionaryResult[] {
     : [...wordResults, ...kanjiResults];
 }
 
+async function requestJotoba(
+  kind: 'words' | 'kanji',
+  term: string,
+  signal: AbortSignal,
+): Promise<Record<string, unknown>> {
+  const response = await fetch(`${JOTOBA_ENDPOINT}/${kind}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'omit',
+    signal,
+    body: JSON.stringify({ query: term, language: 'English', no_english: false }),
+  });
+  if (!response.ok) throw new Error(`사전 서버 응답 ${response.status}`);
+  const payload: unknown = await response.json();
+  if (!isRecord(payload) || !Array.isArray(payload[kind])) {
+    throw new Error('사전 응답을 읽지 못했습니다. 다시 검색해 주세요.');
+  }
+  return payload;
+}
+
+export async function lookupJotobaKanji(rawLiteral: string): Promise<DictionaryKanjiResult> {
+  const literal = normalizeQuery(rawLiteral);
+  if ([...literal].length !== 1 || queryKanji(literal)[0] !== literal) {
+    throw new Error('한자 한 글자만 조회할 수 있습니다.');
+  }
+  const pending = kanjiLookupPromises.get(literal);
+  if (pending) return pending;
+
+  const lookup = (async (): Promise<DictionaryKanjiResult> => {
+    const controller = new AbortController();
+    const timeoutId = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const payload = await requestJotoba('kanji', literal, controller.signal);
+      const result = (payload.kanji as unknown[])
+        .map(parseKanji)
+        .find((candidate) => candidate?.literal === literal);
+      if (!result) throw new Error(`${literal}의 KANJIDIC2 항목을 찾지 못했습니다.`);
+      return result;
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error('사전 응답 시간이 길어 조회를 중단했습니다.', { cause: error });
+      }
+      throw error;
+    } finally {
+      globalThis.clearTimeout(timeoutId);
+    }
+  })();
+  kanjiLookupPromises.set(literal, lookup);
+  try {
+    return await lookup;
+  } catch (error) {
+    kanjiLookupPromises.delete(literal);
+    throw error;
+  }
+}
+
+export async function lookupJotobaWords(rawQuery: string): Promise<DictionaryWordResult[]> {
+  const query = normalizeQuery(rawQuery);
+  if (!query || [...query].length > 80) throw new Error('단어 검색어가 올바르지 않습니다.');
+  const pending = wordLookupPromises.get(query);
+  if (pending) return pending;
+
+  const lookup = (async (): Promise<DictionaryWordResult[]> => {
+    const controller = new AbortController();
+    const timeoutId = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const payload = await requestJotoba('words', query, controller.signal);
+      return (payload.words as unknown[])
+        .map(parseWord)
+        .filter((candidate): candidate is DictionaryWordResult => Boolean(candidate));
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error('사전 응답 시간이 길어 조회를 중단했습니다.', { cause: error });
+      }
+      throw error;
+    } finally {
+      globalThis.clearTimeout(timeoutId);
+    }
+  })();
+  wordLookupPromises.set(query, lookup);
+  try {
+    return await lookup;
+  } catch (error) {
+    wordLookupPromises.delete(query);
+    throw error;
+  }
+}
+
 export const lookupJotoba: DictionaryLookup = async (rawQuery) => {
   const query = normalizeQuery(rawQuery);
   if (!query) return [];
@@ -248,29 +342,14 @@ export const lookupJotoba: DictionaryLookup = async (rawQuery) => {
   if (cached) return cached;
 
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const request = async (kind: 'words' | 'kanji', term: string): Promise<Record<string, unknown>> => {
-      const response = await fetch(`${JOTOBA_ENDPOINT}/${kind}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'omit',
-        signal: controller.signal,
-        body: JSON.stringify({ query: term, language: 'English', no_english: false }),
-      });
-      if (!response.ok) throw new Error(`사전 서버 응답 ${response.status}`);
-      const payload: unknown = await response.json();
-      if (!isRecord(payload) || !Array.isArray(payload[kind])) {
-        throw new Error('사전 응답을 읽지 못했습니다. 다시 검색해 주세요.');
-      }
-      return payload;
-    };
     const kanji = queryKanji(query).join('');
     // A word lookup can return alternate spellings and omit the queried kanji.
     // The dedicated kanji endpoint keeps single-character searches reliable.
     const [wordsPayload, kanjiPayload] = await Promise.all([
-      request('words', query),
-      kanji ? request('kanji', kanji) : Promise.resolve(null),
+      requestJotoba('words', query, controller.signal),
+      kanji ? requestJotoba('kanji', kanji, controller.signal) : Promise.resolve(null),
     ]);
     const results = parseResponse({
       words: wordsPayload.words,
@@ -284,6 +363,6 @@ export const lookupJotoba: DictionaryLookup = async (rawQuery) => {
     }
     throw error;
   } finally {
-    window.clearTimeout(timeoutId);
+    globalThis.clearTimeout(timeoutId);
   }
 };

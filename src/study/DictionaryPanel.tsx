@@ -41,6 +41,8 @@ export interface DictionaryWordResult extends DictionaryResultBase {
   forms: string[];
   readings: string[];
   senses: DictionarySenseResult[];
+  furigana?: string;
+  common?: boolean;
 }
 
 export interface DictionaryKanjiTargetResult {
@@ -485,7 +487,11 @@ function kanjiResult(
 ): DictionaryKanjiResult {
   const literal = lexical?.literal || card.front;
   const targets = lexical?.articleTargets ?? [];
-  const terms = uniqueText([literal, ...targets.map((target) => target.word)]);
+  const terms = uniqueText([
+    literal,
+    ...targets.map((target) => target.word),
+    ...(lexical?.exampleWords ?? []).map((example) => example.word),
+  ]);
 
   return {
     id: card.id,
@@ -495,7 +501,7 @@ function kanjiResult(
     onReadings: uniqueText(lexical?.onReadings ?? []),
     kunReadings: uniqueText(lexical?.kunReadings ?? []),
     nanoriReadings: uniqueText(lexical?.nanoriReadings ?? []),
-    koreanReadings: [],
+    koreanReadings: uniqueText(lexical?.koreanReadings ?? []),
     meaningsEn: uniqueText(lexical?.meaningsEn ?? []),
     meaningKo: uniqueText([
       ...(lexical?.meaningsKo ?? []),
@@ -536,8 +542,14 @@ function searchableValues(card: LearningCard): string[] {
       ...lexical.onReadings,
       ...lexical.kunReadings,
       ...lexical.nanoriReadings,
+      ...(lexical.koreanReadings ?? []),
       ...lexical.meaningsKo,
       ...lexical.meaningsEn,
+      ...(lexical.exampleWords ?? []).flatMap((example) => [
+        example.word,
+        example.wordReading,
+        example.characterReading,
+      ]),
       ...lexical.articleTargets.flatMap((target) => [
         target.word,
         target.wordReading,

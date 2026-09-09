@@ -2,7 +2,9 @@
 
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
+import { enrichKanjiCards, preflightKanjiProposals } from './study-kanji-pipeline.mjs';
 
 const CLI_VERSION = 'local-bridge/1';
 const STUDY_ACCOUNT_DOMAIN = 'auth.sewon-p.github.io';
@@ -71,10 +73,42 @@ apply 결과 JSON 계약(snake_case):
   }
 
 responses와 annotations는 packet의 모든 ID를 중복 없이 한 번씩 포함해야 합니다.
+각 kanji 카드 후보에는 같은 source_id를 가진 word 카드 후보가 정확히 하나 있어야 합니다.
+word 후보에는 기사 단어의 전체 읽기를, kanji 후보에는 그 글자의 사전 기본 읽기를 씁니다.
+음독·훈독·획수 같은 사전 정보는 쓰지 마세요. 수락 시 kanji-card/v2 파이프라인이
+KANJIDIC2에서 자동으로 채우며, 짝이나 사전 검증이 없으면 카드 확정을 중단합니다.
 card_proposals가 없으면 []를 사용하세요. 브리지는 비밀키나 원문을 오류 로그에
 출력하지 않습니다.`;
 
 class CliError extends Error {}
+
+export function validateKanjiProposalPairs(proposals) {
+  if (!Array.isArray(proposals)) {
+    throw new CliError('card_proposals는 배열이어야 합니다.');
+  }
+  const kanjiProposals = proposals.filter((proposal) => proposal?.kind === 'kanji');
+  for (const proposal of kanjiProposals) {
+    const literal = String(proposal.front ?? '').normalize('NFKC').trim();
+    const reading = String(proposal.reading ?? '').normalize('NFKC').trim();
+    if (!/^\p{Script=Han}$/u.test(literal)) {
+      throw new CliError(`한자 카드 '${literal || '(빈칸)'}'는 한 글자여야 합니다.`);
+    }
+    if (!reading) {
+      throw new CliError(`${literal} 한자 카드의 기본 읽기가 비어 있습니다.`);
+    }
+    const pairedWords = proposals.filter((candidate) =>
+      candidate?.kind === 'word'
+      && candidate.source_type === proposal.source_type
+      && (candidate.source_id ?? null) === (proposal.source_id ?? null)
+      && String(candidate.front ?? '').includes(literal)
+      && Boolean(String(candidate.reading ?? '').trim()));
+    if (pairedWords.length !== 1) {
+      throw new CliError(
+        `${literal} 한자 카드에는 같은 출처의 단어 카드가 정확히 하나 필요합니다 (현재 ${pairedWords.length}개).`,
+      );
+    }
+  }
+}
 
 function requireOptionValue(argv, index, option) {
   const value = argv[index + 1];
@@ -370,6 +404,7 @@ async function runTemplate(client, userId, day) {
 
 async function runApply(client, userId, day, filePath) {
   const result = await readResultFile(filePath);
+  validateKanjiProposalPairs(result.card_proposals);
   const resultSubmissionId = result.submission_id ?? result.submissionId;
   if (!UUID_PATTERN.test(String(resultSubmissionId ?? ''))) {
     throw new CliError('채점 결과 최상위에 올바른 submission_id가 필요합니다.');
@@ -464,12 +499,19 @@ async function runAcceptAll(serviceClient, userId, day) {
     const cardIds = proposals
       .map((proposal) => proposal.created_card_id)
       .filter(Boolean);
+    const enrichment = await enrichKanjiCards(serviceClient, userId, {
+      day,
+      cardIds,
+      apply: true,
+      missingOnly: false,
+    });
     process.stdout.write(`${JSON.stringify({
       status: 'cards_confirmed',
       day,
       accepted: cardIds.length,
       uniqueCards: new Set(cardIds).size,
       addedNow: 0,
+      kanjiEnriched: enrichment.cards,
     })}\n`);
     return;
   }
@@ -482,6 +524,7 @@ async function runAcceptAll(serviceClient, userId, day) {
     throw new CliError(`기존 카드 목록을 읽지 못했습니다: ${cardsError.message}`);
   }
   const existingCardIds = new Set((existingCards ?? []).map((card) => card.id));
+  const preflight = await preflightKanjiProposals(serviceClient, userId, { day });
   const client = await signInStudyUser(serviceClient, userId);
   const cardIds = [];
 
@@ -503,6 +546,13 @@ async function runAcceptAll(serviceClient, userId, day) {
     cardIds.push(cardId);
   }
 
+  const uniqueCardIds = new Set(cardIds);
+  const enrichment = await enrichKanjiCards(serviceClient, userId, {
+    day,
+    cardIds: [...uniqueCardIds],
+    apply: true,
+    missingOnly: false,
+  });
   const { error: confirmError } = await client.rpc('confirm_study_grading_cards', {
     p_user_id: userId,
     p_session_id: session.id,
@@ -510,8 +560,6 @@ async function runAcceptAll(serviceClient, userId, day) {
   if (confirmError) {
     throw new CliError(`Day ${day} 카드 정리를 완료하지 못했습니다: ${confirmError.message}`);
   }
-
-  const uniqueCardIds = new Set(cardIds);
   const reused = [...uniqueCardIds].filter((cardId) => existingCardIds.has(cardId)).length;
   process.stdout.write(`${JSON.stringify({
     status: 'cards_confirmed',
@@ -520,6 +568,8 @@ async function runAcceptAll(serviceClient, userId, day) {
     uniqueCards: uniqueCardIds.size,
     addedNow: uniqueCardIds.size - reused,
     mergedWithExisting: reused,
+    kanjiPreflight: preflight.cards,
+    kanjiEnriched: enrichment.cards,
   })}\n`);
 }
 
@@ -545,8 +595,12 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
-  process.stderr.write(`오류: ${message}\n`);
-  process.exitCode = 1;
-});
+const isMain = process.argv[1]
+  && pathToFileURL(process.argv[1]).href === import.meta.url;
+if (isMain) {
+  main().catch((error) => {
+    const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+    process.stderr.write(`오류: ${message}\n`);
+    process.exitCode = 1;
+  });
+}

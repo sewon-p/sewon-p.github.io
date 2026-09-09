@@ -43,24 +43,36 @@ export interface KanjiArticleTarget {
   word: string;
   wordReading: string;
   characterReading: string;
+  readingType?: 'on' | 'kun' | 'nanori' | 'sound_change' | 'other';
   meaningKoInContext: string;
   articleId: string | null;
   annotationId?: string;
 }
 
+export interface KanjiExampleWord {
+  word: string;
+  wordReading: string;
+  characterReading: string;
+  readingType: 'on' | 'kun' | 'nanori' | 'sound_change' | 'other';
+}
+
 export interface KanjiLexicalData {
   kind: 'kanji';
+  schemaVersion?: 1;
+  pipelineVersion?: string;
   dictionaryRef: DictionaryReference;
   literal: string;
   onReadings: string[];
   kunReadings: string[];
   nanoriReadings: string[];
+  koreanReadings?: string[];
   meaningsEn: string[];
   meaningsKo: string[];
   grade?: number;
   frequency?: number;
   strokeCount?: number;
   articleTargets: KanjiArticleTarget[];
+  exampleWords?: KanjiExampleWord[];
 }
 
 export type CardLexicalData = WordLexicalData | KanjiLexicalData;

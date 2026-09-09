@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { Rating, State, type Grade } from 'ts-fsrs';
 import type { LearningCard } from './model';
+import { hasDisplayableKanjiDictionaryData } from './kanjiLexicon';
 import {
   formatDueInterval,
   getRatingPreview,
@@ -38,7 +39,10 @@ interface ActiveReviewProps {
 }
 
 function isStudyable(card: LearningCard): boolean {
-  return !card.suspended && card.learningState !== 'excluded';
+  if (card.suspended || card.learningState === 'excluded') return false;
+  if (card.kind !== 'kanji') return true;
+  return card.lexicalData?.kind === 'kanji'
+    && hasDisplayableKanjiDictionaryData(card.lexicalData, card.front, card.reading);
 }
 
 function isDue(card: LearningCard, now: number): boolean {
@@ -181,13 +185,25 @@ function DictionaryAnswer({ card }: { card: LearningCard }): ReactElement {
     const target = lexical.articleTargets.find(
       (candidate) => candidate.characterReading === card.reading,
     ) ?? lexical.articleTargets[0];
+    const readingType = {
+      on: '음독',
+      kun: '훈독',
+      nanori: '이름 읽기',
+      sound_change: '음변형',
+      other: '기사 읽기',
+    }[target?.readingType ?? 'other'];
+    const exampleWords = lexical.exampleWords?.length
+      ? lexical.exampleWords
+          .map((example) => `${example.word}（${example.wordReading}）`)
+          .join(' · ')
+      : card.exampleJa;
     return (
       <div className="studyDictionaryAnswer">
         <div className="studyDictionaryContext">
           <span>이번 기사에서</span>
           <p lang="ja">
             {target ? `${target.word}（${target.wordReading}）` : card.exampleJa}
-            <strong>{target?.characterReading ?? card.reading}</strong>
+            <strong>{target?.characterReading ?? card.reading} · {readingType}</strong>
           </p>
           <small>{target?.meaningKoInContext ?? card.meaningKo}</small>
         </div>
@@ -204,7 +220,16 @@ function DictionaryAnswer({ card }: { card: LearningCard }): ReactElement {
             <dt>핵심 뜻</dt>
             <dd>{lexical.meaningsKo.join(' · ') || card.meaningKo}</dd>
           </div>
+          {lexical.koreanReadings?.length ? (
+            <div>
+              <dt>한국 한자음</dt>
+              <dd lang="ko">{lexical.koreanReadings.join(' · ')}</dd>
+            </div>
+          ) : null}
         </dl>
+        {exampleWords ? (
+          <p className="studyCardExample" lang="ja">대표 단어 · {exampleWords}</p>
+        ) : null}
         <p className="studyDictionarySource">
           <a href="https://www.edrdg.org/" target="_blank" rel="noreferrer">EDRDG · KANJIDIC2</a>
           {' · '}{lexical.dictionaryRef.sourceVersion}

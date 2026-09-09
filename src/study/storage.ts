@@ -393,8 +393,7 @@ export function getWorkspaceValidationError(value: unknown): string | null {
     if (card.kind === 'kanji' && [...card.front].length !== 1) {
       return `${path}의 한자 카드는 한 글자여야 합니다.`;
     }
-    const expectedCanonicalKey =
-      card.kind === 'kanji' ? card.front : `${card.front}|${card.reading}`;
+    const expectedCanonicalKey = `${card.front}|${card.reading}`;
     if (card.canonicalKey !== expectedCanonicalKey) {
       return `${path}.canonicalKey가 카드 표기와 읽기에 맞지 않습니다.`;
     }

@@ -1061,6 +1061,27 @@ textarea {
   line-height: var(--lh-small);
 }
 
+.studyGradingManagedCards {
+  margin-top: var(--sm);
+  padding: 12px var(--sm);
+  border-left: 3px solid var(--tint);
+  background: color-mix(in srgb, var(--tint) 7%, var(--surface));
+}
+
+.studyGradingManagedCards p,
+.studyGradingManagedCards small,
+.studyManagedCardNote {
+  display: block;
+  margin-top: 4px;
+  color: var(--mute);
+  font-size: var(--text-small);
+  line-height: var(--lh-small);
+}
+
+.studyManagedCardNote {
+  padding: var(--xs) 0;
+}
+
 .studyResponseGrading {
   grid-column: 2;
   border-top: 1px solid var(--ink);
@@ -1529,7 +1550,7 @@ textarea {
 .studyKanjiReadings,
 .studyWordDictionary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   margin-top: var(--sm);
   border-top: 1px solid var(--hairline);
   border-bottom: 1px solid var(--hairline);

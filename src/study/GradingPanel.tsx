@@ -46,6 +46,7 @@ export interface GradingPanelProps {
   responses: StudyResponse[];
   annotations: TextAnnotation[];
   inputsLocked: boolean;
+  cardPipelineManaged?: boolean;
   onRequestGrading?: () => void | Promise<void>;
   onRetryGrading?: () => void | Promise<void>;
   onRefreshGrading?: () => void | Promise<void>;
@@ -102,6 +103,7 @@ export function GradingPanel({
   responses,
   annotations,
   inputsLocked,
+  cardPipelineManaged = false,
   onRequestGrading,
   onRetryGrading,
   onRefreshGrading,
@@ -166,7 +168,11 @@ export function GradingPanel({
         <span>03</span>
         <div>
           <h2 id="grading-heading">채점</h2>
-          <p>{meta.description}</p>
+          <p>
+            {cardPipelineManaged && status === 'graded'
+              ? '카드 후보를 확인한 뒤 사전 보강까지 한 번에 처리합니다.'
+              : meta.description}
+          </p>
         </div>
         <span className={`studyGradingStatus studyGradingStatus-${status}`}>
           {meta.label}
@@ -270,7 +276,11 @@ export function GradingPanel({
               <header>
                 <div>
                   <h3 id="proposal-heading">카드 후보</h3>
-                  <p>복습에 남길 항목만 승인합니다.</p>
+                  <p>
+                    {cardPipelineManaged
+                      ? '단어와 한자를 짝지어 같은 생성 규칙으로 등록합니다.'
+                      : '복습에 남길 항목만 승인합니다.'}
+                  </p>
                 </div>
                 <span>{pendingCount ? `미결정 ${pendingCount}` : `승인 ${acceptedCount}`}</span>
               </header>
@@ -295,42 +305,44 @@ export function GradingPanel({
                         <p>{proposal.meaningKo || '뜻 없음'}</p>
                         {proposal.reviewUnit ? <small>{proposal.reviewUnit}</small> : null}
                       </div>
-                      <div className="studyProposalActions" aria-label={`${proposal.front} 카드 결정`}>
-                        <button
-                          type="button"
-                          aria-pressed={proposal.decision === 'accepted'}
-                          className={proposal.decision === 'accepted' ? 'studyProposalActionActive' : ''}
-                          disabled={
-                            !onProposalDecision
-                            || proposal.decision !== 'proposed'
-                            || Boolean(activeProposalId)
-                          }
-                          onClick={() => void runProposalDecision(proposal.id, 'accepted')}
-                        >
-                          {activeProposalId === proposal.id
-                            ? '저장 중'
-                            : proposal.decision === 'accepted'
-                              ? '추가됨'
-                              : '카드 추가'}
-                        </button>
-                        <button
-                          type="button"
-                          aria-pressed={proposal.decision === 'rejected'}
-                          className={proposal.decision === 'rejected' ? 'studyProposalActionRejected' : ''}
-                          disabled={
-                            !onProposalDecision
-                            || proposal.decision !== 'proposed'
-                            || Boolean(activeProposalId)
-                          }
-                          onClick={() => void runProposalDecision(proposal.id, 'rejected')}
-                        >
-                          {activeProposalId === proposal.id
-                            ? '저장 중'
-                            : proposal.decision === 'rejected'
-                              ? '제외됨'
-                              : '제외'}
-                        </button>
-                      </div>
+                      {!cardPipelineManaged ? (
+                        <div className="studyProposalActions" aria-label={`${proposal.front} 카드 결정`}>
+                          <button
+                            type="button"
+                            aria-pressed={proposal.decision === 'accepted'}
+                            className={proposal.decision === 'accepted' ? 'studyProposalActionActive' : ''}
+                            disabled={
+                              !onProposalDecision
+                              || proposal.decision !== 'proposed'
+                              || Boolean(activeProposalId)
+                            }
+                            onClick={() => void runProposalDecision(proposal.id, 'accepted')}
+                          >
+                            {activeProposalId === proposal.id
+                              ? '저장 중'
+                              : proposal.decision === 'accepted'
+                                ? '추가됨'
+                                : '카드 추가'}
+                          </button>
+                          <button
+                            type="button"
+                            aria-pressed={proposal.decision === 'rejected'}
+                            className={proposal.decision === 'rejected' ? 'studyProposalActionRejected' : ''}
+                            disabled={
+                              !onProposalDecision
+                              || proposal.decision !== 'proposed'
+                              || Boolean(activeProposalId)
+                            }
+                            onClick={() => void runProposalDecision(proposal.id, 'rejected')}
+                          >
+                            {activeProposalId === proposal.id
+                              ? '저장 중'
+                              : proposal.decision === 'rejected'
+                                ? '제외됨'
+                                : '제외'}
+                          </button>
+                        </div>
+                      ) : null}
                     </li>
                   ))}
                 </ol>
@@ -341,17 +353,45 @@ export function GradingPanel({
                 </div>
               )}
 
-              <button
-                type="button"
-                className="studyPrimaryButton studyGradingPrimary"
-                disabled={!onConfirmCards || Boolean(pendingCount) || Boolean(activeAction)}
-                onClick={() => void runAction('confirm', onConfirmCards)}
-              >
-                {activeAction === 'confirm' ? '카드 정리 중' : '카드 정리 완료'}
-              </button>
-              {pendingCount ? (
-                <p className="studyGradingHint">모든 후보를 추가하거나 제외해 주세요.</p>
-              ) : null}
+              {cardPipelineManaged ? (
+                <div className="studyGradingManagedCards" role="status">
+                  <strong>사전 기반 자동 생성</strong>
+                  <p>
+                    {onRefreshGrading
+                      ? `Codex에서 “Day ${dayNo} 카드 전부 추가해”라고 말해 주세요.`
+                      : '미리보기에서는 카드 후보만 확인할 수 있습니다.'}
+                  </p>
+                  <small>
+                    {onRefreshGrading
+                      ? '음독·훈독과 기사 단어를 검증한 뒤 한 번에 등록합니다.'
+                      : '실제 학습 계정에서는 사전 검증 후 등록됩니다.'}
+                  </small>
+                  {onRefreshGrading ? (
+                    <button
+                      type="button"
+                      className="studySecondaryButton studyGradingRetry"
+                      disabled={Boolean(activeAction)}
+                      onClick={() => void runAction('refresh', onRefreshGrading)}
+                    >
+                      {activeAction === 'refresh' ? '확인 중' : '카드 등록 결과 확인'}
+                    </button>
+                  ) : null}
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="studyPrimaryButton studyGradingPrimary"
+                    disabled={!onConfirmCards || Boolean(pendingCount) || Boolean(activeAction)}
+                    onClick={() => void runAction('confirm', onConfirmCards)}
+                  >
+                    {activeAction === 'confirm' ? '카드 정리 중' : '카드 정리 완료'}
+                  </button>
+                  {pendingCount ? (
+                    <p className="studyGradingHint">모든 후보를 추가하거나 제외해 주세요.</p>
+                  ) : null}
+                </>
+              )}
             </section>
           </>
         ) : null}

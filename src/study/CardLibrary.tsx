@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react';
 import type { CardKind, LearningCard } from './model';
+import { hasDisplayableKanjiDictionaryData } from './kanjiLexicon';
 
 type CardFilter = 'all' | CardKind | 'excluded';
 
@@ -27,6 +28,13 @@ function sourceCount(card: LearningCard): number {
   ]).size;
 }
 
+function isReviewable(card: LearningCard): boolean {
+  if (card.suspended || card.learningState === 'excluded') return false;
+  if (card.kind !== 'kanji') return true;
+  return card.lexicalData?.kind === 'kanji'
+    && hasDisplayableKanjiDictionaryData(card.lexicalData, card.front, card.reading);
+}
+
 export function CardLibrary({
   cards,
   onToggleSuspend,
@@ -48,8 +56,7 @@ export function CardLibrary({
   );
   const dueCount = cards.filter(
     (card) =>
-      !card.suspended
-      && card.learningState !== 'excluded'
+      isReviewable(card)
       && new Date(card.fsrs.due).getTime() <= clock,
   ).length;
 

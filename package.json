@@ -7,10 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "node --test scripts/*.test.mjs",
     "preview": "vite preview",
     "study:grading": "node --env-file-if-exists=.env.local scripts/study-grading.mjs",
     "study:import": "node --env-file-if-exists=.env.local scripts/study-import.mjs",
-    "study:lexicon": "node --env-file-if-exists=.env.local scripts/study-lexicon.mjs"
+    "study:lexicon": "node --env-file-if-exists=.env.local scripts/study-lexicon.mjs",
+    "study:kanji": "node --env-file-if-exists=.env.local scripts/study-kanji-pipeline.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",

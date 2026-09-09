@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { lookupJotoba } from '../src/study/dictionary.ts';
+import { lookupJotoba, lookupJotobaKanji } from '../src/study/dictionary.ts';
 
 function setup(t, respond) {
   const storage = new Map();
@@ -70,4 +70,21 @@ test('an oversized article selection never reaches the public dictionary', async
   const { requests } = setup(t, () => Response.json({ words: [] }));
   await assert.rejects(lookupJotoba('あ'.repeat(81)), /80자/);
   assert.equal(requests.length, 0);
+});
+
+test('the card pipeline requests one exact KANJIDIC2 character without a word lookup', async (t) => {
+  const { requests } = setup(t, () => Response.json({ kanji: [{
+    literal: '着',
+    onyomi: ['チャク'],
+    kunyomi: ['き.る'],
+    korean_h: ['착'],
+    meanings: ['wear'],
+    stroke_count: 12,
+  }] }));
+  const result = await lookupJotobaKanji('着');
+  assert.equal(result.literal, '着');
+  assert.deepEqual(result.onReadings, ['チャク']);
+  assert.deepEqual(result.koreanReadings, ['착']);
+  assert.equal(requests.length, 1);
+  assert.match(requests[0].url, /\/kanji$/);
 });
