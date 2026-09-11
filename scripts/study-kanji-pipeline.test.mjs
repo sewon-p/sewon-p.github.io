@@ -151,3 +151,29 @@ test('example selection prefers a common two-kanji word with the same reading ty
     readingType: 'on',
   }]);
 });
+
+test('a one-kanji article word still allows a compound representative example', () => {
+  const widthDictionary = {
+    ...dictionary,
+    literal: '幅',
+    onReadings: ['フク'],
+    kunReadings: ['はば'],
+  };
+  const examples = selectKanjiExampleWords('幅', 'はば', widthDictionary, ['幅'], [
+    {
+      word: '幅', wordReading: 'はば', furigana: '[幅|はば]', common: true, sourceIndex: 0,
+    },
+    {
+      word: '大幅', wordReading: 'おおはば', furigana: '[大幅|おお|はば]', common: true, sourceIndex: 1,
+    },
+    {
+      word: '増幅', wordReading: 'ぞうふく', furigana: '[増幅|ぞう|ふく]', common: true, sourceIndex: 2,
+    },
+  ]);
+  assert.deepEqual(examples, [{
+    word: '大幅',
+    wordReading: 'おおはば',
+    characterReading: 'はば',
+    readingType: 'kun',
+  }]);
+});

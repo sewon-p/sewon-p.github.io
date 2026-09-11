@@ -244,7 +244,11 @@ export function selectKanjiExampleWords(
       const readingType = classifyKanjiReading(characterReading, dictionary);
       const kanjiCount = candidate.word.match(/\p{Script=Han}/gu)?.length ?? 0;
       const overlapsArticle = articleWords.some((word) =>
-        word.includes(candidate.word) || candidate.word.includes(word));
+        candidate.word === word
+        || (
+          word !== literal
+          && (word.includes(candidate.word) || candidate.word.includes(word))
+        ));
       if (overlapsArticle || candidate.word === literal || readingType === 'other') return null;
       return {
         word: candidate.word.normalize('NFKC').trim(),
