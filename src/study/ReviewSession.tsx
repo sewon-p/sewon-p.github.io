@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Rating, State, type Grade } from 'ts-fsrs';
 import type { LearningCard } from './model';
 import { hasDisplayableKanjiDictionaryData } from './kanjiLexicon';
+import { playStudySound, stopStudySounds, type StudySound } from './feedbackSound';
 import {
   formatDueInterval,
   getRatingPreview,
@@ -10,6 +11,44 @@ import {
 } from './scheduler';
 
 const LEARN_AHEAD_MS = 20 * 60 * 1000;
+const SOUND_PREFERENCE_KEY = 'study-review-sound-v1';
+
+const ratingSounds: Record<Grade, StudySound> = {
+  [Rating.Again]: 'again',
+  [Rating.Hard]: 'hard',
+  [Rating.Good]: 'good',
+  [Rating.Easy]: 'easy',
+};
+
+function readSoundPreference(): boolean {
+  try {
+    return window.localStorage.getItem(SOUND_PREFERENCE_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+function SoundToggle({ enabled, onToggle }: {
+  enabled: boolean;
+  onToggle: () => void;
+}): ReactElement {
+  return (
+    <button
+      type="button"
+      className="studySoundToggle"
+      aria-label="복습 효과음"
+      aria-pressed={enabled}
+      title={enabled ? '효과음 끄기' : '효과음 켜기'}
+      onClick={onToggle}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+        {enabled ? <path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" /> : <path d="m16 9 6 6m0-6-6 6" />}
+      </svg>
+      <span>효과음 {enabled ? '켬' : '끔'}</span>
+    </button>
+  );
+}
 
 interface ReviewSessionProps {
   cards: LearningCard[];
@@ -34,8 +73,12 @@ interface ActiveReviewProps {
   remaining: number;
   attempts: number;
   progress: number;
-  onRate: (rating: Grade, startedAt: number, reviewedAt: Date) => void;
+  onRate: (rating: Grade, startedAt: number, reviewedAt: Date) => boolean;
   onExclude: () => void;
+  soundEnabled: boolean;
+  onToggleSound: () => void;
+  onSound: (sound: StudySound) => void;
+  lastAction: string;
 }
 
 function isStudyable(card: LearningCard): boolean {
@@ -297,9 +340,14 @@ function ActiveReview({
   progress,
   onRate,
   onExclude,
+  soundEnabled,
+  onToggleSound,
+  onSound,
+  lastAction,
 }: ActiveReviewProps): ReactElement {
   const [answerShown, setAnswerShown] = useState(false);
   const [ratingPending, setRatingPending] = useState(false);
+  const ratingLocked = useRef(false);
   const [startedAt] = useState(() => Date.now());
   const [reviewedAt] = useState(() => new Date());
   const previews = useMemo(() => getRatingPreview(card, reviewedAt), [card, reviewedAt]);
@@ -310,16 +358,31 @@ function ActiveReview({
     : null;
 
   const rate = (rating: Grade): void => {
-    if (!answerShown || ratingPending) return;
+    if (!answerShown || ratingLocked.current) return;
+    ratingLocked.current = true;
     setRatingPending(true);
-    onRate(rating, startedAt, reviewedAt);
+    if (!onRate(rating, startedAt, reviewedAt)) {
+      ratingLocked.current = false;
+      setRatingPending(false);
+    }
+  };
+
+  const reveal = (): void => {
+    if (answerShown) return;
+    onSound('reveal');
+    setAnswerShown(true);
   };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.repeat || event.defaultPrevented || event.isComposing
+        || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (event.target instanceof Element && event.target.closest(
+        'button, a, input, textarea, select, [contenteditable="true"], [role="dialog"]',
+      )) return;
       if (!answerShown && (event.code === 'Space' || event.code === 'Enter')) {
         event.preventDefault();
-        setAnswerShown(true);
+        reveal();
         return;
       }
       if (!answerShown) return;
@@ -330,7 +393,10 @@ function ActiveReview({
         Digit4: Rating.Easy,
       };
       const rating = keyMap[event.code];
-      if (rating) rate(rating);
+      if (rating) {
+        event.preventDefault();
+        rate(rating);
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -343,7 +409,10 @@ function ActiveReview({
           <p className="studyKicker">TODAY · REVIEW</p>
           <span>{card.kind === 'kanji' ? '한자 1글자' : '단어'}</span>
         </div>
-        <p>남은 카드 {remaining} · 시도 {attempts + 1}</p>
+        <div className="studyReviewHeaderControls">
+          <p>남은 카드 {remaining} · 시도 {attempts + 1}</p>
+          <SoundToggle enabled={soundEnabled} onToggle={onToggleSound} />
+        </div>
       </header>
 
       <div className="studyReviewProgress" aria-hidden="true">
@@ -351,6 +420,7 @@ function ActiveReview({
       </div>
 
       <main className="studyReviewStage">
+        <p className="studyLastAction" role="status">{lastAction}</p>
         <section className="studyFlashcard" aria-live="polite">
           <div className="studyCardTopline">
             <span>{card.sourceLabel}</span>
@@ -386,7 +456,7 @@ function ActiveReview({
           <button
             type="button"
             className="studyRevealButton"
-            onClick={() => setAnswerShown(true)}
+            onClick={reveal}
           >
             정답 보기
             <span>Space</span>
@@ -440,6 +510,25 @@ export function ReviewSession({
   const [excludedCount, setExcludedCount] = useState(0);
   const [clock, setClock] = useState(() => Date.now());
   const [sessionTotal] = useState(() => new Set(queue.map((entry) => entry.cardId)).size);
+  const [soundEnabled, setSoundEnabled] = useState(readSoundPreference);
+  const [lastAction, setLastAction] = useState('');
+
+  const sound = (cue: StudySound): void => {
+    if (soundEnabled) playStudySound(cue);
+  };
+  const toggleSound = (): void => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    try {
+      window.localStorage.setItem(SOUND_PREFERENCE_KEY, next ? 'on' : 'off');
+    } catch {
+      // Sound still works for this session when browser storage is unavailable.
+    }
+    if (next) playStudySound('tap');
+    else stopStudySounds();
+  };
+
+  useEffect(() => () => stopStudySounds(), []);
 
   useEffect(() => {
     const timer = window.setInterval(() => setClock(Date.now()), 5_000);
@@ -461,7 +550,10 @@ export function ReviewSession({
       <div className="studyPage studyReviewPage">
         <header className="studyReviewHeader">
           <p className="studyKicker">TODAY · REVIEW</p>
-          <span>{attempts}회 확인{excludedCount ? ` · ${excludedCount}개 제외` : ''}</span>
+          <div className="studyReviewHeaderControls">
+            <p>{attempts}회 확인{excludedCount ? ` · ${excludedCount}개 제외` : ''}</p>
+            <SoundToggle enabled={soundEnabled} onToggle={toggleSound} />
+          </div>
         </header>
         <section className="studyReviewComplete" aria-live="polite">
           <span className="studyCompletionGlyph" aria-hidden="true">{waiting ? '待' : '済'}</span>
@@ -471,7 +563,10 @@ export function ReviewSession({
               ? `${formatWaitTime(nextAt - clock)} 뒤에 다시 확인할 카드가 있습니다.`
               : '모른 카드는 기억한 것으로 답할 때까지 세션 안에서 다시 확인했습니다.'}
           </p>
-          <button type="button" onClick={onOpenLibrary}>전체 카드 보기</button>
+          <button type="button" onClick={() => {
+            sound('tap');
+            onOpenLibrary();
+          }}>전체 카드 보기</button>
         </section>
       </div>
     );
@@ -484,7 +579,13 @@ export function ReviewSession({
       remaining={remaining}
       attempts={attempts}
       progress={progress}
+      soundEnabled={soundEnabled}
+      onToggleSound={toggleSound}
+      onSound={sound}
+      lastAction={lastAction}
       onExclude={() => {
+        sound('tap');
+        setLastAction('학습에서 제외했어요');
         onExclude(activeCard.id);
         setQueue((current) => current.filter((entry) => entry.cardId !== activeCard.id));
         setSettledIds((current) => new Set(current).add(activeCard.id));
@@ -492,7 +593,10 @@ export function ReviewSession({
       }}
       onRate={(rating, cardStartedAt, reviewedAt) => {
         const updated = onRate(activeCard.id, rating, cardStartedAt, reviewedAt);
-        if (!updated) return;
+        if (!updated) return false;
+        const completesSession = queue.length === 1 && !isLearningCard(updated);
+        sound(completesSession ? 'complete' : ratingSounds[rating]);
+        setLastAction(`${ratingCopy[rating].label} · ${formatDueInterval(new Date(updated.fsrs.due), reviewedAt)} 후 다시`);
         setAttempts((value) => value + 1);
         setQueue((current) => {
           const remainingEntries = current.filter((entry) => entry.id !== activeEntry.id);
@@ -510,6 +614,7 @@ export function ReviewSession({
           setSettledIds((current) => new Set(current).add(updated.id));
         }
         setClock(Date.now());
+        return true;
       }}
     />
   );

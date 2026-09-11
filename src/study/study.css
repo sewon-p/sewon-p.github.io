@@ -1332,6 +1332,7 @@ textarea {
   min-height: calc(100dvh - var(--study-header-height) - var(--xl));
   display: grid;
   grid-template-rows: auto 2px minmax(360px, 1fr) auto;
+  animation: none;
 }
 
 .studyReviewHeader {
@@ -1351,6 +1352,38 @@ textarea {
   color: var(--ink);
 }
 
+.studyReviewHeaderControls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.studySoundToggle {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--mute);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.studySoundToggle[aria-pressed='true'] {
+  border-color: #c1cfee;
+  background: #eef2fc;
+  color: var(--study-blue);
+}
+
+.studySoundToggle svg {
+  flex-shrink: 0;
+}
+
 .studyReviewProgress {
   overflow: hidden;
   background: var(--hairline);
@@ -1366,9 +1399,19 @@ textarea {
 }
 
 .studyReviewStage {
+  position: relative;
   display: grid;
   place-items: center;
   padding: var(--lg) 0;
+}
+
+.studyLastAction {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  color: var(--mute);
+  font-size: 11px;
+  line-height: 18px;
 }
 
 .studyFlashcard {
@@ -1384,6 +1427,17 @@ textarea {
   border-bottom: 1px solid var(--ink);
   background: var(--surface);
   text-align: center;
+  animation: studyCardArrive 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes studyCardArrive {
+  from { opacity: 0.65; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes studyAnswerArrive {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .studyFlashcard::before {
@@ -1482,6 +1536,10 @@ textarea {
 .studyAnswerRevealOpen {
   grid-template-rows: 1fr;
   opacity: 1;
+}
+
+.studyAnswerRevealOpen > div {
+  animation: studyAnswerArrive 140ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .studyCardReading {
@@ -1654,15 +1712,17 @@ textarea {
 }
 
 .studyRevealButton {
+  --study-key-depth: #132b83;
+  --study-key-border: #2147c4;
   width: 100%;
   min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--md);
-  border-radius: var(--radius-sm);
-  background: var(--ink);
-  color: var(--paper);
+  border-radius: 12px;
+  background: var(--study-blue);
+  color: #f8faff;
   font-size: 17px;
   font-weight: var(--weight-ui);
 }
@@ -1677,22 +1737,44 @@ textarea {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--xs);
+  padding-bottom: 4px;
 }
 
 .studyRatingButton {
+  --study-key-depth: #a8b2c4;
+  --study-key-border: #c8cfdb;
   min-height: 72px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   background: var(--surface);
-  box-shadow: var(--ring);
 }
 
-.studyRatingButton:hover {
-  box-shadow: var(--ring-strong);
+.studyRevealButton,
+.studyRatingButton {
+  position: relative;
+  border: 1px solid var(--study-key-border);
+  box-shadow: 0 4px 0 var(--study-key-depth);
+  touch-action: manipulation;
+  user-select: none;
+  transition: transform 90ms cubic-bezier(0.22, 1, 0.36, 1), opacity 90ms linear;
+}
+
+.studyRevealButton:active:not(:disabled),
+.studyRatingButton:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--study-key-depth);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .studyRevealButton:hover:not(:disabled):not(:active),
+  .studyRatingButton:hover:not(:disabled):not(:active) {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 0 var(--study-key-depth);
+  }
 }
 
 .studyRatingButton > span {
@@ -1706,20 +1788,43 @@ textarea {
 }
 
 .studyRating1 {
-  color: var(--study-red);
+  --study-key-depth: #d4a391;
+  --study-key-border: #e6bca9;
+  background: #fff3ed;
+  color: #943d28;
+}
+
+.studyRating2 {
+  --study-key-depth: #c7b276;
+  --study-key-border: #dfd1a4;
+  background: #fcf7e8;
+  color: #71531b;
+}
+
+.studyRating3 {
+  --study-key-depth: #8cb49a;
+  --study-key-border: #b2cfbd;
+  background: #eef7f1;
+  color: #245b3c;
 }
 
 .studyRating4 {
-  background: var(--ink);
-  color: var(--paper);
+  --study-key-depth: #132b83;
+  --study-key-border: #2147c4;
+  background: var(--study-blue);
+  color: #f8faff;
+}
+
+.studyRatingButton small {
+  color: inherit;
 }
 
 .studyRating4 small {
-  color: #c8cbd1;
+  color: #e3eaff;
 }
 
 .studyReviewFootnotes {
-  margin-top: var(--xs);
+  margin-top: var(--sm);
   color: var(--mute);
   font-size: 12px;
   text-align: center;
@@ -2297,8 +2402,14 @@ textarea {
     padding: var(--sm) 0;
   }
 
+  .studyReviewHeaderControls {
+    flex-direction: column;
+    align-items: end;
+    gap: 4px;
+  }
+
   .studyReviewStage {
-    padding: var(--sm) 0;
+    padding: 28px 0 var(--sm);
   }
 
   .studyFlashcard {
@@ -2423,6 +2534,16 @@ textarea {
 @media (prefers-reduced-motion: reduce) {
   .studyPage {
     animation: none;
+  }
+
+  .studyFlashcard,
+  .studyAnswerRevealOpen > div {
+    animation: none;
+  }
+
+  .studyRevealButton,
+  .studyRatingButton {
+    transform: none !important;
   }
 
   *,
