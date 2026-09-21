@@ -458,11 +458,11 @@ textarea {
   display: flex;
   gap: 2px;
   max-width: calc(100vw - 16px);
-  padding: 4px;
+  padding: 0 4px;
   border: 1px solid var(--ink);
   border-radius: 6px;
   background: var(--paper);
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--ink) 20%, transparent);
+  box-shadow: none;
 }
 
 .studySelectionPopover[data-placement='above'] {

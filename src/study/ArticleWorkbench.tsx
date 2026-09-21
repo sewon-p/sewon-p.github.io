@@ -257,21 +257,61 @@ function snapshotRect(rect: DOMRect | ClientRect): ViewportRect {
   };
 }
 
-function positionActionPopover(rect: ViewportRect): ActionPopoverPosition {
+function textClearanceAround(root: HTMLElement | null, anchor: ViewportRect): {
+  above: number;
+  below: number;
+} {
+  if (!root) return { above: Number.POSITIVE_INFINITY, below: Number.POSITIVE_INFINITY };
+  let above = Number.POSITIVE_INFINITY;
+  let below = Number.POSITIVE_INFINITY;
+  root.querySelectorAll('span').forEach((element) => {
+    Array.from(element.getClientRects()).forEach((lineRect) => {
+      if (lineRect.width === 0 || lineRect.height === 0) return;
+      if (lineRect.bottom <= anchor.top) {
+        above = Math.min(above, anchor.top - lineRect.bottom);
+      } else if (lineRect.top >= anchor.bottom) {
+        below = Math.min(below, lineRect.top - anchor.bottom);
+      }
+    });
+  });
+  return { above, below };
+}
+
+function positionActionPopover(
+  rect: ViewportRect,
+  articleRoot: HTMLElement | null = null,
+  popoverHeight = 46,
+): ActionPopoverPosition {
   const viewport = window.visualViewport;
   const viewportLeft = viewport?.offsetLeft ?? 0;
   const viewportTop = viewport?.offsetTop ?? 0;
   const viewportWidth = viewport?.width ?? window.innerWidth;
   const viewportHeight = viewport?.height ?? window.innerHeight;
+  const headerHeight = Number.parseFloat(
+    window.getComputedStyle(document.documentElement)
+      .getPropertyValue('--study-header-height'),
+  ) || 0;
+  const safeViewportTop = viewportTop + headerHeight + 8;
+  const safeViewportBottom = viewportTop + viewportHeight - 8;
   const horizontalEdge = Math.min(78, Math.max(48, viewportWidth / 2));
   const center = rect.left + rect.width / 2;
   const left = Math.min(
     viewportLeft + viewportWidth - horizontalEdge,
     Math.max(viewportLeft + horizontalEdge, center),
   );
-  const roomBelow = viewportTop + viewportHeight - rect.bottom;
-  const roomAbove = rect.top - viewportTop;
-  const placement = roomBelow < 68 && roomAbove > roomBelow ? 'above' : 'below';
+  const roomBelow = safeViewportBottom - rect.bottom;
+  const roomAbove = rect.top - safeViewportTop;
+  const clearance = textClearanceAround(articleRoot, rect);
+  const requiredSpace = popoverHeight + 6;
+  const belowFits = roomBelow >= requiredSpace && clearance.below >= requiredSpace;
+  const aboveFits = roomAbove >= requiredSpace && clearance.above >= requiredSpace;
+  const placement = belowFits
+    ? 'below'
+    : aboveFits
+      ? 'above'
+      : Math.min(roomBelow, clearance.below) >= Math.min(roomAbove, clearance.above)
+        ? 'below'
+        : 'above';
   return {
     left,
     top: placement === 'above' ? rect.top - 6 : rect.bottom + 6,
@@ -343,7 +383,7 @@ export function ArticleWorkbench({
     if (!nextSelection) return;
     setSelection(nextSelection);
     setActionTarget({ type: 'selection', selection: nextSelection });
-    setActionPosition(positionActionPopover(nextSelection.anchorRect));
+    setActionPosition(positionActionPopover(nextSelection.anchorRect, articleRef.current));
   };
 
   const showAnnotationActions = (
@@ -359,7 +399,10 @@ export function ArticleWorkbench({
       quote: annotation.quote,
       anchorRect,
     });
-    setActionPosition(positionActionPopover(anchorRect));
+    setActionPosition(positionActionPopover(
+      anchorRect,
+      element.closest<HTMLElement>('.studyArticleText'),
+    ));
   };
 
   useEffect(() => {
@@ -373,7 +416,7 @@ export function ArticleWorkbench({
         if (!nextSelection) return;
         setSelection(nextSelection);
         setActionTarget({ type: 'selection', selection: nextSelection });
-        setActionPosition(positionActionPopover(nextSelection.anchorRect));
+        setActionPosition(positionActionPopover(nextSelection.anchorRect, articleRef.current));
       });
     };
     document.addEventListener('selectionchange', handleSelectionChange);
@@ -413,7 +456,11 @@ export function ArticleWorkbench({
           setActionPosition(null);
           return;
         }
-        setActionPosition(positionActionPopover(rect));
+        setActionPosition(positionActionPopover(
+          rect,
+          articleRef.current,
+          actionPopoverRef.current?.getBoundingClientRect().height ?? 46,
+        ));
       });
     };
     const closeOnOutsidePointer = (event: PointerEvent): void => {
