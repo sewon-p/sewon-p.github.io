@@ -13,7 +13,13 @@ import type {
   SerializableFsrsCard,
 } from './model';
 
-export const SCHEDULER_VERSION = 'fsrs-6/ts-fsrs-5.4.1-seeded-v2';
+export const SCHEDULER_VERSION = 'fsrs-6/ts-fsrs-5.4.1-seeded-kst4-v3';
+
+export const STUDY_DAY_ROLLOVER_HOUR = 4;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const STUDY_DAY_ROLLOVER_MS = STUDY_DAY_ROLLOVER_HOUR * 60 * 60 * 1000;
 
 const scheduler = fsrs({
   request_retention: 0.9,
@@ -74,12 +80,55 @@ function hydrateLearningCard(card: LearningCard): SeededFsrsCard {
   };
 }
 
+function hasDailyInterval(scheduledDays: number): boolean {
+  return Number.isFinite(scheduledDays) && scheduledDays >= 1;
+}
+
+/**
+ * Returns 04:00 KST on the study day `scheduledDays` after `reviewedAt`.
+ * A review before 04:00 belongs to the preceding study day.
+ */
+export function getStudyDayDue(reviewedAt: Date, scheduledDays: number): Date {
+  const studyDay = Math.floor(
+    (reviewedAt.getTime() + KST_OFFSET_MS - STUDY_DAY_ROLLOVER_MS) / DAY_MS,
+  );
+  return new Date(
+    (studyDay + scheduledDays) * DAY_MS - KST_OFFSET_MS + STUDY_DAY_ROLLOVER_MS,
+  );
+}
+
+function alignDailyDue(card: Card, reviewedAt: Date): Card {
+  if (!hasDailyInterval(card.scheduled_days)) return card;
+  return {
+    ...card,
+    due: getStudyDayDue(reviewedAt, card.scheduled_days),
+  };
+}
+
+/**
+ * Interprets legacy cards with the same 04:00 KST day boundary without a data migration.
+ * Short learning and relearning steps keep their exact stored timestamps.
+ */
+export function getEffectiveDueDate(card: LearningCard): Date {
+  if (hasDailyInterval(card.fsrs.scheduled_days) && card.fsrs.last_review) {
+    const lastReview = new Date(card.fsrs.last_review);
+    if (!Number.isNaN(lastReview.getTime())) {
+      return getStudyDayDue(lastReview, card.fsrs.scheduled_days);
+    }
+  }
+  return new Date(card.fsrs.due);
+}
+
 export function getRatingPreview(card: LearningCard, now = new Date()) {
   const result = scheduler.repeat(hydrateLearningCard(card), now);
-  return ratingOrder.map((rating) => ({
-    rating,
-    due: result[rating].card.due,
-  }));
+  return ratingOrder.map((rating) => {
+    const previewCard = alignDailyDue(result[rating].card, now);
+    return {
+      rating,
+      due: previewCard.due,
+      scheduledDays: previewCard.scheduled_days,
+    };
+  });
 }
 
 export function reviewCard(
@@ -90,7 +139,7 @@ export function reviewCard(
 ): { card: LearningCard; event: ReviewEvent } {
   const beforeState = learningCard.fsrs;
   const result = scheduler.next(hydrateLearningCard(learningCard), now, rating);
-  const afterState = serializeFsrsCard(result.card);
+  const afterState = serializeFsrsCard(alignDailyDue(result.card, now));
   const nextRevision = learningCard.revision + 1;
 
   return {
@@ -114,14 +163,25 @@ export function reviewCard(
   };
 }
 
-export function formatDueInterval(due: Date, now = new Date()): string {
+function formatDayInterval(days: number): string {
+  if (days < 30) return `${days}일`;
+  const months = Math.round(days / 30);
+  if (months < 12) return `${months}개월`;
+  return `${Math.round(months / 12)}년`;
+}
+
+export function formatDueInterval(
+  due: Date,
+  now = new Date(),
+  scheduledDays?: number,
+): string {
+  if (scheduledDays !== undefined && hasDailyInterval(scheduledDays)) {
+    return formatDayInterval(scheduledDays);
+  }
   const minutes = Math.max(1, Math.round((due.getTime() - now.getTime()) / 60000));
   if (minutes < 60) return `${minutes}분`;
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `${hours}시간`;
   const days = Math.round(hours / 24);
-  if (days < 30) return `${days}일`;
-  const months = Math.round(days / 30);
-  if (months < 12) return `${months}개월`;
-  return `${Math.round(months / 12)}년`;
+  return formatDayInterval(days);
 }

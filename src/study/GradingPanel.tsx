@@ -14,7 +14,7 @@ const statusCopy: Record<
 > = {
   draft: {
     label: '작성 중',
-    description: '짧은 답과 최초 표시만 채점합니다.',
+    description: '짧은 답과 체크한 표현만 채점합니다.',
   },
   submitted: {
     label: '채점 요청됨',
@@ -35,7 +35,7 @@ const statusCopy: Record<
 };
 
 const proposalSourceCopy = {
-  annotation: '표시',
+  annotation: '체크',
   response: '답안',
   article: '기사',
 } as const;
@@ -185,21 +185,21 @@ export function GradingPanel({
             {hasGradingInput ? (
               <>
                 <p className="studyGradingCount">
-                  짧은 확인 {answeredCount}/{responses.length} · 표시 {annotations.length}개
+                  짧은 확인 {answeredCount}/{responses.length} · 체크 {annotations.length}개
                 </p>
                 {blankCount ? (
                   <p className="studyGradingHint">빈 답안 {blankCount}개도 현재 상태로 포함됩니다.</p>
                 ) : null}
                 {!annotations.length ? (
-                  <p className="studyGradingHint">표시가 없어도 답안만 채점할 수 있습니다.</p>
+                  <p className="studyGradingHint">체크가 없어도 답안만 채점할 수 있습니다.</p>
                 ) : null}
                 {!answeredCount ? (
-                  <p className="studyGradingHint">답안 없이 표시만 보내도 단어와 한자를 정리할 수 있습니다.</p>
+                  <p className="studyGradingHint">답안 없이 체크만 보내도 단어와 한자를 정리할 수 있습니다.</p>
                 ) : null}
                 {onRequestGrading ? (
                   <>
                     <p className="studyGradingHint">
-                      요청하면 현재 답과 표시가 고정되며, 채점이 끝날 때까지 수정할 수 없습니다.
+                      요청하면 현재 답과 체크가 고정되며, 채점이 끝날 때까지 수정할 수 없습니다.
                     </p>
                     <button
                       type="button"
@@ -219,7 +219,7 @@ export function GradingPanel({
             ) : (
               <div className="studyGradingEmpty">
                 <p>아직 채점할 기록이 없습니다.</p>
-                <span>짧은 확인에 답하거나 본문에 색 표시를 남기면 요청할 수 있습니다.</span>
+                <span>짧은 확인에 답하거나 본문에 체크를 남기면 요청할 수 있습니다.</span>
               </div>
             )}
           </div>
@@ -230,7 +230,7 @@ export function GradingPanel({
             <div>
               <strong>Day {dayNo} 제출본이 준비됐습니다.</strong>
               <p>Codex에서 “Day {dayNo} 채점해”라고 보내 주세요.</p>
-              <small>채점은 자동으로 시작되지 않으며, 요청 시점의 답과 표시가 고정되어 있습니다.</small>
+              <small>채점은 자동으로 시작되지 않으며, 요청 시점의 답과 체크가 고정되어 있습니다.</small>
               {submittedAt ? <small>제출본 저장 {submittedAt}</small> : null}
               {onRefreshGrading ? (
                 <button

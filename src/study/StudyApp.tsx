@@ -680,14 +680,14 @@ function ImportPage({ remote, onImport }: ImportPageProps): ReactElement {
         <p className="studyKicker">FIRST IMPORT · DAY 01</p>
         <h1>Codex와 고른 기사를 첫 학습 데이터로 가져옵니다.</h1>
         <p>
-          기사 본문과 질문이 담긴 Day JSON을 넣으면 바로 읽기와 표시를 시작할 수 있습니다.
+          기사 본문과 질문이 담긴 Day JSON을 넣으면 바로 읽기와 체크를 시작할 수 있습니다.
         </p>
       </section>
       <section className="studySetupPanel">
         <h2>{remote ? '개인 DB로 가져오기' : '이 기기로 가져오기'}</h2>
         <ol>
           <li>채팅에서 함께 만든 Day JSON 파일을 선택합니다.</li>
-          <li>사이트에서 표시와 답안을 작성한 뒤 채점을 요청합니다.</li>
+          <li>사이트에서 체크와 답안을 작성한 뒤 채점을 요청합니다.</li>
           <li>채점 뒤 승인한 단어와 한자만 FSRS 복습에 들어갑니다.</li>
         </ol>
         <label className="studyFileButton">

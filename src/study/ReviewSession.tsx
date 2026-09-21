@@ -5,6 +5,7 @@ import { hasDisplayableKanjiDictionaryData } from './kanjiLexicon';
 import { playStudySound, stopStudySounds, type StudySound } from './feedbackSound';
 import {
   formatDueInterval,
+  getEffectiveDueDate,
   getRatingPreview,
   ratingCopy,
   ratingOrder,
@@ -89,7 +90,7 @@ function isStudyable(card: LearningCard): boolean {
 }
 
 function isDue(card: LearningCard, now: number): boolean {
-  return isStudyable(card) && new Date(card.fsrs.due).getTime() <= now;
+  return isStudyable(card) && getEffectiveDueDate(card).getTime() <= now;
 }
 
 function hashSeed(value: string): number {
@@ -124,7 +125,7 @@ function shuffled<T>(items: T[], random: () => number): T[] {
 function dueDateThenRandom(cards: LearningCard[], random: () => number): LearningCard[] {
   const buckets = new Map<number, LearningCard[]>();
   cards.forEach((card) => {
-    const dueDay = Math.floor(new Date(card.fsrs.due).getTime() / 86_400_000);
+    const dueDay = Math.floor(getEffectiveDueDate(card).getTime() / 86_400_000);
     buckets.set(dueDay, [...(buckets.get(dueDay) ?? []), card]);
   });
   return [...buckets.entries()]
@@ -476,7 +477,9 @@ function ActiveReview({
                 >
                   <span>{ratingCopy[rating].label}</span>
                   <small>
-                    {preview ? formatDueInterval(preview.due, reviewedAt) : '계산 중'} · {index + 1}
+                    {preview
+                      ? formatDueInterval(preview.due, reviewedAt, preview.scheduledDays)
+                      : '계산 중'} · {index + 1}
                   </small>
                 </button>
               );
@@ -596,7 +599,11 @@ export function ReviewSession({
         if (!updated) return false;
         const completesSession = queue.length === 1 && !isLearningCard(updated);
         sound(completesSession ? 'complete' : ratingSounds[rating]);
-        setLastAction(`${ratingCopy[rating].label} · ${formatDueInterval(new Date(updated.fsrs.due), reviewedAt)} 후 다시`);
+        setLastAction(`${ratingCopy[rating].label} · ${formatDueInterval(
+          new Date(updated.fsrs.due),
+          reviewedAt,
+          updated.fsrs.scheduled_days,
+        )} 후 다시`);
         setAttempts((value) => value + 1);
         setQueue((current) => {
           const remainingEntries = current.filter((entry) => entry.id !== activeEntry.id);

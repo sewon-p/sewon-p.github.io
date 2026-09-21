@@ -1102,7 +1102,7 @@ export function DictionaryPanel({
           </button>
         </div>
         <small id={hintId} style={styles.hint}>
-          본문에서 최초 색을 남긴 표기가 자동으로 들어옵니다. 단어·한자·가나 읽기로 찾을 수 있습니다.
+          본문에서 체크한 표기가 자동으로 들어옵니다. 단어·한자·가나 읽기로 찾을 수 있습니다.
         </small>
       </form>
 

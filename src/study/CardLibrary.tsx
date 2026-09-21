@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactElement } from 'react';
 import type { CardKind, LearningCard } from './model';
 import { hasDisplayableKanjiDictionaryData } from './kanjiLexicon';
+import { getEffectiveDueDate } from './scheduler';
 
 type CardFilter = 'all' | CardKind | 'excluded';
 
@@ -11,8 +12,8 @@ interface CardLibraryProps {
   onStartReview: () => void;
 }
 
-function formatDue(value: string): string {
-  const due = new Date(value);
+function formatDue(card: LearningCard): string {
+  const due = getEffectiveDueDate(card);
   const now = new Date();
   if (due.getTime() <= now.getTime()) return '오늘';
   return new Intl.DateTimeFormat('ko-KR', {
@@ -57,7 +58,7 @@ export function CardLibrary({
   const dueCount = cards.filter(
     (card) =>
       isReviewable(card)
-      && new Date(card.fsrs.due).getTime() <= clock,
+      && getEffectiveDueDate(card).getTime() <= clock,
   ).length;
 
   return (
@@ -133,7 +134,7 @@ export function CardLibrary({
                   ? '학습 제외'
                   : card.suspended
                     ? '일시 정지'
-                    : formatDue(card.fsrs.due)}
+                    : formatDue(card)}
               </strong>
               <span>{card.fsrs.reps}회 복습</span>
             </div>

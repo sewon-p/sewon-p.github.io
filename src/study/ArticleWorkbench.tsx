@@ -6,6 +6,7 @@ import {
   type FormEvent,
   type ReactElement,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { GradingPanel } from './GradingPanel';
 import { DictionaryPanel } from './DictionaryPanel';
 import { DictionaryDock } from './DictionaryDock';
@@ -22,36 +23,37 @@ import type {
   TextAnnotation,
 } from './model';
 
-const annotationMeta: Record<
-  AnnotationKind,
-  { short: string; label: string; className: string }
-> = {
-  reading_unknown: {
-    short: '파랑',
-    label: '뜻은 알지만 읽기 불확실',
-    className: 'studyMarkBlue',
-  },
-  context_guess: {
-    short: '주황',
-    label: '문맥으로 뜻 추측',
-    className: 'studyMarkOrange',
-  },
-  unknown: {
-    short: '노랑',
-    label: '읽기와 뜻 모두 모름',
-    className: 'studyMarkOchre',
-  },
-  misread: {
-    short: '오독',
-    label: '답안에서 실제로 잘못 읽음',
-    className: 'studyMarkRed',
-  },
-};
+const CHECK_KIND: AnnotationKind = 'unknown';
+
+interface ViewportRect {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+  width: number;
+  height: number;
+}
 
 interface SelectionRange {
   start: number;
   end: number;
   quote: string;
+  anchorRect: ViewportRect;
+}
+
+type AnnotationActionTarget =
+  | { type: 'selection'; selection: SelectionRange }
+  | {
+      type: 'annotation';
+      annotationId: string;
+      quote: string;
+      anchorRect: ViewportRect;
+    };
+
+interface ActionPopoverPosition {
+  left: number;
+  top: number;
+  placement: 'above' | 'below';
 }
 
 export interface AnnotationGradingInput {
@@ -174,6 +176,7 @@ function ResponseGradingResult({ response }: { response: StudyResponse }): React
 function renderAnnotatedText(
   bodyText: string,
   annotations: TextAnnotation[],
+  onActivate: (annotation: TextAnnotation, element: HTMLElement) => void,
 ): ReactElement[] {
   const valid = annotations
     .filter(
@@ -198,9 +201,22 @@ function renderAnnotatedText(
     nodes.push(
       <span
         key={annotation.id}
-        className={annotationMeta[annotation.kind].className}
+        className="studyAnnotationMark"
         data-annotation={annotation.id}
-        title={annotationMeta[annotation.kind].label}
+        title="체크한 표현"
+        role="button"
+        tabIndex={0}
+        aria-label={`${annotation.quote} 체크 메뉴 열기`}
+        onClick={(event) => {
+          const activeSelection = window.getSelection();
+          if (activeSelection && !activeSelection.isCollapsed) return;
+          onActivate(annotation, event.currentTarget);
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          onActivate(annotation, event.currentTarget);
+        }}
       >
         {bodyText.slice(annotation.start, annotation.end)}
       </span>,
@@ -227,7 +243,37 @@ function captureSelection(root: HTMLElement): SelectionRange | null {
   const quote = range.toString();
   const end = start + quote.length;
   if (!quote.trim()) return null;
-  return { start, end, quote };
+  return { start, end, quote, anchorRect: snapshotRect(range.getBoundingClientRect()) };
+}
+
+function snapshotRect(rect: DOMRect | ClientRect): ViewportRect {
+  return {
+    top: rect.top,
+    right: rect.right,
+    bottom: rect.bottom,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+function positionActionPopover(rect: ViewportRect): ActionPopoverPosition {
+  const viewport = window.visualViewport;
+  const viewportLeft = viewport?.offsetLeft ?? 0;
+  const viewportTop = viewport?.offsetTop ?? 0;
+  const viewportWidth = viewport?.width ?? window.innerWidth;
+  const horizontalEdge = Math.min(108, Math.max(48, viewportWidth / 2));
+  const center = rect.left + rect.width / 2;
+  const left = Math.min(
+    viewportLeft + viewportWidth - horizontalEdge,
+    Math.max(viewportLeft + horizontalEdge, center),
+  );
+  const placement = rect.top - viewportTop >= 64 ? 'above' : 'below';
+  return {
+    left,
+    top: placement === 'above' ? rect.top - 8 : rect.bottom + 8,
+    placement,
+  };
 }
 
 function sentenceAt(bodyText: string, start: number, end: number): string {
@@ -263,9 +309,11 @@ export function ArticleWorkbench({
 }: ArticleWorkbenchProps): ReactElement {
   const articleRef = useRef<HTMLDivElement>(null);
   const dictionaryRef = useRef<HTMLDivElement>(null);
-  const dictionaryTriggerRef = useRef<HTMLButtonElement>(null);
+  const actionPopoverRef = useRef<HTMLDivElement>(null);
+  const dictionaryReturnFocusRef = useRef<HTMLElement | null>(null);
   const [selection, setSelection] = useState<SelectionRange | null>(null);
-  const [lastMarkedSelection, setLastMarkedSelection] = useState<SelectionRange | null>(null);
+  const [actionTarget, setActionTarget] = useState<AnnotationActionTarget | null>(null);
+  const [actionPosition, setActionPosition] = useState<ActionPopoverPosition | null>(null);
   const [dictionaryQuery, setDictionaryQuery] = useState('');
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const [importText, setImportText] = useState('');
@@ -286,10 +334,29 @@ export function ArticleWorkbench({
     [article.annotations],
   );
 
-  const updateSelection = (): void => {
+  const showSelectionActions = (): void => {
     if (!articleRef.current) return;
     const nextSelection = captureSelection(articleRef.current);
+    if (!nextSelection) return;
     setSelection(nextSelection);
+    setActionTarget({ type: 'selection', selection: nextSelection });
+    setActionPosition(positionActionPopover(nextSelection.anchorRect));
+  };
+
+  const showAnnotationActions = (
+    annotation: TextAnnotation,
+    element: HTMLElement,
+  ): void => {
+    const anchorRect = snapshotRect(element.getBoundingClientRect());
+    window.getSelection()?.removeAllRanges();
+    setSelection(null);
+    setActionTarget({
+      type: 'annotation',
+      annotationId: annotation.id,
+      quote: annotation.quote,
+      anchorRect,
+    });
+    setActionPosition(positionActionPopover(anchorRect));
   };
 
   useEffect(() => {
@@ -300,7 +367,10 @@ export function ArticleWorkbench({
         frame = null;
         if (!articleRef.current) return;
         const nextSelection = captureSelection(articleRef.current);
-        if (nextSelection) setSelection(nextSelection);
+        if (!nextSelection) return;
+        setSelection(nextSelection);
+        setActionTarget({ type: 'selection', selection: nextSelection });
+        setActionPosition(positionActionPopover(nextSelection.anchorRect));
       });
     };
     document.addEventListener('selectionchange', handleSelectionChange);
@@ -310,57 +380,130 @@ export function ArticleWorkbench({
     };
   }, []);
 
-  const applyAnnotation = (kind: AnnotationKind | null): void => {
+  useEffect(() => {
+    if (!actionTarget) return undefined;
+    let frame: number | null = null;
+    const updatePosition = (): void => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        let rect: ViewportRect;
+        if (actionTarget.type === 'selection') {
+          const activeSelection = window.getSelection();
+          if (activeSelection && !activeSelection.isCollapsed && activeSelection.rangeCount) {
+            rect = snapshotRect(activeSelection.getRangeAt(0).getBoundingClientRect());
+          } else {
+            rect = actionTarget.selection.anchorRect;
+          }
+        } else {
+          const element = articleRef.current?.querySelector<HTMLElement>(
+            `[data-annotation="${CSS.escape(actionTarget.annotationId)}"]`,
+          );
+          rect = element
+            ? snapshotRect(element.getBoundingClientRect())
+            : actionTarget.anchorRect;
+        }
+        const viewportTop = window.visualViewport?.offsetTop ?? 0;
+        const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+        if (rect.bottom < viewportTop || rect.top > viewportTop + viewportHeight) {
+          setActionTarget(null);
+          setActionPosition(null);
+          return;
+        }
+        setActionPosition(positionActionPopover(rect));
+      });
+    };
+    const closeOnOutsidePointer = (event: PointerEvent): void => {
+      const target = event.target;
+      if (!(target instanceof Node) || actionPopoverRef.current?.contains(target)) return;
+      setActionTarget(null);
+      setActionPosition(null);
+    };
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return;
+      setActionTarget(null);
+      setActionPosition(null);
+    };
+
+    updatePosition();
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    window.visualViewport?.addEventListener('resize', updatePosition);
+    window.visualViewport?.addEventListener('scroll', updatePosition);
+    document.addEventListener('pointerdown', closeOnOutsidePointer);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+      window.visualViewport?.removeEventListener('resize', updatePosition);
+      window.visualViewport?.removeEventListener('scroll', updatePosition);
+      document.removeEventListener('pointerdown', closeOnOutsidePointer);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [actionTarget]);
+
+  const applyAnnotation = (): void => {
     if (inputsLocked || !selection) return;
     const retained = article.annotations.filter(
       (item) => item.end <= selection.start || item.start >= selection.end,
     );
-    const nextAnnotations = kind
-      ? [
-          ...retained,
-          {
-            id: crypto.randomUUID(),
-            start: selection.start,
-            end: selection.end,
-            quote: selection.quote,
-            kind,
-            note: '',
-          },
-        ]
-      : retained;
+    const nextAnnotations = [
+      ...retained,
+      {
+        id: crypto.randomUUID(),
+        start: selection.start,
+        end: selection.end,
+        quote: selection.quote,
+        kind: CHECK_KIND,
+        note: '',
+      },
+    ];
 
     onUpdateArticle({
       ...article,
       annotations: nextAnnotations,
     });
-    if (kind) {
-      setLastMarkedSelection(selection);
-      setDictionaryQuery(selection.quote.trim());
-    } else {
-      setLastMarkedSelection(null);
-      setDictionaryQuery('');
-      setDictionaryOpen(false);
-    }
     window.getSelection()?.removeAllRanges();
     setSelection(null);
+    setActionTarget(null);
+    setActionPosition(null);
   };
 
-  const selectionHasInitialMark = Boolean(selection && article.annotations.some(
-    (annotation) => annotation.start <= selection.start && annotation.end >= selection.end,
-  ));
-  const dictionaryTarget = selection
-    ? (inputsLocked || selectionHasInitialMark ? selection : null)
-    : lastMarkedSelection;
+  const removeAnnotation = (annotationId: string): void => {
+    if (inputsLocked) return;
+    onUpdateArticle({
+      ...article,
+      annotations: article.annotations.filter((annotation) => annotation.id !== annotationId),
+    });
+    setActionTarget(null);
+    setActionPosition(null);
+  };
 
   const closeDictionary = (): void => {
     setDictionaryOpen(false);
-    window.requestAnimationFrame(() => dictionaryTriggerRef.current?.focus());
+    window.requestAnimationFrame(() => {
+      const returnTarget = dictionaryReturnFocusRef.current;
+      if (returnTarget?.isConnected) returnTarget.focus({ preventScroll: true });
+    });
   };
 
   const openDictionary = (): void => {
-    if (!dictionaryTarget) return;
-    setDictionaryQuery(dictionaryTarget.quote.trim());
+    if (!actionTarget) return;
+    const query = actionTarget.type === 'selection'
+      ? actionTarget.selection.quote
+      : actionTarget.quote;
+    dictionaryReturnFocusRef.current = actionTarget.type === 'annotation'
+      ? articleRef.current?.querySelector<HTMLElement>(
+          `[data-annotation="${CSS.escape(actionTarget.annotationId)}"]`,
+        ) ?? null
+      : null;
+    setDictionaryQuery(query.trim());
     setDictionaryOpen(true);
+    setActionTarget(null);
+    setActionPosition(null);
+    window.getSelection()?.removeAllRanges();
+    setSelection(null);
     window.requestAnimationFrame(() => {
       dictionaryRef.current?.querySelector('input')?.focus({ preventScroll: true });
     });
@@ -376,7 +519,9 @@ export function ArticleWorkbench({
       bodyRevision: article.bodyRevision + 1,
     });
     setImportText('');
-    setLastMarkedSelection(null);
+    setActionTarget(null);
+    setActionPosition(null);
+    setSelection(null);
     setDictionaryQuery('');
     setDictionaryOpen(false);
   };
@@ -457,11 +602,45 @@ export function ArticleWorkbench({
     if (!onRequestGrading) return;
     window.getSelection()?.removeAllRanges();
     setSelection(null);
+    setActionTarget(null);
+    setActionPosition(null);
     await onRequestGrading(article.id);
   };
 
+  const actionPopover = actionTarget && actionPosition && typeof document !== 'undefined'
+    ? createPortal(
+        <div
+          ref={actionPopoverRef}
+          className="studySelectionPopover"
+          role="toolbar"
+          aria-label="선택한 표현 작업"
+          data-placement={actionPosition.placement}
+          style={{ left: actionPosition.left, top: actionPosition.top }}
+        >
+          {actionTarget.type === 'selection' && !inputsLocked ? (
+            <button type="button" className="studyCheckAction" onClick={applyAnnotation}>
+              <span aria-hidden="true">✓</span>
+              체크
+            </button>
+          ) : null}
+          <button type="button" onClick={openDictionary}>사전</button>
+          {actionTarget.type === 'annotation' && !inputsLocked ? (
+            <button
+              type="button"
+              className="studyDeleteAction"
+              onClick={() => removeAnnotation(actionTarget.annotationId)}
+            >
+              삭제
+            </button>
+          ) : null}
+        </div>,
+        document.body,
+      )
+    : null;
+
   return (
     <div className="studyPage studyArticlePage">
+      {actionPopover}
       <header className="studyPageLead">
         <div>
           <p className="studyKicker">DAY {String(article.dayNo).padStart(2, '0')} · ARTICLE</p>
@@ -476,7 +655,8 @@ export function ArticleWorkbench({
                 value={article.id}
                 onChange={(event) => {
                   setSelection(null);
-                  setLastMarkedSelection(null);
+                  setActionTarget(null);
+                  setActionPosition(null);
                   setDictionaryQuery('');
                   setDictionaryOpen(false);
                   onSelectArticle(event.target.value);
@@ -523,7 +703,7 @@ export function ArticleWorkbench({
             <span>01</span>
             <div>
               <h2 id="article-heading">기사 읽기</h2>
-              <p>본문을 선택한 뒤 글자색으로 최초 상태를 남깁니다.</p>
+              <p>막힌 표현을 드래그하면 체크와 사전 메뉴가 열립니다.</p>
             </div>
             {article.sourceUrl ? (
               <a href={article.sourceUrl} target="_blank" rel="noreferrer">
@@ -532,79 +712,19 @@ export function ArticleWorkbench({
             ) : null}
           </div>
 
-          <div className="studyLegend" aria-label="표시 색 범례">
-            {(Object.keys(annotationMeta) as AnnotationKind[]).slice(0, 3).map((kind) => (
-              <span key={kind} className={annotationMeta[kind].className}>
-                {annotationMeta[kind].short} · {annotationMeta[kind].label}
-              </span>
-            ))}
-          </div>
-
-          <div className="studyMarkToolbar" aria-label="선택한 본문 표시">
-            <p>
-              {selection
-                ? `선택: ${selection.quote.replace(/\s+/g, ' ').slice(0, 28)}${!inputsLocked && !selectionHasInitialMark ? ' · 색을 먼저 고르세요' : selectionHasInitialMark ? ' · 이미 표시됨' : ''}`
-                : lastMarkedSelection
-                  ? `표시 완료: ${lastMarkedSelection.quote.replace(/\s+/g, ' ').slice(0, 28)} · 사전에서 확인할 수 있습니다.`
-                : '본문에서 단어나 한자를 드래그하세요.'}
-            </p>
-            <div>
-              <button
-                type="button"
-                className="studyMarkBlue"
-                disabled={inputsLocked || !selection || selectionHasInitialMark}
-                onPointerDown={(event) => event.preventDefault()}
-                onClick={() => applyAnnotation('reading_unknown')}
-              >
-                파랑
-              </button>
-              <button
-                type="button"
-                className="studyMarkOrange"
-                disabled={inputsLocked || !selection || selectionHasInitialMark}
-                onPointerDown={(event) => event.preventDefault()}
-                onClick={() => applyAnnotation('context_guess')}
-              >
-                주황
-              </button>
-              <button
-                type="button"
-                className="studyMarkOchre"
-                disabled={inputsLocked || !selection || selectionHasInitialMark}
-                onPointerDown={(event) => event.preventDefault()}
-                onClick={() => applyAnnotation('unknown')}
-              >
-                노랑
-              </button>
-              <button
-                type="button"
-                disabled={inputsLocked || !selection}
-                onPointerDown={(event) => event.preventDefault()}
-                onClick={() => applyAnnotation(null)}
-              >
-                표시 지우기
-              </button>
-              <button
-                ref={dictionaryTriggerRef}
-                type="button"
-                disabled={!dictionaryTarget}
-                onPointerDown={(event) => event.preventDefault()}
-                onClick={openDictionary}
-              >
-                {selection && !dictionaryTarget ? '색 먼저' : '사전'}
-              </button>
-            </div>
-          </div>
-
           <div
             ref={articleRef}
             className={`studyArticleText ${inputsLocked ? 'studyArticleTextLocked' : ''}`}
             lang="ja"
-            onMouseUp={updateSelection}
-            onPointerUp={updateSelection}
-            onKeyUp={updateSelection}
+            onMouseUp={showSelectionActions}
+            onPointerUp={showSelectionActions}
+            onKeyUp={showSelectionActions}
           >
-            {renderAnnotatedText(article.bodyText, article.annotations)}
+            {renderAnnotatedText(
+              article.bodyText,
+              article.annotations,
+              showAnnotationActions,
+            )}
           </div>
 
           <DictionaryDock
@@ -637,7 +757,7 @@ export function ArticleWorkbench({
             <p>
               {inputsLocked
                 ? '채점 요청 이후에는 본문을 교체할 수 없습니다.'
-                : '본문을 교체하면 현재 글자색 표시는 초기화됩니다.'}
+                : '본문을 교체하면 현재 체크는 초기화됩니다.'}
             </p>
             <button
               type="button"
@@ -693,7 +813,7 @@ export function ArticleWorkbench({
           </section>
         </section>
 
-        <aside className="studyAnalysisColumn" aria-label="기사 채점과 표시 기록">
+        <aside className="studyAnalysisColumn" aria-label="기사 채점과 체크 기록">
           <GradingPanel
             dayNo={article.dayNo}
             grading={article.grading}
@@ -722,15 +842,14 @@ export function ArticleWorkbench({
             <div className="studySectionHeading studyAnalysisHeading">
               <span>04</span>
               <div>
-                <h2 id="marks-heading">표시 기록</h2>
-                <p>최초 상태와 채점 결과를 나란히 남깁니다.</p>
+                <h2 id="marks-heading">체크 기록</h2>
+                <p>체크한 표현과 채점 결과를 나란히 남깁니다.</p>
               </div>
             </div>
             {cardNotice ? <p className="studyInlineNotice" role="status">{cardNotice}</p> : null}
             {sortedAnnotations.length ? (
               <ol className="studyAnnotationList">
                 {sortedAnnotations.map((annotation, index) => {
-                  const meta = annotationMeta[annotation.kind];
                   const quote = annotation.quote.trim();
                   const annotationGrading = annotation.grading;
                   const judgement = annotationGrading?.judgement ?? 'ungraded';
@@ -749,17 +868,14 @@ export function ArticleWorkbench({
                     <li key={annotation.id}>
                       <div className="studyAnnotationHead">
                         <span>{String(index + 1).padStart(2, '0')}</span>
-                        <strong lang="ja" className={meta.className}>
-                          {annotation.quote}
-                        </strong>
-                        <span className="studyAnnotationMeta">
-                          <small>{meta.short}</small>
-                          {showGradingResult ? (
+                        <strong lang="ja">{annotation.quote}</strong>
+                        {showGradingResult ? (
+                          <span className="studyAnnotationMeta">
                             <small className={`studyJudgement studyJudgement-${judgement}`}>
                               {judgementCopy[judgement]}
                             </small>
-                          ) : null}
-                        </span>
+                          </span>
+                        ) : null}
                       </div>
 
                       <div className="studyAnnotationInputs">
@@ -881,8 +997,8 @@ export function ArticleWorkbench({
               </ol>
             ) : (
               <div className="studyEmptyState">
-                <p>아직 표시한 부분이 없습니다.</p>
-                <span>왼쪽 본문에서 막힌 표현을 선택해 최초 상태를 남겨보세요.</span>
+                <p>아직 체크한 표현이 없습니다.</p>
+                <span>왼쪽 본문에서 막힌 표현을 드래그해 체크해보세요.</span>
               </div>
             )}
           </section>

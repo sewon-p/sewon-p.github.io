@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const STUDY_ACCOUNT_DOMAIN = 'auth.sewon-p.github.io';
 const STUDY_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{2,31}$/;
-const SCHEDULER_VERSION = 'fsrs-6/ts-fsrs-5.4.1-seeded-v2';
+const SCHEDULER_VERSION = 'fsrs-6/ts-fsrs-5.4.1-seeded-kst4-v3';
 
 const HELP = `일본어 학습 StudyWorkspace 가져오기
 
