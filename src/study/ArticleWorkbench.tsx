@@ -262,16 +262,19 @@ function positionActionPopover(rect: ViewportRect): ActionPopoverPosition {
   const viewportLeft = viewport?.offsetLeft ?? 0;
   const viewportTop = viewport?.offsetTop ?? 0;
   const viewportWidth = viewport?.width ?? window.innerWidth;
-  const horizontalEdge = Math.min(108, Math.max(48, viewportWidth / 2));
+  const viewportHeight = viewport?.height ?? window.innerHeight;
+  const horizontalEdge = Math.min(78, Math.max(48, viewportWidth / 2));
   const center = rect.left + rect.width / 2;
   const left = Math.min(
     viewportLeft + viewportWidth - horizontalEdge,
     Math.max(viewportLeft + horizontalEdge, center),
   );
-  const placement = rect.top - viewportTop >= 64 ? 'above' : 'below';
+  const roomBelow = viewportTop + viewportHeight - rect.bottom;
+  const roomAbove = rect.top - viewportTop;
+  const placement = roomBelow < 68 && roomAbove > roomBelow ? 'above' : 'below';
   return {
     left,
-    top: placement === 'above' ? rect.top - 8 : rect.bottom + 8,
+    top: placement === 'above' ? rect.top - 6 : rect.bottom + 6,
     placement,
   };
 }
