@@ -25,20 +25,10 @@ import type {
 
 const CHECK_KIND: AnnotationKind = 'unknown';
 
-interface ViewportRect {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-  width: number;
-  height: number;
-}
-
 interface SelectionRange {
   start: number;
   end: number;
   quote: string;
-  anchorRect: ViewportRect;
 }
 
 type AnnotationActionTarget =
@@ -47,14 +37,7 @@ type AnnotationActionTarget =
       type: 'annotation';
       annotationId: string;
       quote: string;
-      anchorRect: ViewportRect;
     };
-
-interface ActionPopoverPosition {
-  left: number;
-  top: number;
-  placement: 'above' | 'below';
-}
 
 export interface AnnotationGradingInput {
   userReading: string;
@@ -176,7 +159,7 @@ function ResponseGradingResult({ response }: { response: StudyResponse }): React
 function renderAnnotatedText(
   bodyText: string,
   annotations: TextAnnotation[],
-  onActivate: (annotation: TextAnnotation, element: HTMLElement) => void,
+  onActivate: (annotation: TextAnnotation) => void,
 ): ReactElement[] {
   const valid = annotations
     .filter(
@@ -207,15 +190,15 @@ function renderAnnotatedText(
         role="button"
         tabIndex={0}
         aria-label={`${annotation.quote} 체크 메뉴 열기`}
-        onClick={(event) => {
+        onClick={() => {
           const activeSelection = window.getSelection();
           if (activeSelection && !activeSelection.isCollapsed) return;
-          onActivate(annotation, event.currentTarget);
+          onActivate(annotation);
         }}
         onKeyDown={(event) => {
           if (event.key !== 'Enter' && event.key !== ' ') return;
           event.preventDefault();
-          onActivate(annotation, event.currentTarget);
+          onActivate(annotation);
         }}
       >
         {bodyText.slice(annotation.start, annotation.end)}
@@ -243,80 +226,7 @@ function captureSelection(root: HTMLElement): SelectionRange | null {
   const quote = range.toString();
   const end = start + quote.length;
   if (!quote.trim()) return null;
-  return { start, end, quote, anchorRect: snapshotRect(range.getBoundingClientRect()) };
-}
-
-function snapshotRect(rect: DOMRect | ClientRect): ViewportRect {
-  return {
-    top: rect.top,
-    right: rect.right,
-    bottom: rect.bottom,
-    left: rect.left,
-    width: rect.width,
-    height: rect.height,
-  };
-}
-
-function textClearanceAround(root: HTMLElement | null, anchor: ViewportRect): {
-  above: number;
-  below: number;
-} {
-  if (!root) return { above: Number.POSITIVE_INFINITY, below: Number.POSITIVE_INFINITY };
-  let above = Number.POSITIVE_INFINITY;
-  let below = Number.POSITIVE_INFINITY;
-  root.querySelectorAll('span').forEach((element) => {
-    Array.from(element.getClientRects()).forEach((lineRect) => {
-      if (lineRect.width === 0 || lineRect.height === 0) return;
-      if (lineRect.bottom <= anchor.top) {
-        above = Math.min(above, anchor.top - lineRect.bottom);
-      } else if (lineRect.top >= anchor.bottom) {
-        below = Math.min(below, lineRect.top - anchor.bottom);
-      }
-    });
-  });
-  return { above, below };
-}
-
-function positionActionPopover(
-  rect: ViewportRect,
-  articleRoot: HTMLElement | null = null,
-  popoverHeight = 46,
-): ActionPopoverPosition {
-  const viewport = window.visualViewport;
-  const viewportLeft = viewport?.offsetLeft ?? 0;
-  const viewportTop = viewport?.offsetTop ?? 0;
-  const viewportWidth = viewport?.width ?? window.innerWidth;
-  const viewportHeight = viewport?.height ?? window.innerHeight;
-  const headerHeight = Number.parseFloat(
-    window.getComputedStyle(document.documentElement)
-      .getPropertyValue('--study-header-height'),
-  ) || 0;
-  const safeViewportTop = viewportTop + headerHeight + 8;
-  const safeViewportBottom = viewportTop + viewportHeight - 8;
-  const horizontalEdge = Math.min(78, Math.max(48, viewportWidth / 2));
-  const center = rect.left + rect.width / 2;
-  const left = Math.min(
-    viewportLeft + viewportWidth - horizontalEdge,
-    Math.max(viewportLeft + horizontalEdge, center),
-  );
-  const roomBelow = safeViewportBottom - rect.bottom;
-  const roomAbove = rect.top - safeViewportTop;
-  const clearance = textClearanceAround(articleRoot, rect);
-  const requiredSpace = popoverHeight + 6;
-  const belowFits = roomBelow >= requiredSpace && clearance.below >= requiredSpace;
-  const aboveFits = roomAbove >= requiredSpace && clearance.above >= requiredSpace;
-  const placement = belowFits
-    ? 'below'
-    : aboveFits
-      ? 'above'
-      : Math.min(roomBelow, clearance.below) >= Math.min(roomAbove, clearance.above)
-        ? 'below'
-        : 'above';
-  return {
-    left,
-    top: placement === 'above' ? rect.top - 6 : rect.bottom + 6,
-    placement,
-  };
+  return { start, end, quote };
 }
 
 function sentenceAt(bodyText: string, start: number, end: number): string {
@@ -352,11 +262,9 @@ export function ArticleWorkbench({
 }: ArticleWorkbenchProps): ReactElement {
   const articleRef = useRef<HTMLDivElement>(null);
   const dictionaryRef = useRef<HTMLDivElement>(null);
-  const actionPopoverRef = useRef<HTMLDivElement>(null);
   const dictionaryReturnFocusRef = useRef<HTMLElement | null>(null);
   const [selection, setSelection] = useState<SelectionRange | null>(null);
   const [actionTarget, setActionTarget] = useState<AnnotationActionTarget | null>(null);
-  const [actionPosition, setActionPosition] = useState<ActionPopoverPosition | null>(null);
   const [dictionaryQuery, setDictionaryQuery] = useState('');
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const [importText, setImportText] = useState('');
@@ -383,26 +291,16 @@ export function ArticleWorkbench({
     if (!nextSelection) return;
     setSelection(nextSelection);
     setActionTarget({ type: 'selection', selection: nextSelection });
-    setActionPosition(positionActionPopover(nextSelection.anchorRect, articleRef.current));
   };
 
-  const showAnnotationActions = (
-    annotation: TextAnnotation,
-    element: HTMLElement,
-  ): void => {
-    const anchorRect = snapshotRect(element.getBoundingClientRect());
+  const showAnnotationActions = (annotation: TextAnnotation): void => {
     window.getSelection()?.removeAllRanges();
     setSelection(null);
     setActionTarget({
       type: 'annotation',
       annotationId: annotation.id,
       quote: annotation.quote,
-      anchorRect,
     });
-    setActionPosition(positionActionPopover(
-      anchorRect,
-      element.closest<HTMLElement>('.studyArticleText'),
-    ));
   };
 
   useEffect(() => {
@@ -416,7 +314,6 @@ export function ArticleWorkbench({
         if (!nextSelection) return;
         setSelection(nextSelection);
         setActionTarget({ type: 'selection', selection: nextSelection });
-        setActionPosition(positionActionPopover(nextSelection.anchorRect, articleRef.current));
       });
     };
     document.addEventListener('selectionchange', handleSelectionChange);
@@ -427,71 +324,17 @@ export function ArticleWorkbench({
   }, []);
 
   useEffect(() => {
-    if (!actionTarget) return undefined;
-    let frame: number | null = null;
-    const updatePosition = (): void => {
-      if (frame !== null) window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        frame = null;
-        let rect: ViewportRect;
-        if (actionTarget.type === 'selection') {
-          const activeSelection = window.getSelection();
-          if (activeSelection && !activeSelection.isCollapsed && activeSelection.rangeCount) {
-            rect = snapshotRect(activeSelection.getRangeAt(0).getBoundingClientRect());
-          } else {
-            rect = actionTarget.selection.anchorRect;
-          }
-        } else {
-          const element = articleRef.current?.querySelector<HTMLElement>(
-            `[data-annotation="${CSS.escape(actionTarget.annotationId)}"]`,
-          );
-          rect = element
-            ? snapshotRect(element.getBoundingClientRect())
-            : actionTarget.anchorRect;
-        }
-        const viewportTop = window.visualViewport?.offsetTop ?? 0;
-        const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-        if (rect.bottom < viewportTop || rect.top > viewportTop + viewportHeight) {
-          setActionTarget(null);
-          setActionPosition(null);
-          return;
-        }
-        setActionPosition(positionActionPopover(
-          rect,
-          articleRef.current,
-          actionPopoverRef.current?.getBoundingClientRect().height ?? 46,
-        ));
-      });
-    };
-    const closeOnOutsidePointer = (event: PointerEvent): void => {
-      const target = event.target;
-      if (!(target instanceof Node) || actionPopoverRef.current?.contains(target)) return;
-      setActionTarget(null);
-      setActionPosition(null);
-    };
     const closeOnEscape = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') return;
       setActionTarget(null);
-      setActionPosition(null);
+      setSelection(null);
+      window.getSelection()?.removeAllRanges();
     };
-
-    updatePosition();
-    window.addEventListener('scroll', updatePosition, true);
-    window.addEventListener('resize', updatePosition);
-    window.visualViewport?.addEventListener('resize', updatePosition);
-    window.visualViewport?.addEventListener('scroll', updatePosition);
-    document.addEventListener('pointerdown', closeOnOutsidePointer);
     document.addEventListener('keydown', closeOnEscape);
     return () => {
-      if (frame !== null) window.cancelAnimationFrame(frame);
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
-      window.visualViewport?.removeEventListener('resize', updatePosition);
-      window.visualViewport?.removeEventListener('scroll', updatePosition);
-      document.removeEventListener('pointerdown', closeOnOutsidePointer);
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, [actionTarget]);
+  }, []);
 
   const applyAnnotation = (): void => {
     if (inputsLocked || !selection) return;
@@ -517,7 +360,6 @@ export function ArticleWorkbench({
     window.getSelection()?.removeAllRanges();
     setSelection(null);
     setActionTarget(null);
-    setActionPosition(null);
   };
 
   const removeAnnotation = (annotationId: string): void => {
@@ -527,7 +369,6 @@ export function ArticleWorkbench({
       annotations: article.annotations.filter((annotation) => annotation.id !== annotationId),
     });
     setActionTarget(null);
-    setActionPosition(null);
   };
 
   const closeDictionary = (): void => {
@@ -551,7 +392,6 @@ export function ArticleWorkbench({
     setDictionaryQuery(query.trim());
     setDictionaryOpen(true);
     setActionTarget(null);
-    setActionPosition(null);
     window.getSelection()?.removeAllRanges();
     setSelection(null);
     window.requestAnimationFrame(() => {
@@ -570,7 +410,6 @@ export function ArticleWorkbench({
     });
     setImportText('');
     setActionTarget(null);
-    setActionPosition(null);
     setSelection(null);
     setDictionaryQuery('');
     setDictionaryOpen(false);
@@ -653,36 +492,49 @@ export function ArticleWorkbench({
     window.getSelection()?.removeAllRanges();
     setSelection(null);
     setActionTarget(null);
-    setActionPosition(null);
     await onRequestGrading(article.id);
   };
 
-  const actionPopover = actionTarget && actionPosition && typeof document !== 'undefined'
+  const canCheckSelection = actionTarget?.type === 'selection' && !inputsLocked;
+  const canOpenSelectionDictionary = actionTarget !== null;
+  const canDeleteAnnotation = actionTarget?.type === 'annotation' && !inputsLocked;
+
+  const actionPopover = typeof document !== 'undefined'
     ? createPortal(
         <div
-          ref={actionPopoverRef}
           className="studySelectionPopover"
           role="toolbar"
           aria-label="선택한 표현 작업"
-          data-placement={actionPosition.placement}
-          style={{ left: actionPosition.left, top: actionPosition.top }}
+          data-active={actionTarget ? 'true' : 'false'}
         >
-          {actionTarget.type === 'selection' && !inputsLocked ? (
-            <button type="button" className="studyCheckAction" onClick={applyAnnotation}>
-              <span aria-hidden="true">✓</span>
-              체크
-            </button>
-          ) : null}
-          <button type="button" onClick={openDictionary}>사전</button>
-          {actionTarget.type === 'annotation' && !inputsLocked ? (
-            <button
-              type="button"
-              className="studyDeleteAction"
-              onClick={() => removeAnnotation(actionTarget.annotationId)}
-            >
-              삭제
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="studyCheckAction"
+            disabled={!canCheckSelection}
+            onClick={applyAnnotation}
+          >
+            <span aria-hidden="true">✓</span>
+            체크
+          </button>
+          <button
+            type="button"
+            disabled={!canOpenSelectionDictionary}
+            onClick={openDictionary}
+          >
+            사전
+          </button>
+          <button
+            type="button"
+            className="studyDeleteAction"
+            disabled={!canDeleteAnnotation}
+            onClick={() => {
+              if (actionTarget?.type === 'annotation') {
+                removeAnnotation(actionTarget.annotationId);
+              }
+            }}
+          >
+            삭제
+          </button>
         </div>,
         document.body,
       )
@@ -706,7 +558,6 @@ export function ArticleWorkbench({
                 onChange={(event) => {
                   setSelection(null);
                   setActionTarget(null);
-                  setActionPosition(null);
                   setDictionaryQuery('');
                   setDictionaryOpen(false);
                   onSelectArticle(event.target.value);
@@ -753,7 +604,7 @@ export function ArticleWorkbench({
             <span>01</span>
             <div>
               <h2 id="article-heading">기사 읽기</h2>
-              <p>막힌 표현을 드래그하면 체크와 사전 메뉴가 열립니다.</p>
+              <p>막힌 표현을 드래그한 뒤 왼쪽 아래 도구막대를 사용합니다.</p>
             </div>
             {article.sourceUrl ? (
               <a href={article.sourceUrl} target="_blank" rel="noreferrer">
@@ -766,7 +617,6 @@ export function ArticleWorkbench({
             ref={articleRef}
             className={`studyArticleText ${inputsLocked ? 'studyArticleTextLocked' : ''}`}
             lang="ja"
-            onMouseUp={showSelectionActions}
             onPointerUp={showSelectionActions}
             onKeyUp={showSelectionActions}
           >

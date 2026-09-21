@@ -454,6 +454,8 @@ textarea {
 
 .studySelectionPopover {
   position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: max(16px, env(safe-area-inset-left));
   z-index: 70;
   display: flex;
   gap: 2px;
@@ -463,14 +465,6 @@ textarea {
   border-radius: 6px;
   background: var(--paper);
   box-shadow: none;
-}
-
-.studySelectionPopover[data-placement='above'] {
-  transform: translate(-50%, -100%);
-}
-
-.studySelectionPopover[data-placement='below'] {
-  transform: translateX(-50%);
 }
 
 .studySelectionPopover button {
@@ -485,8 +479,14 @@ textarea {
   white-space: nowrap;
 }
 
-.studySelectionPopover button:hover,
-.studySelectionPopover button:focus-visible {
+.studySelectionPopover button:disabled {
+  background: transparent;
+  color: color-mix(in srgb, var(--ink) 38%, var(--paper));
+  cursor: default;
+}
+
+.studySelectionPopover button:not(:disabled):hover,
+.studySelectionPopover button:not(:disabled):focus-visible {
   background: color-mix(in srgb, var(--ink) 8%, var(--paper));
 }
 
@@ -495,9 +495,14 @@ textarea {
   color: var(--paper);
 }
 
-.studySelectionPopover .studyCheckAction:hover,
-.studySelectionPopover .studyCheckAction:focus-visible {
+.studySelectionPopover .studyCheckAction:not(:disabled):hover,
+.studySelectionPopover .studyCheckAction:not(:disabled):focus-visible {
   background: color-mix(in srgb, var(--ink) 88%, var(--paper));
+}
+
+.studySelectionPopover .studyCheckAction:disabled {
+  background: transparent;
+  color: color-mix(in srgb, var(--ink) 38%, var(--paper));
 }
 
 .studyCheckAction span {
@@ -2222,6 +2227,10 @@ textarea {
 @media (max-width: 720px) {
   :root {
     --study-header-height: 56px;
+  }
+
+  .studySelectionPopover {
+    bottom: calc(64px + max(8px, env(safe-area-inset-bottom)));
   }
 
   body {
